@@ -1,0 +1,4 @@
+.installed
+nvim/plugged/
+nvim/ftplugin/
+.netrwhist
