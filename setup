@@ -7,7 +7,7 @@ defaults write com.apple.finder AppleShowAllFiles YES.
 
 # link dotfiles
 DOTFILES="$HOME/.dotfiles"
-ln -sf $HOME/projects/joshm1/dotfiles $DOTFILES
+[ -d $DOTFILES ] || ln -sf $HOME/projects/joshm1/dotfiles $DOTFILES
 
 ln -s $DOTFILES/git/gitconfig $HOME/.gitconfig
 ln -s $DOTFILES/git/gitignore $HOME/.gitignore
@@ -32,9 +32,30 @@ if [[ ! -f $DOTFILES/homebrew/.installed ]]; then
   echo $(date) >> $DOTFILES/homebrew/.installed
 fi
 
+# rbenv: set global ruby version to 2.3.1 and install neovim gem
+if ! rbenv versions | grep 2.3.1 >/dev/null; then
+  rbenv global 2.3.1
+  gem install bundler neovim
+fi
+
 # python3
 if ! pyenv versions | grep 2.7 >/dev/null; then pyenv install 2.7; fi
 if ! pyenv versions | grep 3.6.0 >/dev/null; then pyenv install 3.6.0; fi
+
+# setup python environments for neovim
+if [ ! -d ~/.pyenv/versions/neovim2 ]; then
+  pyenv virtualenv 2.7 neovim2
+  pyenv activate neovim2
+  pip install neovim
+fi
+
+if [ ! -d ~/.pyenv/versions/neovim3 ]; then
+  pyenv virtualenv 3.6 neovim3
+  pyenv activate neovim3
+  pip install neovim
+  pip install flake8
+  ln -s `pyenv which flake8` ~/bin/flake8
+fi
 
 # fzf: install useful keybindings and fuzzy completion
 [[ ! -f ~/.fzf.zsh ]] && /usr/local/opt/fzf/install
