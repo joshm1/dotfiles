@@ -70,6 +70,7 @@ if [[ -d $HOME/Dropbox ]]; then
   find projects -type f -exec ln -s ~/Dropbox/dotfiles/{} ~/{} ";"
   cd $last_dir
 
+  ln -sf $HOME/Dropbox/dotfiles/.zsh_history $HOME/.zsh_history
   ln -s $HOME/Dropbox/dotfiles/.npmrc $HOME/.npmrc
   ln -s $HOME/Dropbox/dotfiles/.warprc $HOME/.warprc
   ln -s $HOME/Dropbox/dotfiles/.aws $HOME/.aws

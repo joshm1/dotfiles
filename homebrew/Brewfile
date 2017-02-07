@@ -29,6 +29,7 @@ brew 'fzf'
 brew 'git'
 brew 'imagemagick'
 brew 'jq'
+brew 'qemu'
 brew 'postgresql', restart_service: :changed
 brew 'pyenv'
 brew 'pyenv-virtualenv'
