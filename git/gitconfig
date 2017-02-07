@@ -114,7 +114,7 @@
 [core]
   autocrlf = false
   editor = nvim
-	excludesfile = /Users/josh/.gitignore_global
+	excludesfile = /Users/josh/.gitignore
 [advice]
   statusHints = false
 [diff]
@@ -137,3 +137,5 @@
 [mergetool "sourcetree"]
 	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
 	trustExitCode = true
+[commit]
+	template = /Users/josh/.stCommitMsg
