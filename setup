@@ -41,6 +41,11 @@ if ! pyenv versions | grep 3.6.0 >/dev/null; then pyenv install 3.6.0; fi
 
 # private config files should be in Dropbox
 if [[ -d $HOME/Dropbox ]]; then
+  last_dir=$PWD
+  cd $HOME/Dropbox/dotfiles
+  find projects -type f -exec ln -s ~/Dropbox/dotfiles/{} ~/{} ";"
+  cd $last_dir
+
   ln -s $HOME/Dropbox/dotfiles/.npmrc $HOME/.npmrc
   ln -s $HOME/Dropbox/dotfiles/.warprc $HOME/.warprc
   ln -s $HOME/Dropbox/dotfiles/.aws $HOME/.aws
