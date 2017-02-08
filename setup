@@ -76,6 +76,7 @@ if [[ -d $HOME/Dropbox ]]; then
   ln -s $HOME/Dropbox/dotfiles/.aws $HOME/.aws
   ln -s $HOME/Dropbox/dotfiles/.ssh $HOME/.ssh
   ln -s $HOME/Dropbox/dotfiles/.docker $HOME/.docker
+  ln -s $HOME/Dropbox/dotfiles/.kube $HOME/.kube
   ln -s $HOME/Dropbox/dotfiles/bin $HOME/
 
   echo "Adjusting permissions on secret files..."
@@ -83,6 +84,7 @@ if [[ -d $HOME/Dropbox ]]; then
   find $HOME/Dropbox/dotfiles/.aws -exec chmod go-rwx {} ";"
   find $HOME/Dropbox/dotfiles/.ssh -type f -exec chmod 0600 {} ";"
   find $HOME/Dropbox/dotfiles/.ssh -type d -exec chmod 0700 {} ";"
+  find $HOME/Dropbox/dotfiles/.kube -exec chmod go-rwx {} ";"
   find $HOME/Dropbox/dotfiles/bin -exec chmod go-rwx {} ";"
 
   sublime_user_dir="$HOME/Library/Application Support/Sublime Text 3/Packages/User"
@@ -95,6 +97,22 @@ if [[ -d $HOME/Dropbox ]]; then
 else
   echo "!!! Install Dropbox to link more dotfiles !!!"
 fi
+
+if psql -U postgres postgres -c 'SELECT 1;' >/dev/null 2>&1; then
+  echo "postgres ROLE already exists"
+else
+  createuser --superuser --createrole --login --no-password postgres
+fi
+
+# install pow (pow.cx)
+if [ -d ~/Library/Application\ Support/Pow ]; then
+  echo "pow.cx is already installed"
+else
+  curl get.pow.cx | sh
+fi
+
+# create symlinks my projects in ~/.pow
+bash ~/Dropbox/dotfiles/setup/create-pow-links
 
 # clone oh-my-zsh - do not run installer because our .zshrc already has includes the oh-my-zsh config
 [[ ! -d ~/.oh-my-zsh ]] && \

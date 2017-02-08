@@ -13,6 +13,8 @@ cd ~/projects/joshm1/dotfiles
 - [ ] Install BetterTouchTool license
 - [ ] Install SublimeText license
 - [ ] Increase Docker image file (see below)
+- [ ] [Install QT](https://github.com/thoughtbot/capybara-webkit/wiki/Installing-Qt-and-compiling-capybara-webkit#macos-sierra-1012)
+- [ ] [Install Xquartz](https://www.xquartz.org/)
 
 ### Increase Docker VM Image
 

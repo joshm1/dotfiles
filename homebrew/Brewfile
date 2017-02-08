@@ -13,6 +13,7 @@ cask 'quicklook-csv'
 cask 'betterzipql'
 cask 'slack'
 cask 'sourcetree'
+cask 'spotify'
 cask 'sublime-text'
 
 # cask 'sonarr'
