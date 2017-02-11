@@ -42,6 +42,7 @@ brew 'rbenv'
 brew 'ruby-build'
 brew 'the_silver_searcher'
 brew 'tmux'
+brew 'wget'
 brew 'zsh'
 brew 'zsh-completions'
 
