@@ -26,6 +26,8 @@ brew 'bash'
 brew 'ctags'
 brew 'cscope'
 brew 'direnv'
+brew 'gettext'
+link --force gettext
 brew 'fswatch'
 brew 'fzf'
 brew 'git'
