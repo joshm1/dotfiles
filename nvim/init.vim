@@ -171,10 +171,10 @@ let g:indent_guides_enable_on_vim_startup = 1
 
 Plug 'nsf/gocode', { 'rtp': 'nvim', 'do': '~/.config/nvim/plugged/gocode/nvim/symlink.sh' }
 
-Plug 'Shougo/deoplete.nvim'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 " {{{ deoplete
 " Plug 'zchee/deoplete-jedi' " python completion
-Plug 'zchee/deoplete-go', { 'do': 'make' }
+" Plug 'zchee/deoplete-go', { 'do': 'make' }
 Plug 'carlitux/deoplete-ternjs' " javascript completion
 " Plug 'mhartington/deoplete-typescript'
 let g:deoplete#enable_at_startup = 1

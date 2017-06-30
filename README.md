@@ -16,6 +16,7 @@ cd ~/projects/joshm1/dotfiles
 - [ ] [Install QT](https://github.com/thoughtbot/capybara-webkit/wiki/Installing-Qt-and-compiling-capybara-webkit#macos-sierra-1012)
 - [ ] [Install Xquartz](https://www.xquartz.org/)
 - [ ] [Install wkhtmltopdf](http://download.gna.org/wkhtmltopdf/0.12/0.12.3/wkhtmltox-0.12.3_osx-cocoa-x86-64.pkg)
+- [ ] [Install pgAdmin](https://www.pgadmin.org/download/macos4.php)
 
 ### Increase Docker VM Image
 
