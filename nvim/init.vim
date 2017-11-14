@@ -322,6 +322,8 @@ xmap <C-k>     <Plug>(neosnippet_expand_target)
 
 Plug 'Shougo/neosnippet-snippets'
 
+" Plug 'ajh17/VimCompletesMe'
+
 call plug#end()
 
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*/.git/*,*/.hg/*,*/.svn/*,*/.idea/*,*/.DS_Store,*/vendor
@@ -398,5 +400,6 @@ augroup BWCCreateDir
   autocmd BufWritePre * :call s:MkNonExDir(expand('<afile>'), +expand('<abuf>'))
 augroup END
 " }}}
+
 
 " vim: set sw=2 ts=2 et foldlevel=0 foldmethod=marker:

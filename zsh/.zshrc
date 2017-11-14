@@ -45,7 +45,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(brew bundler capistrano git git-extras gitignore history-substring-search history knife knife_ssh mosh node npm osx postgres pow rbenv redis-cli rsync sbt scala sublime sudo supervisor tmux vundle wd)
+plugins=(brew bundler capistrano git git-extras gitignore history-substring-search history knife knife_ssh mosh node npm osx postgres pow redis-cli rsync sbt scala sublime sudo supervisor tmux vundle wd rbenv)
 
 # User configuration
 
@@ -88,6 +88,29 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 export NODE_REPL_HISTORY_FILE=~/.node_history
 
+# auto-run nvm use when entering a directory with nvmrc
+# source: https://github.com/creationix/nvm#deeper-shell-integration
+autoload -U add-zsh-hook
+load-nvmrc() {
+  local node_version="$(nvm version)"
+  local nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$node_version" ]; then
+      nvm use
+    fi
+  elif [ "$node_version" != "$(nvm version default)" ]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+add-zsh-hook chpwd load-nvmrc
+load-nvmrc
+
 setopt no_beep # don't beep on error
 
 alias vim="nvim"
@@ -95,9 +118,6 @@ alias vi="nvim"
 
 # direnv - http://direnv.net
 eval "$(direnv hook zsh)"
-
-# boot2docker
-alias dockerup="eval \$(docker-machine env default) && docker-machine status default"
 
 # delete all stopped containers
 alias dockercleanc='printf "\n>>> Deleting stopped containers\n\n" && docker rm $(docker ps -a -q)'
@@ -127,6 +147,83 @@ gpr() {
 
 path=("$HOME/bin" $path)
 
+if [ -d ~/Qt5.5.1/5.5/clang_64/bin ]; then
+  path=("$HOME/Qt5.5.1/5.5/clang_64/bin/" $path)
+fi
+
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+ec2_terminate() {
+  local private_dns_name=$1
+  local instance_ids=$(aws ec2 describe-instances \
+    --filters "Name=private-dns-name,Values=$private_dns_name" | \
+    jq '.Reservations | .[] | .Instances | .[] | .InstanceId' -r | tr '\n' ' ')
+
+  if [ -z $instance_ids ]; then
+    echo "instances not found for $private_dns_name"
+    exit 1
+  fi
+
+  echo "Terminating EC2 Instances:$instance_ids\n"
+  local cmd="aws ec2 terminate-instances --instance-ids $instance_ids"
+  echo $cmd
+  bash -c $cmd
+}
+
+ec2_ssh() {
+  local private_dns_name=$1
+  local public_ips=$(aws ec2 describe-instances \
+    --filters "Name=private-dns-name,Values=$private_dns_name" | \
+    jq '.Reservations | .[] | .Instances | .[] | .PublicIpAddress' -r)
+
+  echo $public_ips
+
+  if [ -z $public_ips ]; then
+    echo "instances not found for $private_dns_name"
+    exit 1
+  fi
+
+  echo "SSH Instances: $public_ips\n"
+  local public_ips_arr=($public_ips)
+  if [[ "${#public_ips_arr[@]}" -eq 1 ]]; then
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@${public_ips} ${@:2}
+  else
+    echo $public_ips | xargs -I{} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@{} ${@:2}
+  fi
+}
+
+ec2_restart_docker() {
+  ec2_ssh $1 sudo systemctl restart docker
+}
+
+jenkins_ssh() {
+  local public_ips=$(aws ec2 describe-instances \
+    --filters "Name=tag:Name,Values=jenkins-slave" | \
+    jq '.Reservations | .[] | .Instances | .[] | .PublicIpAddress' -r | grep -E "^[0-9]")
+
+  echo $public_ips
+
+  if [ -z $public_ips ]; then
+    echo "instances not found for $private_dns_name"
+    exit 1
+  fi
+
+  echo "SSH Instances: $public_ips\n"
+  local public_ips_arr=($public_ips)
+  if [[ "${#public_ips_arr[@]}" -eq 1 ]]; then
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null eng@${public_ips} ${@:2}
+  else
+    echo $public_ips | xargs -I{} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@{} ${@:2}
+  fi
+}
+
+alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
+
+# pyenv: https://github.com/yyuu/pyenv
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+# load more configuration I don't care to add to a public repository
+test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
