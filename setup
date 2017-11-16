@@ -23,7 +23,6 @@ ln -s $DOTFILES/vim $HOME/.vim
 
 ln -s $DOTFILES/zsh/.zshrc $HOME/.zshrc
 ln -s $DOTFILES/zsh/oh-my-zsh $HOME/.oh-my-zsh
-ln -s $DOTFILES/zsh/oh-my-zsh $HOME/.oh-my-zsh
 
 # homebrew
 ln -s $DOTFILES/homebrew/Brewfile ~/Brewfile
@@ -72,14 +71,19 @@ if [[ -d $HOME/Dropbox ]]; then
   cd $last_dir
 
   ln -sf $HOME/Dropbox/dotfiles/.zsh_history $HOME/.zsh_history
+  ln -sf $HOME/Dropbox/dotfiles/.node_repl_history $HOME
+  ln -sf $HOME/Dropbox/dotfiles/.python_history $HOME
+  ln -sf $HOME/Dropbox/dotfiles/.psql_history $HOME
+  ln -sf $HOME/Dropbox/dotfiles/.pry_history $HOME
+
   ln -s $HOME/Dropbox/dotfiles/.npmrc $HOME/.npmrc
   ln -s $HOME/Dropbox/dotfiles/.warprc $HOME/.warprc
   ln -s $HOME/Dropbox/dotfiles/.aws $HOME/.aws
   ln -s $HOME/Dropbox/dotfiles/.ssh $HOME/.ssh
   ln -s $HOME/Dropbox/dotfiles/.docker $HOME/.docker
   ln -s $HOME/Dropbox/dotfiles/.kube $HOME/.kube
-  ln -s $HOME/Dropbox/dotfiles/bin $HOME/
-  ln -s $HOME/Dropbox/dotfiles/.atom $HOME/
+  ln -s $HOME/Dropbox/dotfiles/bin $HOME
+  ln -s $HOME/Dropbox/dotfiles/.atom $HOME
 
   echo "Adjusting permissions on secret files..."
   chmod 0600 $HOME/Dropbox/dotfiles/.docker/config.json
