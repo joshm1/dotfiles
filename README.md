@@ -1,6 +1,7 @@
 # Install
 
 ```
+xcode-select --install
 mkdir -p ~/projects/joshm1
 git clone https://github.com/joshm1/dotfiles.git ~/projects/joshm1
 cd ~/projects/joshm1/dotfiles
@@ -9,9 +10,9 @@ cd ~/projects/joshm1/dotfiles
 
 # Manual
 
-- [ ] Install Alfred 2 license
+- [ ] Install Alfred 2 & add license (https://www.alfredapp.com/help/v2/)
 - [ ] Install BetterTouchTool license
-- [ ] Install SublimeText license
+- [ ] Install SublimeText license: `pbcopy < ~/Dropbox/Apps/SublimeText3/license.txt`
 - [ ] Increase Docker image file (see below)
 - [ ] [Install QT](https://github.com/thoughtbot/capybara-webkit/wiki/Installing-Qt-and-compiling-capybara-webkit#macos-sierra-1012)
 - [ ] [Install Xquartz](https://www.xquartz.org/)

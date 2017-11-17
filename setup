@@ -1,4 +1,23 @@
-#!/bin/bash
+#!/bin/zsh -e
+
+DOTFILES="$HOME/.dotfiles"
+BCKDIR="$HOME/.dotfiles.$(date +%Y%m%d-%H%M%S).bck"
+
+symlink() {
+  local bck=${BCKDIR}/$(basename $2)
+  if [[ -e $2 ]]; then
+    mkdir -p $BCKDIR
+    if [[ -L $2 && $(readlink $2) == $1 ]]; then
+      echo "$1 is already linked to $2, skipping"
+      return
+    else
+      echo "$2 exists, moving to $bck"
+      mv $2 $bck
+    fi
+  fi
+
+  ln -s ${@}
+}
 
 git submodule update --init
 
@@ -6,41 +25,57 @@ git submodule update --init
 defaults write com.apple.finder AppleShowAllFiles YES.
 
 # link dotfiles
-DOTFILES="$HOME/.dotfiles"
-[ -d $DOTFILES ] || ln -sf $HOME/projects/joshm1/dotfiles $DOTFILES
+[ -d $DOTFILES ] || symlink $HOME/projects/joshm1/dotfiles $DOTFILES
 
-ln -s $DOTFILES/git/gitconfig $HOME/.gitconfig
-ln -s $DOTFILES/git/gitignore $HOME/.gitignore
+symlink $DOTFILES/git/gitconfig $HOME/.gitconfig
+symlink $DOTFILES/git/gitignore $HOME/.gitignore
 
-ln -s $DOTFILES/ruby/gemrc $HOME/.gemrc
+symlink $DOTFILES/ruby/gemrc $HOME/.gemrc
 
 mkdir -p $HOME/.config
-ln -s $DOTFILES/nvim $HOME/.config/nvim
-ln -s $DOTFILES/nvim $HOME/.nvim
-ln -s $DOTFILES/nvim/init.vim $HOME/.nvimrc
-ln -s $DOTFILES/vimrc $HOME/.vimrc
-ln -s $DOTFILES/vim $HOME/.vim
+symlink $DOTFILES/nvim $HOME/.config/nvim
+symlink $DOTFILES/nvim $HOME/.nvim
+symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
+symlink $DOTFILES/vimrc $HOME/.vimrc
 
-ln -s $DOTFILES/zsh/.zshrc $HOME/.zshrc
-ln -s $DOTFILES/zsh/oh-my-zsh $HOME/.oh-my-zsh
+symlink $DOTFILES/zsh/.zshrc $HOME/.zshrc
 
 # homebrew
-ln -s $DOTFILES/homebrew/Brewfile ~/Brewfile
+if ! type brew >/dev/null 2>&1; then
+  # install homebrew
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+
+symlink $DOTFILES/homebrew/Brewfile $HOME/Brewfile
 if [[ ! -f $DOTFILES/homebrew/.installed ]]; then
   brew tap homebrew/bundle
-  brew bundle
+  brew bundle --file=$HOME/Brewfile
   echo $(date) >> $DOTFILES/homebrew/.installed
 fi
 
-# rbenv: set global ruby version to 2.3.1 and install neovim gem
-if ! rbenv versions | grep 2.3.1 >/dev/null; then
-  rbenv global 2.3.1
-  gem install bundler neovim
+# set zsh as default shell
+if  ! grep /usr/local/bin/zsh /etc/shells >/dev/null; then
+  sudo sh -c "echo $(which zsh) >> /etc/shells"
+  chsh -s $(which zsh)
 fi
 
-# python3
-if ! pyenv versions | grep 2.7 >/dev/null; then pyenv install 2.7; fi
-if ! pyenv versions | grep 3.6.0 >/dev/null; then pyenv install 3.6.0; fi
+# rbenv: set global ruby version to 2.4.2 and install neovim gem
+if ! rbenv versions | grep 2.4.2 >/dev/null; then
+  rbenv install 2.4.2
+  rbenv global 2.4.2
+  gem install bundler neovim hub
+fi
+
+# python3 (environment variables from https://github.com/pyenv/pyenv/wiki/Common-build-problems#error-the-python-ssl-extension-was-not-compiled-missing-the-openssl-lib)
+if ! pyenv versions | grep 2.7 >/dev/null; then
+  CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib" pyenv install 2.7
+fi
+if ! pyenv versions | grep 3.6.0 >/dev/null; then
+  CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib" pyenv install 3.6.0
+fi
+
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
 # setup python environments for neovim
 if [ ! -d ~/.pyenv/versions/neovim2 ]; then
@@ -50,11 +85,11 @@ if [ ! -d ~/.pyenv/versions/neovim2 ]; then
 fi
 
 if [ ! -d ~/.pyenv/versions/neovim3 ]; then
-  pyenv virtualenv 3.6 neovim3
+  pyenv virtualenv 3.6.0 neovim3
   pyenv activate neovim3
   pip install neovim
   pip install flake8
-  ln -s `pyenv which flake8` ~/bin/flake8
+  symlink `pyenv which flake8` ~/bin/flake8
 fi
 
 # fzf: install useful keybindings and fuzzy completion
@@ -63,6 +98,12 @@ fi
 # nvmrc
 [ ! -d ~/.nvm ] && curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+
+nvm install lts/carbon
+nvm alias default lts/carbon
+
 # private config files should be in Dropbox
 if [[ -d $HOME/Dropbox ]]; then
   last_dir=$PWD
@@ -70,20 +111,20 @@ if [[ -d $HOME/Dropbox ]]; then
   find projects -type f -exec ln -s ~/Dropbox/dotfiles/{} ~/{} ";"
   cd $last_dir
 
-  ln -sf $HOME/Dropbox/dotfiles/.zsh_history $HOME/.zsh_history
-  ln -sf $HOME/Dropbox/dotfiles/.node_repl_history $HOME
-  ln -sf $HOME/Dropbox/dotfiles/.python_history $HOME
-  ln -sf $HOME/Dropbox/dotfiles/.psql_history $HOME
-  ln -sf $HOME/Dropbox/dotfiles/.pry_history $HOME
+  symlink $HOME/Dropbox/dotfiles/.zsh_history $HOME/.zsh_history
+  symlink $HOME/Dropbox/dotfiles/.node_repl_history $HOME/.node_repl_history
+  symlink $HOME/Dropbox/dotfiles/.python_history $HOME/.python_history
+  symlink $HOME/Dropbox/dotfiles/.psql_history $HOME/.psql_history
+  symlink $HOME/Dropbox/dotfiles/.pry_history $HOME/.pry_history
 
-  ln -s $HOME/Dropbox/dotfiles/.npmrc $HOME/.npmrc
-  ln -s $HOME/Dropbox/dotfiles/.warprc $HOME/.warprc
-  ln -s $HOME/Dropbox/dotfiles/.aws $HOME/.aws
-  ln -s $HOME/Dropbox/dotfiles/.ssh $HOME/.ssh
-  ln -s $HOME/Dropbox/dotfiles/.docker $HOME/.docker
-  ln -s $HOME/Dropbox/dotfiles/.kube $HOME/.kube
-  ln -s $HOME/Dropbox/dotfiles/bin $HOME
-  ln -s $HOME/Dropbox/dotfiles/.atom $HOME
+  symlink $HOME/Dropbox/dotfiles/.npmrc $HOME/.npmrc
+  symlink $HOME/Dropbox/dotfiles/.warprc $HOME/.warprc
+  symlink $HOME/Dropbox/dotfiles/.aws $HOME/.aws
+  symlink $HOME/Dropbox/dotfiles/.ssh $HOME/.ssh
+  symlink $HOME/Dropbox/dotfiles/.docker $HOME/.docker
+  symlink $HOME/Dropbox/dotfiles/.kube $HOME/.kube
+  symlink $HOME/Dropbox/dotfiles/bin $HOME/bin
+  symlink $HOME/Dropbox/dotfiles/.atom $HOME/.atom
 
   echo "Adjusting permissions on secret files..."
   chmod 0600 $HOME/Dropbox/dotfiles/.docker/config.json
@@ -98,7 +139,7 @@ if [[ -d $HOME/Dropbox ]]; then
     echo "$sublime_user_dir is already a symbolic link"
   else
     rm -rf "$sublime_user_dir"
-    ln -s $HOME/Dropbox/Apps/SublimeText3/User "$sublime_user_dir"
+    symlink $HOME/Dropbox/Apps/SublimeText3/User "$sublime_user_dir"
   fi
 else
   echo "!!! Install Dropbox to link more dotfiles !!!"
