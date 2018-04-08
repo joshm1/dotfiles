@@ -111,7 +111,8 @@ load-nvmrc() {
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 
-setopt no_beep # don't beep on error
+# do not beep on error
+setopt no_beep
 
 alias vim="nvim"
 alias vi="nvim"
@@ -139,7 +140,7 @@ gpr() {
   local current_branch=$(git branch | grep -E '^\*' | tr -d '* ')
   echo "git-push -u origin $current_branch"
   git push -u origin $current_branch
-  local commit_message="$(git log -1 --pretty=%B)"
+  local commit_message="$(git log -1 --pretty=%B | sed -e 's/comment: //')"
   echo "Message: $commit_message"
   local github_url=$(echo $commit_message | hub pull-request -F -)
   open $github_url
@@ -147,75 +148,13 @@ gpr() {
 
 path=("$HOME/bin" $path)
 
-if [ -d ~/Qt5.5.1/5.5/clang_64/bin ]; then
-  path=("$HOME/Qt5.5.1/5.5/clang_64/bin/" $path)
+if brew --prefix qt@5.5 >/dev/null 2>&1; then
+  path=("$(brew --prefix qt@5.5)/bin" $path)
+else
+  echo "ERROR: qt@5.5 not found"
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-ec2_terminate() {
-  local private_dns_name=$1
-  local instance_ids=$(aws ec2 describe-instances \
-    --filters "Name=private-dns-name,Values=$private_dns_name" | \
-    jq '.Reservations | .[] | .Instances | .[] | .InstanceId' -r | tr '\n' ' ')
-
-  if [ -z $instance_ids ]; then
-    echo "instances not found for $private_dns_name"
-    exit 1
-  fi
-
-  echo "Terminating EC2 Instances:$instance_ids\n"
-  local cmd="aws ec2 terminate-instances --instance-ids $instance_ids"
-  echo $cmd
-  bash -c $cmd
-}
-
-ec2_ssh() {
-  local private_dns_name=$1
-  local public_ips=$(aws ec2 describe-instances \
-    --filters "Name=private-dns-name,Values=$private_dns_name" | \
-    jq '.Reservations | .[] | .Instances | .[] | .PublicIpAddress' -r)
-
-  echo $public_ips
-
-  if [ -z $public_ips ]; then
-    echo "instances not found for $private_dns_name"
-    exit 1
-  fi
-
-  echo "SSH Instances: $public_ips\n"
-  local public_ips_arr=($public_ips)
-  if [[ "${#public_ips_arr[@]}" -eq 1 ]]; then
-    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@${public_ips} ${@:2}
-  else
-    echo $public_ips | xargs -I{} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@{} ${@:2}
-  fi
-}
-
-ec2_restart_docker() {
-  ec2_ssh $1 sudo systemctl restart docker
-}
-
-jenkins_ssh() {
-  local public_ips=$(aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=jenkins-slave" | \
-    jq '.Reservations | .[] | .Instances | .[] | .PublicIpAddress' -r | grep -E "^[0-9]")
-
-  echo $public_ips
-
-  if [ -z $public_ips ]; then
-    echo "instances not found for $private_dns_name"
-    exit 1
-  fi
-
-  echo "SSH Instances: $public_ips\n"
-  local public_ips_arr=($public_ips)
-  if [[ "${#public_ips_arr[@]}" -eq 1 ]]; then
-    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null eng@${public_ips} ${@:2}
-  else
-    echo $public_ips | xargs -I{} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@{} ${@:2}
-  fi
-}
 
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 

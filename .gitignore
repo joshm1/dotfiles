@@ -1,4 +1,5 @@
 .installed
+nvim/sessions/
 nvim/plugged/
 nvim/ftplugin/
 .netrwhist

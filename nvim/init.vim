@@ -240,6 +240,7 @@ call plug#end()
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*/.git/*,*/.hg/*,*/.svn/*,*/.idea/*,*/.DS_Store,*/vendor
 set nowrap
 set colorcolumn=110
+set textwidth=110
 colo jellybeans " jellybeans or seoul256
 
 set tabstop=2 shiftwidth=2 sts=2
@@ -311,5 +312,34 @@ augroup BWCCreateDir
 augroup END
 " }}}
 
+" Save and restore vim sessions automatically {{{
+function! MakeSession()
+  let b:sessiondir = $HOME . "/.nvim/sessions" . getcwd()
+  if (filewritable(b:sessiondir) != 2)
+    exe 'silent !mkdir -p ' b:sessiondir
+    redraw!
+  endif
+  let b:filename = b:sessiondir . '/session.vim'
+  exe "mksession! " . b:filename
+endfunction
+
+function! LoadSession()
+  let b:sessiondir = $HOME . "/.nvim/sessions" . getcwd()
+  let b:sessionfile = b:sessiondir . "/session.vim"
+  if (filereadable(b:sessionfile))
+    exe 'source ' b:sessionfile
+  else
+    echo "No session loaded."
+  endif
+endfunction
+
+" Adding automatons for when entering or leaving Vim
+if(argc() == 0)
+  au VimEnter * nested :call LoadSession()
+endif
+au VimLeave * :call MakeSession()
+" }}}
+
+au BufRead,BufNewFile .pryrc set filetype=ruby
 
 " vim: set sw=2 ts=2 et foldlevel=0 foldmethod=marker:
