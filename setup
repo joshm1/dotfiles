@@ -125,6 +125,7 @@ if [[ -d $HOME/Dropbox ]]; then
   symlink $HOME/Dropbox/dotfiles/.kube $HOME/.kube
   symlink $HOME/Dropbox/dotfiles/bin $HOME/bin
   symlink $HOME/Dropbox/dotfiles/.atom $HOME/.atom
+  symlink $HOME/Dropbox/scripts $HOME/scripts
 
   echo "Adjusting permissions on secret files..."
   chmod 0600 $HOME/Dropbox/dotfiles/.docker/config.json
