@@ -134,6 +134,7 @@ export FZF_DEFAULT_COMMAND='ag -g ""'
 # kubernetes aliases
 alias pods="kubectl get pods --show-labels -o wide"
 alias nodes="kubectl get nodes -a"
+alias k="kubectl"
 
 # gpr: git pull request / pushes current branch to origin, creates pull request, and opens github
 gpr() {
@@ -148,12 +149,6 @@ gpr() {
 
 path=("$HOME/bin" $path)
 
-if brew --prefix qt@5.5 >/dev/null 2>&1; then
-  path=("$(brew --prefix qt@5.5)/bin" $path)
-else
-  echo "ERROR: qt@5.5 not found"
-fi
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
@@ -162,7 +157,18 @@ alias gitpurge="git checkout master && git remote update --prune | git branch -r
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
+# kubectl auto complete
+if [ $commands[kubectl] ]; then
+  source <(kubectl completion zsh)
+fi
+
+if [ $commands[stern] ]; then
+  source <(stern --completion zsh)
+fi
+
 # load more configuration I don't care to add to a public repository
 test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
