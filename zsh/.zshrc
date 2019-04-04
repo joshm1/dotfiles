@@ -166,6 +166,9 @@ if [ $commands[stern] ]; then
   source <(stern --completion zsh)
 fi
 
+# add psql to path
+path=("/usr/local/opt/postgresql@10/bin" $path)
+
 # load more configuration I don't care to add to a public repository
 test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"
 
