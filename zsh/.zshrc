@@ -134,7 +134,6 @@ export FZF_DEFAULT_COMMAND='ag -g ""'
 # kubernetes aliases
 alias pods="kubectl get pods --show-labels -o wide"
 alias nodes="kubectl get nodes -a"
-alias k="kubectl"
 
 # gpr: git pull request / pushes current branch to origin, creates pull request, and opens github
 gpr() {

@@ -54,9 +54,9 @@ brew 'imagemagick'
 brew 'jq'
 brew 'kubectl'
 brew 'kubernetes-helm'
+brew 'mas'
 brew 'neovim'
 brew 'qemu'
-brew 'qt@5.5'
 brew 'postgresql', restart_service: :changed
 brew 'postgis'
 brew 'pyenv'
@@ -89,3 +89,6 @@ brew 'zlib'
 
 tap 'homebrew/versions'
 brew 'qt55'
+
+# Mac Apple Store
+mas "todoist", id: 585829637

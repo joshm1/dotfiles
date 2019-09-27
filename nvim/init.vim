@@ -62,6 +62,17 @@ let g:syntastic_javascript_checkers   = ['eslint']
 let g:syntastic_enable_elixir_checker = 0
 let g:syntastic_always_populate_loc_list = 1
 
+" Coc is an intellisense engine for vim8 & neovim.
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" {{{ coc.nvim
+
+" Remap keys for gotos
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+" }}}
+
 " suggested by vim-go
 let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
 let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
@@ -82,11 +93,11 @@ let g:indent_guides_enable_on_vim_startup = 1
 
 Plug 'nsf/gocode', { 'rtp': 'nvim', 'do': '~/.config/nvim/plugged/gocode/nvim/symlink.sh' }
 
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+" Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 " {{{ deoplete
 " Plug 'zchee/deoplete-jedi' " python completion
 " Plug 'zchee/deoplete-go', { 'do': 'make' }
-Plug 'carlitux/deoplete-ternjs' " javascript completion
+" Plug 'carlitux/deoplete-ternjs' " javascript completion
 " Plug 'mhartington/deoplete-typescript'
 let g:deoplete#enable_at_startup = 1
 let g:deoplete#enable_ignore_case = 1

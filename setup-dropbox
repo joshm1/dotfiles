@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# so this file can be executed directly if needed
+if ! type symlink; then
+  source ./utils.sh
+fi
+
+DROPBOX_DIR=$DROPBOX_DIR
+if [[ -d $DROPBOX_DIR && -d $DROPBOX_DIR/dotfiles ]]; then
+  last_dir=$PWD
+  cd $DROPBOX_DIR/dotfiles
+  find projects -type f -exec ln -s $DROPBOX_DIR/dotfiles/{} ~/{} ";"
+  cd $last_dir
+
+  symlink $DROPBOX_DIR/dotfiles/.zsh_history $HOME/.zsh_history
+  symlink $DROPBOX_DIR/dotfiles/.node_repl_history $HOME/.node_repl_history
+  symlink $DROPBOX_DIR/dotfiles/.python_history $HOME/.python_history
+  symlink $DROPBOX_DIR/dotfiles/.psql_history $HOME/.psql_history
+  symlink $DROPBOX_DIR/dotfiles/.pry_history $HOME/.pry_history
+
+  symlink $DROPBOX_DIR/dotfiles/.npmrc $HOME/.npmrc
+  symlink $DROPBOX_DIR/dotfiles/.warprc $HOME/.warprc
+  symlink $DROPBOX_DIR/dotfiles/.aws $HOME/.aws
+  symlink $DROPBOX_DIR/dotfiles/.ssh $HOME/.ssh
+  symlink $DROPBOX_DIR/dotfiles/.docker $HOME/.docker
+  symlink $DROPBOX_DIR/dotfiles/.kube $HOME/.kube
+  symlink $DROPBOX_DIR/dotfiles/bin $HOME/bin
+  symlink $DROPBOX_DIR/scripts $HOME/scripts
+
+  echo "Adjusting permissions on secret files..."
+  chmod 0600 $DROPBOX_DIR/dotfiles/.docker/config.json
+  find $DROPBOX_DIR/dotfiles/.aws -exec chmod go-rwx {} ";"
+  find $DROPBOX_DIR/dotfiles/.ssh -type f -exec chmod 0600 {} ";"
+  find $DROPBOX_DIR/dotfiles/.ssh -type d -exec chmod 0700 {} ";"
+  find $DROPBOX_DIR/dotfiles/.kube -exec chmod go-rwx {} ";"
+  find $DROPBOX_DIR/dotfiles/bin -exec chmod go-rwx {} ";"
+
+  sublime_user_dir="$HOME/Library/Application Support/Sublime Text 3/Packages/User"
+  dropbox_sublime_user_dir=$DROPBOX_DIR/Apps/SublimeText3/User
+  if file -h "$sublime_user_dir" | grep symbolic >/dev/null 2>&1; then
+    echo "$sublime_user_dir is already a symbolic link"
+  elif [ -d $dropbox_sublime_user_dir ]; then
+    mv $sublime_user_dir ${sublime_user_dir}_backup_$(date +'%s')
+    echo "creating symlink from $dropbox_sublime_user_dir to $sublime_user_dir"
+    symlink $dropbox_sublime_user_dir "$sublime_user_dir"
+  fi
+
+  vscode_user_dir="$HOME/Library/Application Support/Code/User"
+  dropbox_vscode_user_dir=$DROPBOX_DIR/Apps/Code/User
+  if file -h "$sublime_user_dir" | grep symbolic >/dev/null 2>&1; then
+    echo "$sublime_user_dir is already a symbolic link"
+  elif [ -d $dropbox_vscode_user_dir ]; then
+    mv $vscode_user_dir ${vscode_user_dir}_backup_$(date +'%s')
+    echo "creating symlink from $dropbox_vscode_user_dir to $vscode_user_dir"
+    symlink $dropbox_vscode_user_dir "$sublime_user_dir"
+  fi
+else
+  echo "!!! Install Dropbox to link more dotfiles !!!"
+fi
