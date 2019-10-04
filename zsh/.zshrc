@@ -166,7 +166,9 @@ if [ $commands[stern] ]; then
 fi
 
 # add psql to path
-path=("/usr/local/opt/postgresql@10/bin" $path)
+if [ -d /Applications/Postgres.app ]; then
+  path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)
+fi
 
 # load more configuration I don't care to add to a public repository
 test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"

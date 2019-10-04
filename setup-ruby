@@ -1,0 +1,12 @@
+#!/bin/bash
+
+[ -z "$DOTFILES" ] && source ./utils.sh
+
+# rbenv: set global ruby version and install neovim gem
+if [ ! -d ~/.rbenv/versions/$DEFAULT_RUBY_VERSION ]; then
+  echo "Installing ruby ${DEFAULT_RUBY_VERSION}..."
+  rbenv install $DEFAULT_RUBY_VERSION
+  rbenv global $DEFAULT_RUBY_VERSION
+else
+  echo "Ruby ${DEFAULT_RUBY_VERSION} is already installed."
+fi

@@ -1,12 +1,15 @@
 #!/bin/bash
 
 # so this file can be executed directly if needed
-if ! type symlink; then
-  source ./utils.sh
+[ -z "$DROPBOX_DIR" ] && source ./utils.sh
+
+if [ ! -d $DROPBOX_DIR/dotfiles ]; then
+  echo "About to run Dropbox setup script, make sure Dropbox is installed and the ~/Dropbox/dotfiles directory is synced."
+  echo "Press any key to continue..."
+  read line
 fi
 
-DROPBOX_DIR=$DROPBOX_DIR
-if [[ -d $DROPBOX_DIR && -d $DROPBOX_DIR/dotfiles ]]; then
+if [ -d $DROPBOX_DIR/dotfiles ]; then
   last_dir=$PWD
   cd $DROPBOX_DIR/dotfiles
   find projects -type f -exec ln -s $DROPBOX_DIR/dotfiles/{} ~/{} ";"
@@ -40,19 +43,25 @@ if [[ -d $DROPBOX_DIR && -d $DROPBOX_DIR/dotfiles ]]; then
   if file -h "$sublime_user_dir" | grep symbolic >/dev/null 2>&1; then
     echo "$sublime_user_dir is already a symbolic link"
   elif [ -d $dropbox_sublime_user_dir ]; then
-    mv $sublime_user_dir ${sublime_user_dir}_backup_$(date +'%s')
+    if [ -d "$sublime_user_dir" ]; then
+      mv "$sublime_user_dir" "${sublime_user_dir}_backup_$(date +'%s')"
+    fi
     echo "creating symlink from $dropbox_sublime_user_dir to $sublime_user_dir"
-    symlink $dropbox_sublime_user_dir "$sublime_user_dir"
+    mkdir -p "$(dirname "$sublime_user_dir")"
+    symlink "$dropbox_sublime_user_dir" "$sublime_user_dir"
   fi
 
   vscode_user_dir="$HOME/Library/Application Support/Code/User"
   dropbox_vscode_user_dir=$DROPBOX_DIR/Apps/Code/User
-  if file -h "$sublime_user_dir" | grep symbolic >/dev/null 2>&1; then
-    echo "$sublime_user_dir is already a symbolic link"
-  elif [ -d $dropbox_vscode_user_dir ]; then
-    mv $vscode_user_dir ${vscode_user_dir}_backup_$(date +'%s')
+  if file -h "$vscode_user_dir" | grep symbolic >/dev/null 2>&1; then
+    echo "$vscode_user_dir is already a symbolic link"
+  elif [ -d "$dropbox_vscode_user_dir" ]; then
+    if [ -d "$vscode_user_dir" ]; then
+      mv "$vscode_user_dir" "${vscode_user_dir}_backup_$(date +'%s')"
+    fi
     echo "creating symlink from $dropbox_vscode_user_dir to $vscode_user_dir"
-    symlink $dropbox_vscode_user_dir "$sublime_user_dir"
+    mkdir -p "$(dirname "$vscode_user_dir")"
+    symlink "$dropbox_vscode_user_dir" "$vscode_user_dir"
   fi
 else
   echo "!!! Install Dropbox to link more dotfiles !!!"

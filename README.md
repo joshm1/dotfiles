@@ -3,7 +3,7 @@
 ```
 xcode-select --install
 mkdir -p ~/projects/joshm1
-git clone https://github.com/joshm1/dotfiles.git ~/projects/joshm1
+git clone https://github.com/joshm1/dotfiles.git ~/projects/joshm1/dotfiles
 cd ~/projects/joshm1/dotfiles
 ./setup
 ```

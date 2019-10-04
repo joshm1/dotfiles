@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# install nvm/nodejs
+
+source ./utils.sh
+
+export NVM_DIR="$HOME/.nvm"
+
+if [ ! -d ~/.nvm ]; then
+  echo "Installing nvm..."
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
+else
+  echo "nvm is already installed."
+fi
+
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+
+if ! nvm ls | grep $DEFAULT_NODE_VERSION >/dev/null; then
+  echo "Installing node version $DEFAULT_NODE_VERSION with nvm..."
+
+  nvm install $DEFAULT_NODE_VERSION
+  nvm alias default $DEFAULT_NODE_VERSION
+  nvm install-latest-npm
+else
+  echo "node version $DEFAULT_NODE_VERSION is already installed."
+fi
