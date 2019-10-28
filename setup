@@ -21,8 +21,6 @@ symlink $DOTFILES/nvim $HOME/.nvim
 symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
 symlink $DOTFILES/vimrc $HOME/.vimrc
 
-symlink $DOTFILES/zsh/.zshrc $HOME/.zshrc
-
 # homebrew
 if ! type brew >/dev/null 2>&1; then
   echo "Installing homebrew..."
@@ -37,7 +35,9 @@ bundle_installed_file=$DOTFILES/homebrew/.installed
 if [[ ! -f $bundle_installed_file ]]; then
   echo "Running brew bundle..."
   brew tap homebrew/bundle
-  brew bundle --file=$HOME/Brewfile
+  for brewfile in $(ls $DOTFILES/homebrew); do
+    brew bundle --file=$HOME/$brewfile
+  done
   echo $(date) >> $bundle_installed_file
 else
   echo "Homebrew bundle has already been run. Delete $bundle_installed_file to run again"
