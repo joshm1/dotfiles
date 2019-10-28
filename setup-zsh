@@ -1,0 +1,6 @@
+#!/bin/bash
+
+[ -z "$DOTFILES" ] && source ./utils.sh
+
+symlink $DOTFILES/zsh/antigen.zsh $HOME/.antigen.zsh
+symlink $DOTFILES/zsh/.zshrc $HOME/.zshrc
