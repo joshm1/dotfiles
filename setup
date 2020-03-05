@@ -34,7 +34,7 @@ fi
 
 symlink $DOTFILES/homebrew/Brewfile $HOME/Brewfile
 bundle_installed_file=$DOTFILES/homebrew/.installed
-if [[ ! -f $DOTFILES/homebrew/.installed ]]; then
+if [[ ! -f $bundle_installed_file ]]; then
   echo "Running brew bundle..."
   brew tap homebrew/bundle
   brew bundle --file=$HOME/Brewfile
