@@ -1,5 +1,5 @@
 export LANG=en_US.UTF-8
-export NVM_LAZY_LOAD=true
+# export NVM_LAZY_LOAD=true
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
@@ -56,7 +56,10 @@ alias vi="nvim"
 alias pods="kubectl get pods --show-labels -o wide"
 alias nodes="kubectl get nodes -a"
 
-path=("$HOME/bin" $path)
+path=("$HOME/.linkerd2/bin" "$HOME/bin" $path)
+
+# add psql to path
+[ -d /Applications/Postgres.app ] && path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)
 
 if [ $commands[stern] ]; then
   source <(stern --completion zsh)
