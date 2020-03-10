@@ -41,6 +41,9 @@ antigen theme robbyrussell
 
 antigen apply
 
+# direnv
+eval "$(direnv hook $0)"
+
 alias be="bundle exec"
 alias rc="bundle exec rails console"
 
