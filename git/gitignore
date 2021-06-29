@@ -57,3 +57,4 @@ Session.vim
 .agignore
 *.hprof # jvm
 routes.txt
+.metals/

@@ -4,3 +4,4 @@
 
 symlink $DOTFILES/zsh/antigen.zsh $HOME/.antigen.zsh
 symlink $DOTFILES/zsh/.zshrc $HOME/.zshrc
+symlink $DOTFILES/zsh/.zsh_history $HOME/.zsh_history
