@@ -92,4 +92,4 @@ test -d "$HOME/flyway" && path=("$HOME/flyway" $path)
 
 test -d "/Library/TeX/texbin" && path=("/Library/TeX/texbin" $path)
 
-test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path")
+test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
