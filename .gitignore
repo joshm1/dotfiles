@@ -3,3 +3,4 @@ nvim/sessions/
 nvim/plugged/
 nvim/ftplugin/
 .netrwhist
+.zsh_history*

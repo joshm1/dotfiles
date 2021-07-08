@@ -44,15 +44,8 @@ else
   echo "Homebrew bundle has already been run. Delete $bundle_installed_file to run again"
 fi
 
-# set zsh as default shell
-if  ! grep /usr/local/bin/zsh /etc/shells >/dev/null; then
-  echo "Setting zsh as default shell..."
-  sudo sh -c "echo $(which zsh) >> /etc/shells"
-  chsh -s $(which zsh)
-else
-  echo "zsh is already the default shell."
-fi
-
+source ./setup-zsh
+source ./setup-zsh-history
 source ./setup-ruby
 source ./setup-python
 source ./setup-nodejs

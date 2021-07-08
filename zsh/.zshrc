@@ -12,7 +12,12 @@ export EDITOR="$VISUAL"
 export GIT_EDITOR="$EDITOR"
 export FZF_DEFAULT_COMMAND='ag -g ""'
 
-source $HOME/.antigen.zsh
+if [ -f $HOME/.antigen.zsh ]; then
+  source $HOME/.antigen.zsh
+else
+  echo "$HOME/.antigen.zsh does not exist..."
+fi
+
 
 antigen use oh-my-zsh
 
@@ -55,13 +60,17 @@ setopt no_beep
 alias vim="nvim"
 alias vi="nvim"
 
-# kubernetes aliases
-alias pods="kubectl get pods --show-labels -o wide"
-alias nodes="kubectl get nodes -a"
+path=("$HOME/bin" $path)
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 
 [ -d $HOME/bin ] && path=("$HOME/bin" $path)
 
-[ -d $HOME/.linkerd2/bin ] && path=("$HOME/.linkerd2/bin" "$HOME/bin" $path)
+# pyenv: https://github.com/yyuu/pyenv
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
 # add psql to path
 [ -d /Applications/Postgres.app ] && path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)
@@ -75,5 +84,14 @@ test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfi
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# The next line updates PATH for the Google Cloud SDK.
+test -f "$HOME/Downloads/google-cloud-sdk/path.zsh.inc"  && source '/Users/josh/Downloads/google-cloud-sdk/path.zsh.inc'
+
+# The next line enables shell command completion for gcloud.
+test -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" && source '/Users/josh/Downloads/google-cloud-sdk/completion.zsh.inc'
+
+test -d "$HOME/flyway" && path=("$HOME/flyway" $path)
+
+test -d "/Library/TeX/texbin" && path=("/Library/TeX/texbin" $path)
+
+test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
