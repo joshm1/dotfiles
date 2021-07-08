@@ -40,8 +40,9 @@ Plug 'wellle/targets.vim'
 Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-ragtag'
 Plug 'tpope/vim-rails'
-Plug 'kchmck/vim-coffee-script'
-Plug 'leafgarland/typescript-vim'
+"Plug 'kchmck/vim-coffee-script'
+"Plug 'leafgarland/typescript-vim'
+Plug 'ludovicchabant/vim-gutentags'
 
 Plug 'scrooloose/syntastic'
 " {{{ syntastic config
