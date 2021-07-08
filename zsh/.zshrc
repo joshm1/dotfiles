@@ -135,17 +135,6 @@ export FZF_DEFAULT_COMMAND='ag -g ""'
 alias pods="kubectl get pods --show-labels -o wide"
 alias nodes="kubectl get nodes -a"
 
-# gpr: git pull request / pushes current branch to origin, creates pull request, and opens github
-gpr() {
-  local current_branch=$(git branch | grep -E '^\*' | tr -d '* ')
-  echo "git-push -u origin $current_branch"
-  git push -u origin $current_branch
-  local commit_message="$(git log -1 --pretty=%B | sed -e 's/comment: //')"
-  echo "Message: $commit_message"
-  local github_url=$(echo $commit_message | hub pull-request -F -)
-  open $github_url
-}
-
 path=("$HOME/bin" $path)
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -177,3 +166,13 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f "$HOME/Downloads/google-cloud-sdk/path.zsh.inc" ]; then . '/Users/josh/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then . '/Users/josh/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+
+if [ -d "$HOME/flyway" ]; then path=("$HOME/flyway" $path); fi
+
+if [ -d "/Library/TeX/texbin" ]; then path=("/Library/TeX/texbin" $path); fi

@@ -79,5 +79,7 @@ brew 'whois'
 brew 'xz'
 brew 'zlib'
 
+brew 'saulpw/vd/visidata'
+
 # Mac Apple Store
 mas "todoist", id: 585829637
