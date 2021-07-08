@@ -59,7 +59,9 @@ alias vi="nvim"
 alias pods="kubectl get pods --show-labels -o wide"
 alias nodes="kubectl get nodes -a"
 
-path=("$HOME/.linkerd2/bin" "$HOME/bin" $path)
+[ -d $HOME/bin ] && path=("$HOME/bin" $path)
+
+[ -d $HOME/.linkerd2/bin ] && path=("$HOME/.linkerd2/bin" "$HOME/bin" $path)
 
 # add psql to path
 [ -d /Applications/Postgres.app ] && path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)

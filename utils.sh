@@ -17,7 +17,7 @@ function ctrl_c() {
 
 symlink() {
   local bck=${BCKDIR}/$(basename $2)
-  if [[ -e $2 ]]; then
+  if [[ -e $2 || -L $2 ]]; then
     mkdir -p $BCKDIR
     if [[ -L $2 && $(readlink $2) == $1 ]]; then
       echo "$1 is already linked to $2, skipping"

@@ -33,10 +33,11 @@ fi
 symlink $DOTFILES/homebrew/Brewfile $HOME/Brewfile
 bundle_installed_file=$DOTFILES/homebrew/.installed
 if [[ ! -f $bundle_installed_file ]]; then
-  echo "Running brew bundle..."
   brew tap homebrew/bundle
   for brewfile in $(ls $DOTFILES/homebrew); do
-    brew bundle --file=$HOME/$brewfile
+    brewfile_path=$DOTFILES/homebrew/$brewfile
+    echo "Running brew bundle for $brewfile_path..."
+    brew bundle --file=$brewfile_path
   done
   echo $(date) >> $bundle_installed_file
 else
@@ -65,5 +66,5 @@ source ./setup-dropbox
 source ./setup-postgres
 
 # clone oh-my-zsh - do not run installer because our .zshrc already has includes the oh-my-zsh config
-[[ ! -d ~/.oh-my-zsh ]] && \
-  git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+# [[ ! -d ~/.oh-my-zsh ]] && \
+#   git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
