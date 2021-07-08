@@ -1,7 +1,7 @@
 cask_args appdir: '/Applications'
 tap 'homebrew/cask-versions'
 
-cask '1password6'
+# cask '1password6'
 cask 'authy'
 cask 'bettertouchtool'
 # cask 'cyberduck'
