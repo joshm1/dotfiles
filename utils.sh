@@ -33,4 +33,4 @@ symlink() {
   ln -s "$1" "$2"
 }
 
-echo "Loaded utils.sh"
+# echo "Loaded utils.sh"
