@@ -1,0 +1,9 @@
+#!/bin/zsh -e
+
+source ./utils.sh
+
+# symlink $DOTFILES/neovim/.config/nvim $HOME/.config/nvim
+symlink $DOTFILES/nvim $HOME/.config/nvim
+symlink $DOTFILES/nvim $HOME/.nvim
+symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
+symlink $DOTFILES/vimrc $HOME/.vimrc

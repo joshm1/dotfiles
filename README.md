@@ -15,3 +15,12 @@ cd ~/projects/joshm1/dotfiles
 - [ ] Install SublimeText license: `pbcopy < ~/Dropbox/Apps/SublimeText3/license.txt`
 - [ ] [Install pgAdmin](https://www.pgadmin.org/download/macos4.php)
 - [ ] Run `:PlugInstall` in `vim`
+
+# Mac-specific configuration
+
+If you want different machines to behave differently and still use the same dotfiles repository, you can
+configure environment variables in the `~/.dotfiles-config` file.
+
+* `RUBY_VERSION_MANAGER` can be "rbenv" or "rvm" - this is to prevent both rvm or rbenv from being setup
+  (default is rbenv if this value is blank)
+* `ENABLE_K8S` - set to "true" to enable kubernetes plugins

@@ -128,15 +128,14 @@
   # http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
   enabled = true
 [include]
-  path = .gitconfig.user
-[user]
-	name = Josh McDade
-	email = josh.ncsu@gmail.com
+  path = ~/.gitconfig.local
 [difftool "sourcetree"]
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
-[mergetool "sourcetree"]
-	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
-	trustExitCode = true
+	path =
 [commit]
-	template = /Users/josh/.stCommitMsg
+	gpgsign = true
+[hub]
+	host = github.com
+	protocol = https
+[init]
+	defaultBranch = main

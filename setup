@@ -10,16 +10,12 @@ defaults write com.apple.finder AppleShowAllFiles YES.
 # link dotfiles
 [ -d $DOTFILES ] || symlink $HOME/projects/joshm1/dotfiles $DOTFILES
 
+mkdir -p $HOME/.config
+
 symlink $DOTFILES/git/gitconfig $HOME/.gitconfig
 symlink $DOTFILES/git/gitignore $HOME/.gitignore
 
 symlink $DOTFILES/ruby/gemrc $HOME/.gemrc
-
-mkdir -p $HOME/.config
-symlink $DOTFILES/nvim $HOME/.config/nvim
-symlink $DOTFILES/nvim $HOME/.nvim
-symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
-symlink $DOTFILES/vimrc $HOME/.vimrc
 
 # homebrew
 if ! type brew >/dev/null 2>&1; then
@@ -46,6 +42,7 @@ fi
 
 source ./setup-zsh
 source ./setup-zsh-history
+source ./setup-vim
 source ./setup-ruby
 source ./setup-python
 source ./setup-nodejs

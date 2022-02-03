@@ -1,5 +1,5 @@
-let g:python_host_prog = '/Users/josh/.pyenv/versions/neovim2/bin/python'
-let g:python3_host_prog = '/Users/josh/.pyenv/versions/neovim3/bin/python'
+let g:python_host_prog = '~/.pyenv/versions/neovim2/bin/python'
+let g:python3_host_prog = '~/.pyenv/versions/neovim3/bin/python'
 
 let mapleader = "\<Space>"
 set foldmethod=manual       " use manual folding
@@ -40,9 +40,7 @@ Plug 'wellle/targets.vim'
 Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-ragtag'
 Plug 'tpope/vim-rails'
-"Plug 'kchmck/vim-coffee-script'
-"Plug 'leafgarland/typescript-vim'
-Plug 'ludovicchabant/vim-gutentags'
+" Plug 'ludovicchabant/vim-gutentags'
 
 Plug 'scrooloose/syntastic'
 " {{{ syntastic config
@@ -92,7 +90,7 @@ let g:indent_guides_auto_colors = 1
 let g:indent_guides_enable_on_vim_startup = 1
 " }}}
 
-Plug 'nsf/gocode', { 'rtp': 'nvim', 'do': '~/.config/nvim/plugged/gocode/nvim/symlink.sh' }
+" Plug 'nsf/gocode', { 'rtp': 'nvim', 'do': '~/.config/nvim/plugged/gocode/nvim/symlink.sh' }
 
 " Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 " {{{ deoplete
@@ -105,17 +103,6 @@ let g:deoplete#enable_ignore_case = 1
 let g:deoplete#enable_smart_case = 1
 
 " }}}
-
-Plug 'osyo-manga/vim-monster' " {{{
-let g:monster#completion#rcodetools#backend = "async_rct_complete"
-let g:neocomplete#sources#omni#input_patterns = {
-\   "ruby" : '[^. *\t]\.\w*\|\h\w*::',
-\}
-let g:monster#completion#rcodetools#backend = "async_rct_complete"
-let g:deoplete#sources#omni#input_patterns = {
-\   "ruby" : '[^. *\t]\.\w*\|\h\w*::',
-\}
-"}}}
 
 Plug 'zchee/deoplete-go', { 'do': 'make'} " {{{
 let g:deoplete#sources#go#gocode_binary = '~/.gotools/gocode'
@@ -195,8 +182,6 @@ function! NERDTreeToggleAndFind()
   endif
 endfunction
 " }}}
-
-Plug 'danchoi/ruby_bashrockets.vim'
 
 Plug 'fatih/vim-go'
 " {{{
