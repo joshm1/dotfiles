@@ -1,0 +1,13 @@
+#!/bin/bash
+
+[ -z "$DOTFILES" ] && source ./utils.sh
+
+asdf plugin add java https://github.com/halcyon/asdf-java.git
+asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+asdf plugin add python https://github.com/danhper/asdf-python.git
+asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
+
+asdf global java $DEFAULT_JAVA_VERSION
+asdf global nodejs $DEFAULT_NODE_VERSION
+asdf global python $DEFAULT_PYTHON_VERSION
+asdf global ruby $DEFAULT_RUBY_VERSION
