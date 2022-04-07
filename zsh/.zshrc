@@ -21,7 +21,6 @@ fi
 (( ${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
 
 export LANG=en_US.UTF-8
-export NVM_LAZY_LOAD=true
 
 # Preferred editor for local and remote sessions
 export VISUAL='nvim'
@@ -59,11 +58,17 @@ antigen bundle zsh-users/zsh-syntax-highlighting
 # antigen bundle shihyuho/zsh-jenv-lazy
 
 # python version manager
-antigen bundle davidparsson/zsh-pyenv-lazy
-# antigen bundle pip
+case $PYTHON_VERSION_MANAGER in
+  pyenv)
+    antigen bundle davidparsson/zsh-pyenv-lazy
+    antigen bundle pip
+    ;;
+  *)
+    # do nothing, assume asdf
+    ;;
+esac
 
 # ruby version manager
-# antigen bundle bundler
 case $RUBY_VERSION_MANAGER in
   asdf)
     # do nothing - the asdf plugin didn't work last time I checked
@@ -80,6 +85,7 @@ esac
 # nodejs
 case $NODE_VERSION_MANAGER in
   nvm)
+    export NVM_LAZY_LOAD=true
     antigen bundle lukechilds/zsh-nvm
     ;;
   *)
@@ -169,3 +175,6 @@ unset -f enable_zprof
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
+
+# https://github.com/wting/autojump
+[ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh

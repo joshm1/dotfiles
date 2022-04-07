@@ -43,9 +43,12 @@ fi
 source ./setup-zsh
 source ./setup-zsh-history
 source ./setup-vim
-source ./setup-ruby
-source ./setup-python
-source ./setup-nodejs
+source ./setup-asdf
+
+# these deprecated in favor of asdf
+# source ./setup-ruby
+# source ./setup-python
+# source ./setup-nodejs
 
 # fzf: install useful keybindings and fuzzy completion
 [[ ! -f ~/.fzf.zsh ]] && /usr/local/opt/fzf/install
