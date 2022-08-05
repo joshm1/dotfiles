@@ -157,7 +157,7 @@ unset -f enable_zprof
 
 # asdf
 (){
-  local asdf_sh=/usr/local/opt/asdf/libexec/asdf.sh
+  local asdf_sh=$(brew --prefix asdf)/libexec/asdf.sh
   if [ -f $asdf_sh ]; then
     source $asdf_sh
   else
@@ -177,4 +177,11 @@ unset -f enable_zprof
 test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
 
 # https://github.com/wting/autojump
-[ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh
+(){
+  if [ -f /usr/local/etc/profile.d/autojump.sh ]; then
+    . /usr/local/etc/profile.d/autojump.sh
+  else
+    local aj_file=$(brew --prefix autojump)/etc/autojump.sh
+    [ -f $aj_file ] && . $aj_file
+  fi
+}
