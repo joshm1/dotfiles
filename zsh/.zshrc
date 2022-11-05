@@ -126,9 +126,13 @@ alias vi="nvim"
 
 path=("$HOME/bin" $path)
 
-# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
+
+# export FZF_DEFAULT_OPTS='--height=70% --preview="cat {}" --preview-window=right:60%:wrap'
+export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
+# export FZF_DEFAULT_COMMAND='rg --files'
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 [ -d $HOME/bin ] && path=("$HOME/bin" $path)
 
@@ -171,10 +175,24 @@ unset -f enable_zprof
   fi
 }
 
+set_java_home() {
+  local set_java_home_sh=$HOME/.asdf/plugins/java/set-java-home.zsh
+  if [ -f $set_java_home_sh ]; then
+    . $set_java_home_sh
+  else
+    echo "asdf java plugin is not installed"
+  fi
+}
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
+
+git-stats() {
+  local refs=${1:-HEAD^..HEAD}
+  git log $refs --shortstat | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' -
+}
 
 # https://github.com/wting/autojump
 (){
