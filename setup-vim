@@ -2,8 +2,12 @@
 
 source ./utils.sh
 
-# symlink $DOTFILES/neovim/.config/nvim $HOME/.config/nvim
+git submodule update --init
+
 symlink $DOTFILES/nvim $HOME/.config/nvim
 symlink $DOTFILES/nvim $HOME/.nvim
 symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
+symlink $DOTFILES/nvim-config $HOME/.config/nvim/lua/user
 symlink $DOTFILES/vimrc $HOME/.vimrc
+
+nvim  --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'

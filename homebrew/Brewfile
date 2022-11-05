@@ -43,3 +43,7 @@ brew 'zlib'
 
 # AWS VPN
 # cask 'session-manager-plugin'
+
+# Nerd fonts: https://www.nerdfonts.com/font-downloads
+tap 'homebrew/cask-fonts'
+cask font-3270-nerd-font
