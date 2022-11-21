@@ -133,6 +133,7 @@ export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-ra
 # export FZF_DEFAULT_COMMAND='rg --files'
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_CTRL_R_OPTS="--preview ''"
 
 [ -d $HOME/bin ] && path=("$HOME/bin" $path)
 
@@ -197,6 +198,10 @@ test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_m
 git-stats() {
   local refs=${1:-HEAD^..HEAD}
   git log $refs --shortstat | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' -
+}
+
+gch() {
+  git checkout "$(git branch --sort=-committerdate | fzf | tr -d '[:space:]')"
 }
 
 # https://github.com/wting/autojump
