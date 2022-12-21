@@ -217,3 +217,5 @@ gch() {
     [ -f $aj_file ] && . $aj_file
   fi
 }
+
+[ -f "$HOME/.cargo/bin" ] && path=("$HOME/.cargo/bin" $path)
