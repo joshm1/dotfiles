@@ -17,36 +17,11 @@ symlink $DOTFILES/git/gitignore $HOME/.gitignore
 
 symlink $DOTFILES/ruby/gemrc $HOME/.gemrc
 
-# homebrew
-if ! type brew >/dev/null 2>&1; then
-  echo "Installing homebrew..."
-  # install homebrew
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /Users/josh/.zprofile
-  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/josh/.zprofile
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-else
-  echo "Homebrew is already installed."
-fi
-
-symlink $DOTFILES/homebrew/Brewfile $HOME/Brewfile
-bundle_installed_file=$DOTFILES/homebrew/.installed
-if [[ ! -f $bundle_installed_file ]]; then
-  brew tap homebrew/bundle
-  for brewfile in $(ls $DOTFILES/homebrew); do
-    brewfile_path=$DOTFILES/homebrew/$brewfile
-    echo "Running brew bundle for $brewfile_path..."
-    brew bundle --file=$brewfile_path
-  done
-  echo $(date) >> $bundle_installed_file
-else
-  echo "Homebrew bundle has already been run. Delete $bundle_installed_file to run again"
-fi
-
+source ./setup-homebrew
 source ./setup-zsh
-source ./setup-zsh-history
 source ./setup-vim
-source ./setup-asdf
+# run this lazily when we call asdf for the first time
+# source ./setup-asdf
 
 # these deprecated in favor of asdf
 # source ./setup-ruby
@@ -54,10 +29,13 @@ source ./setup-asdf
 # source ./setup-nodejs
 
 # fzf: install useful keybindings and fuzzy completion
-[[ ! -f ~/.fzf.zsh ]] && /usr/local/opt/fzf/install
+[[ ! -f ~/.fzf.zsh ]] && /opt/homebrew/opt/fzf/install
 
 # private config files should be in Dropbox
 source ./setup-dropbox
+
+# zsh-history has dropbox dependency
+source ./setup-zsh-history
 
 source ./setup-postgres
 

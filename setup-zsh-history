@@ -24,4 +24,5 @@ if [[ ! -f $LOCAL_DEVICE_ID_FILE || -z $LOCAL_DEVICE_ID ]]; then
   fi
 fi
 
+touch $(dropbox_device_zsh_history_file)
 symlink $(dropbox_device_zsh_history_file) $HOME/.zsh_history

@@ -2,7 +2,11 @@
 
 source ./utils.sh
 
-git submodule update --init
+if [[ -d ~/.config/nvim ]]; then
+  git clone https://github.com/AstroNvim/AstroNvim ~/.config/nvim
+else
+  echo "nvim already exists at ~/.config/nvim"
+fi
 
 symlink $DOTFILES/nvim $HOME/.config/nvim
 symlink $DOTFILES/nvim $HOME/.nvim
@@ -10,4 +14,3 @@ symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
 symlink $DOTFILES/nvim-config $HOME/.config/nvim/lua/user
 symlink $DOTFILES/vimrc $HOME/.vimrc
 
-nvim  --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'

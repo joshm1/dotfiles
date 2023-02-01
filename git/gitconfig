@@ -136,8 +136,6 @@
 [difftool "sourcetree"]
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
 	path =
-[commit]
-	gpgsign = true
 [hub]
 	host = github.com
 	protocol = https
