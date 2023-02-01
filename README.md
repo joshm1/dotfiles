@@ -6,6 +6,9 @@ mkdir -p ~/projects/joshm1
 git clone https://github.com/joshm1/dotfiles.git ~/projects/joshm1/dotfiles
 cd ~/projects/joshm1/dotfiles
 ./setup
+
+# new tab
+p10k configure 
 ```
 
 # Manual
@@ -13,6 +16,7 @@ cd ~/projects/joshm1/dotfiles
 - [ ] Install [Alfred](https://www.alfredapp.com) & add license
 - [ ] Install BetterTouchTool license
 - [ ] Install SublimeText license: `pbcopy < ~/Dropbox/Apps/SublimeText3/license.txt`
+- [ ] [Install Powerlevel10k fonts](https://github.com/romkatv/powerlevel10k#automatic-font-installation)
 
 # Mac-specific configuration
 

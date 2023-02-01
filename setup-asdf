@@ -7,7 +7,11 @@ asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
 asdf plugin add python https://github.com/danhper/asdf-python.git
 asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
 
+asdf install java $DEFAULT_JAVA_VERSION
 asdf global java $DEFAULT_JAVA_VERSION
+asdf install nodejs $DEFAULT_NODE_VERSION
 asdf global nodejs $DEFAULT_NODE_VERSION
+asdf install python $DEFAULT_PYTHON_VERSION
 asdf global python $DEFAULT_PYTHON_VERSION
+asdf install ruby $DEFAULT_RUBY_VERSION
 asdf global ruby $DEFAULT_RUBY_VERSION
