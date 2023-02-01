@@ -3,12 +3,12 @@
 [ -z "$DOTFILES" ] && source ./utils.sh
 
 # set zsh as default shell
-if ! grep /usr/local/bin/zsh /etc/shells >/dev/null; then
+if [[ $SHELL = *zsh ]]; then
+  echo "zsh is already the default shell."
+else
   echo "Setting zsh as default shell..."
   sudo sh -c "echo $(which zsh) >> /etc/shells"
   chsh -s $(which zsh)
-else
-  echo "zsh is already the default shell."
 fi
 
 symlink $DOTFILES/zsh/antigen.zsh $HOME/.antigen.zsh

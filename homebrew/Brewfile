@@ -17,7 +17,6 @@ brew 'jq'
 brew 'lazygit'
 brew 'mas'
 brew 'neovim'
-brew 'notion'
 brew 'php'
 brew 'qemu'
 brew 'redis', restart_service: :changed
