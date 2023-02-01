@@ -4,7 +4,7 @@ BCKDIR="$HOME/.dotfiles.$(date +%Y%m%d-%H%M%S).bck"
 
 DEFAULT_NODE_VERSION=17.8.0
 DEFAULT_RUBY_VERSION=2.7.4
-DEFAULT_JAVA_VERSION=adoptopenjdk-17.0.2+8
+DEFAULT_JAVA_VERSION=adoptopenjdk-17.0.5+8
 DEFAULT_PYTHON_VERSION=3.7.4
 
 # set to "true" to install Python 2
