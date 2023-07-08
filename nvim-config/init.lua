@@ -9,7 +9,7 @@ local config = {
   -- Configure AstroNvim updates
   updater = {
     remote = "origin", -- remote to use
-    channel = "nightly", -- "stable" or "nightly"
+    channel = "stable", -- "stable" or "nightly"
     version = "latest", -- "latest", tag name, or regex search like "v1.*" to only do updates before v2 (STABLE ONLY)
     branch = "main", -- branch name (NIGHTLY ONLY)
     commit = nil, -- commit hash (NIGHTLY ONLY)
@@ -218,6 +218,7 @@ local config = {
   -- Configure plugins
   plugins = {
     init = {
+      { "github/copilot.vim" },
       -- You can disable default plugins as follows:
       -- ["goolord/alpha-nvim"] = { disable = true },
 
@@ -239,6 +240,18 @@ local config = {
       --     require("lsp_signature").setup()
       --   end,
       -- },
+      {
+        "glepnir/lspsaga.nvim",
+        branch = "main",
+        config = function()
+          require("lspsaga").setup({})
+        end,
+        requires = {
+          {"nvim-tree/nvim-web-devicons"},
+          -- Please make sure you install markdown and markdown_inline parser
+          {"nvim-treesitter/nvim-treesitter"}
+        }
+      }
     },
     -- All other entries override the require("<key>").setup({...}) call for default plugins
     ["null-ls"] = function(config) -- overrides `require("null-ls").setup(config)`

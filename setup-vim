@@ -3,14 +3,13 @@
 source ./utils.sh
 
 if [[ -d ~/.config/nvim ]]; then
-  git clone https://github.com/AstroNvim/AstroNvim ~/.config/nvim
-else
   echo "nvim already exists at ~/.config/nvim"
+else
+  git clone https://github.com/AstroNvim/AstroNvim ~/.config/nvim
 fi
 
-symlink $DOTFILES/nvim $HOME/.config/nvim
 symlink $DOTFILES/nvim $HOME/.nvim
 symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
+mkdir -p $HOME/.config/nvim/lua
 symlink $DOTFILES/nvim-config $HOME/.config/nvim/lua/user
 symlink $DOTFILES/vimrc $HOME/.vimrc
-
