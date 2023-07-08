@@ -118,7 +118,7 @@
 [core]
   autocrlf = false
   editor = nvim
-	excludesfile = /Users/josh/.gitignore
+	excludesfile = ~/.gitignore
 	pager = diff-so-fancy | less --tabs=4 -RFX
 [advice]
   statusHints = false
@@ -132,10 +132,10 @@
   # http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
   enabled = true
 [include]
-  path = ~/.gitconfig.local
+  path = ~/.gitconfig_local
 [difftool "sourcetree"]
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path =
+	path = 
 [hub]
 	host = github.com
 	protocol = https
@@ -153,3 +153,6 @@
 	oldHighlight = red bold 52
 	newNormal = green bold
 	newHighlight = green bold 22
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true

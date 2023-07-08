@@ -161,7 +161,7 @@ enable_zprof && zprof
 unset -f enable_zprof
 
 # asdf
-(){
+source_asdf(){
   local asdf_sh=$(brew --prefix asdf)/libexec/asdf.sh
   if [ -f $asdf_sh ]; then
     source $asdf_sh
@@ -205,7 +205,9 @@ git-diff-stats() {
 }
 
 gch() {
-  git checkout "$(git branch --sort=-committerdate | fzf | tr -d '[:space:]')"
+  local preview_cmd="git log --pretty=tformat:'%C(bold blue)%h %C(bold red)%ad %C(bold blue)%aN%C(auto) %<|(100,trunc)%s%C(reset)' --date=short --graph {}"
+  local branch=$(git branch --format='%(refname:short)' --sort=-committerdate | fzf --preview "$preview_cmd" | tr -d '[:space:]')
+  git checkout $branch
 }
 
 # https://github.com/wting/autojump
@@ -227,3 +229,16 @@ if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/google-cloud-sdk/
 if [ -f "$HOME/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/google-cloud-sdk/completion.zsh.inc"; fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+source_asdf
+
+if [[ -f ~/.docker/init-zsh.sh ]]; then
+  source ~/.docker/init-zsh.sh || true # Added by Docker Desktop
+fi
+
+if type aws_completer >/dev/null; then
+  autoload bashcompinit && bashcompinit
+  autoload -Uz compinit && compinit
+  complete -C "$(brew --prefix)/bin/aws_completer" aws
+fi
+source "${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
