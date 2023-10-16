@@ -241,4 +241,10 @@ if type aws_completer >/dev/null; then
   autoload -Uz compinit && compinit
   complete -C "$(brew --prefix)/bin/aws_completer" aws
 fi
-source "${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
+
+asdf_direnv_zshrc="${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
+[[ -f $asdf_direnv_zshrc ]] && . $asdf_direnv_zshrc
+
+if command -v ngrok &>/dev/null; then
+  eval "$(ngrok completion)"
+fi
