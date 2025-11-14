@@ -1,6 +1,6 @@
-# these only to be enabled when we need kubernetes
-brew 'helm'
-brew 'kubectl'
-brew 'kubectx'
-brew 'kube-ps1'
-brew 'stern'
+# Kubernetes tools - not actively used, kept for reference
+# brew 'helm'
+# brew 'kubectl'
+# brew 'kubectx'
+# brew 'kube-ps1'
+# brew 'stern'
