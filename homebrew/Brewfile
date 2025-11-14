@@ -1,49 +1,103 @@
-brew 'asdf'
-brew 'autojump'
-brew 'awscli'
-brew 'bat'
-brew 'ctags'
-brew 'cscope'
-brew 'diff-so-fancy'
-brew 'direnv'
-brew 'gettext'
-brew 'git-recent'
-brew 'fd'
-brew 'fswatch'
-brew 'fzf'
-brew 'git'
-brew 'go'
-brew 'jq'
-brew 'lazygit'
-brew 'mas'
-brew 'miller'
-brew 'neovim'
-brew 'php'
-brew 'qemu'
-brew 'redis', restart_service: :changed
-brew 'ripgrep'
-# brew 'sbt'
-brew 'tealdeer'
-brew 'the_silver_searcher'
-brew 'tig'
-brew 'tmux'
-brew 'wget'
-# brew 'zsh'
-brew 'zsh-completions'
+# Development Tools
+brew 'act'                      # Run GitHub Actions locally - https://github.com/nektos/act
+brew 'gh'                       # GitHub CLI - https://github.com/cli/cli
+brew 'git'                      # Version control system
+brew 'git-delta'                # Better git diff viewer - https://github.com/dandavison/delta
+brew 'git-recent'               # View recent git branches - https://github.com/paulirish/git-recent
+brew 'lazygit'                  # Terminal UI for git - https://github.com/jesseduffield/lazygit
+brew 'tig'                      # Text-mode interface for git - https://github.com/jonas/tig
 
+# Programming Languages & Runtimes
+brew 'asdf'                     # Multi-language version manager - https://github.com/asdf-vm/asdf
+brew 'go'                       # Go programming language
+brew 'php'                      # PHP scripting language
+brew 'rust'                     # Rust programming language
+
+# Shell & Terminal Tools
+brew 'antidote'                 # Zsh plugin manager - https://github.com/mattmc3/antidote
+brew 'atuin'                    # Shell history sync & search - https://github.com/atuinsh/atuin
+brew 'autojump'                 # Fast directory navigation - https://github.com/wting/autojump
+brew 'bat'                      # Cat clone with syntax highlighting - https://github.com/sharkdp/bat
+brew 'btop'                     # Resource monitor - https://github.com/aristocratos/btop
+brew 'direnv'                   # Load/unload env vars per directory - https://github.com/direnv/direnv
+brew 'eza'                      # Modern ls replacement - https://github.com/eza-community/eza
+brew 'fzf'                      # Fuzzy finder - https://github.com/junegunn/fzf
+brew 'mosh'                     # Mobile shell (SSH alternative) - https://github.com/mobile-shell/mosh
+brew 'sesh'                     # Smart session manager for tmux - https://github.com/joshmedeski/sesh
+brew 'tmux'                     # Terminal multiplexer - https://github.com/tmux/tmux
+brew 'zoxide'                   # Smarter cd command - https://github.com/ajeetdsouza/zoxide
+brew 'zsh-completions'          # Additional zsh completions - https://github.com/zsh-users/zsh-completions
+
+# Text Editors
+brew 'neovim'                   # Modern vim - https://github.com/neovim/neovim
+brew 'lua-language-server'      # LSP for Lua/Neovim config - https://github.com/LuaLS/lua-language-server
+
+# Search & File Tools
+brew 'fd'                       # Fast find alternative - https://github.com/sharkdp/fd
+brew 'fswatch'                  # File change monitor - https://github.com/emcrisostomo/fswatch
+brew 'ripgrep'                  # Fast grep alternative - https://github.com/BurntSushi/ripgrep
+brew 'the_silver_searcher'      # Fast code search (ag) - https://github.com/ggreer/the_silver_searcher
+brew 'tree'                     # Directory tree viewer
+
+# Data Processing
+brew 'jq'                       # JSON processor - https://github.com/jqlang/jq
+brew 'miller'                   # CSV/JSON/etc processor - https://github.com/johnkerl/miller
+brew 'xsv'                      # CSV toolkit - https://github.com/BurntSushi/xsv
+brew 'yq'                       # YAML processor - https://github.com/mikefarah/yq
+
+# Cloud & Infrastructure
+brew 'awscli'                   # AWS command line interface
+brew 'pulumi'                   # Infrastructure as code - https://github.com/pulumi/pulumi
+
+# Containers & VMs
+brew 'docker-compose'           # Multi-container Docker apps - https://github.com/docker/compose
+brew 'lima'                     # Linux VMs on macOS - https://github.com/lima-vm/lima
+brew 'podman'                   # Daemonless container engine - https://github.com/containers/podman
+brew 'qemu'                     # Generic machine emulator
+
+# Kubernetes Tools
+brew 'k9s'                      # Kubernetes TUI - https://github.com/derailed/k9s
+
+# Databases
+brew 'dbmate'                   # Database migration tool - https://github.com/amacneil/dbmate
+brew 'redis', restart_service: :changed  # In-memory data store
+
+# Build & Task Tools
+brew 'just'                     # Command runner - https://github.com/casey/just
+
+# Testing & Performance
+brew 'k6'                       # Load testing tool - https://github.com/grafana/k6
+
+# Network Tools
+brew 'socat'                    # Socket relay utility
+brew 'wget'                     # File downloader
+brew 'whois'                    # Domain lookup tool
+
+# Documentation & Conversion
+brew 'pandoc'                   # Universal document converter - https://github.com/jgm/pandoc
+brew 'tealdeer'                 # Fast tldr client - https://github.com/dbrgn/tealdeer
+
+# Utilities
+brew 'ctags'                    # Code indexing tool
+brew 'cscope'                   # Code browsing tool
+brew 'diff-so-fancy'            # Better diff output - https://github.com/so-fancy/diff-so-fancy
+brew 'dos2unix'                 # Convert line endings
+brew 'gettext'                  # Internationalization library
+brew 'mas'                      # Mac App Store CLI - https://github.com/mas-cli/mas
+
+# System Libraries (for building from source)
 brew 'bzip2'
 brew 'grep'
 brew 'ncurses'
 brew 'readline'
 brew 'rsync'
 brew 'unzip'
-brew 'whois'
 brew 'xz'
 brew 'zlib'
 
 # AWS VPN
 # cask 'session-manager-plugin'
 
-# Nerd fonts: https://www.nerdfonts.com/font-downloads
+# Fonts
 tap 'homebrew/cask-fonts'
-cask 'font-3270-nerd-font'
+cask 'font-3270-nerd-font'      # Nerd Fonts: https://www.nerdfonts.com/font-downloads

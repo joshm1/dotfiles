@@ -1,36 +1,61 @@
 cask_args appdir: '/Applications'
 tap 'homebrew/cask-versions'
 
-cask '1password'
-cask '1password-cli'
-cask 'alfred'
-cask 'authy'
-cask 'bettertouchtool'
-# cask 'cyberduck'
-cask 'docker'
-# cask 'dropbox'
-# cask 'evernote'
-cask 'gpg-suite' # used to sign git commits, see https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits
+# Password Managers
+cask '1password'                # Password manager - https://1password.com
+# cask '1password-cli'          # Only needed if using 'op' CLI for scripting
+
+# Productivity
+cask 'alfred'                   # Spotlight replacement & automation - https://www.alfredapp.com
+# cask 'bettertouchtool'        # Advanced input customization - https://folivora.ai - replaced with Raycast Window Management
+cask 'cleanshot'                # Screen capturing tool - https://getcleanshot.com
+cask 'grammarly'                # Grammar & spell checker
+cask 'linear-linear'            # Project management & issue tracking - https://linear.app
+cask 'loom'                     # Screen recording & sharing - https://www.loom.com
+cask 'notion'                   # Notes & collaboration - https://www.notion.so
+cask 'notion-calendar'          # Calendar for professionals - https://www.notion.com/product/calendar
+cask 'obsidian'                 # Knowledge base with Markdown - https://obsidian.md
+cask 'raycast'                  # Launcher & productivity tool - https://raycast.com
+
+# Development Tools
+cask 'bruno'                    # Opensource API client - https://github.com/usebruno/bruno
+cask 'chatgpt'                  # OpenAI's official ChatGPT desktop app - https://chatgpt.com
+cask 'claude'                   # Anthropic's official Claude AI desktop app - https://claude.ai
+cask 'cursor'                   # AI-powered code editor - https://www.cursor.com
+cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
+cask 'ghostty'                  # Fast, native terminal emulator - https://github.com/ghostty-org/ghostty
+cask 'lm-studio'                # Run local LLMs - https://lmstudio.ai
+cask 'visual-studio-code'       # Code editor - https://github.com/microsoft/vscode
+cask 'sublime-text'             # Text editor - https://www.sublimetext.com
+cask 'zed'                      # Multiplayer code editor - https://zed.dev
+
+# Cloud & Infrastructure
+cask 'gcloud-cli'               # Google Cloud SDK - https://cloud.google.com/sdk
+cask 'ngrok'                    # Secure tunneling - https://ngrok.com
+
+# Database
+cask 'postgres-unofficial'      # PostgreSQL GUI - https://postgresapp.com
+
+# Communication
+cask 'slack'                    # Team chat - https://slack.com
+cask 'superhuman'               # Email client - https://superhuman.com
+cask 'zoom'                     # Video conferencing - https://zoom.us
+
+# Security & Privacy
+cask 'gpg-suite'                # GPG tools for macOS - used to sign git commits
+                                # https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits
+cask 'tailscale-app'            # VPN & secure networks - https://tailscale.com
+
+# Storage & Sync
+cask 'dropbox'                  # File sync & storage - https://www.dropbox.com
+
+# Browsers
+cask 'google-chrome'            # Web browser
+cask 'vivaldi'                  # Privacy-focused browser - https://vivaldi.com
 # cask 'firefox'
-cask 'google-chrome'
-cask 'google-drive'
-cask 'grammarly'
-cask 'iterm2'
-cask 'jetbrains-toolbox'
-cask 'loom'
-# cask 'macdown'
-# cask 'mactex'
-cask 'notion'
-cask 'postman'
-cask 'postgres-unofficial'
-# cask 'qlmarkdown'
-# cask 'quicklook-json'
-# cask 'quicklook-csv'
-# cask 'skitch'
-cask 'slack'
-cask 'sourcetree'
-cask 'spotify'
-cask 'sublime-text'
-cask 'visual-studio-code'
-# cask 'vlc'
-cask 'zoom'
+
+# Security
+cask 'authy'                    # 2FA authenticator - https://authy.com
+
+# Entertainment
+cask 'spotify'                  # Music streaming - https://www.spotify.com
