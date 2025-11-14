@@ -1,0 +1,11 @@
+.git/
+node_modules/
+target/
+dist/
+.cache/
+coverage/
+__pycache__/
+.venv/
+.mypy_cache/
+.pytest_cache/
+direnv/allow

@@ -1,0 +1,21 @@
+[project]
+name = "dotfiles-scripts"
+version = "0.1.0"
+description = "Utility scripts for managing dotfiles"
+readme = "README.md"
+authors = [
+    { name = "Josh McDade", email = "josh.ncsu@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "rich>=13.0.0",
+    "click>=8.1.0",
+]
+
+[project.scripts]
+symlink-home-files = "dotfiles_scripts.symlink_home:main"
+check-homebrew-apps = "dotfiles_scripts.check_homebrew:main"
+
+[build-system]
+requires = ["uv_build>=0.8.24,<0.9.0"]
+build-backend = "uv_build"

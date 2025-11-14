@@ -35,4 +35,34 @@ symlink() {
   ln -s "$1" "$2"
 }
 
+# Auto-discover and symlink all files from home/ directory to $HOME
+symlink_home_files() {
+  local home_dir="${DOTFILES}/home"
+
+  if [[ ! -d "$home_dir" ]]; then
+    echo "Warning: home/ directory not found at $home_dir"
+    return 1
+  fi
+
+  echo "Auto-discovering and symlinking files from home/..."
+
+  # Symlink all top-level files in home/
+  find "$home_dir" -mindepth 1 -maxdepth 1 -type f | while read -r source_path; do
+    local filename=$(basename "$source_path")
+    local target_path="${HOME}/${filename}"
+    symlink "$source_path" "$target_path"
+  done
+
+  # Symlink entire .config subdirectories (nvim, tmux, etc.)
+  if [[ -d "$home_dir/.config" ]]; then
+    find "$home_dir/.config" -mindepth 1 -maxdepth 1 | while read -r source_path; do
+      local dirname=$(basename "$source_path")
+      local target_path="${HOME}/.config/${dirname}"
+      symlink "$source_path" "$target_path"
+    done
+  fi
+
+  echo "Home files symlinked!"
+}
+
 # echo "Loaded utils.sh"
