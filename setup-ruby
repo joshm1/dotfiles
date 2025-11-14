@@ -2,16 +2,25 @@
 
 [ -z "$DOTFILES" ] && source ./utils.sh
 
-if [ -d ~/.rbenv ]; then
+echo "Setting up Ruby with asdf..."
 
-  # rbenv: set global ruby version and install neovim gem
-  if [ ! -d ~/.rbenv/versions/$DEFAULT_RUBY_VERSION ]; then
-    echo "Installing ruby ${DEFAULT_RUBY_VERSION}..."
-    rbenv install $DEFAULT_RUBY_VERSION
-    rbenv global $DEFAULT_RUBY_VERSION
-  else
-    echo "Ruby ${DEFAULT_RUBY_VERSION} is already installed."
-  fi
-else
-  echo "Skipping rbenv setup, ~/.rbenv not found"
+# Install Ruby plugin for asdf if not already installed
+if ! asdf plugin list | grep ruby >/dev/null; then
+  echo "Adding asdf ruby plugin..."
+  asdf plugin add ruby
 fi
+
+# Install default Ruby version if not already installed
+if ! asdf list ruby | grep $DEFAULT_RUBY_VERSION >/dev/null; then
+  echo "Installing Ruby $DEFAULT_RUBY_VERSION..."
+  asdf install ruby $DEFAULT_RUBY_VERSION
+else
+  echo "Ruby $DEFAULT_RUBY_VERSION has already been installed."
+fi
+
+# Set global Ruby version
+echo "Setting Ruby $DEFAULT_RUBY_VERSION as global version..."
+asdf set --home ruby $DEFAULT_RUBY_VERSION
+
+echo "Ruby setup complete!"
+echo "Current Ruby version: $(ruby --version)"

@@ -14,8 +14,10 @@ p10k configure
 # Manual
 
 - [ ] Install [Alfred](https://www.alfredapp.com) & add license
-- [ ] Install BetterTouchTool license
+- [ ] Install BetterTouchTool license (optional - Raycast provides many similar features)
+- [ ] Install CleanShot X license: https://licenses.cleanshot.com/
 - [ ] Install SublimeText license: `pbcopy < ~/Dropbox/Apps/SublimeText3/license.txt`
+- [ ] Download and activate Wispr Flow: https://wisprflow.ai (use your work email)
 - [ ] [Install Powerlevel10k fonts](https://github.com/romkatv/powerlevel10k#automatic-font-installation)
 
 # Mac-specific configuration
@@ -23,10 +25,4 @@ p10k configure
 If you want different machines to behave differently and still use the same dotfiles repository, you can
 configure environment variables in the `~/.dotfiles-config` file.
 
-* `RUBY_VERSION_MANAGER` can be "rbenv" or "rvm" - this is to prevent both rvm or rbenv from being setup
-  (default is rbenv if this value is blank)
 * `ENABLE_K8S` - set to "true" to enable kubernetes plugins
-
-# References
-
-* [AstroNvim](https://astronvim.github.io)

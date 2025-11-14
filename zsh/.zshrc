@@ -6,7 +6,7 @@ bool() {
 }
 
 # add ENABLE_ZPROF=yes to ~/.dotfiles-config to run
-enable_zprof() { bool $ENABLE_ZPROF ]] }
+enable_zprof() { bool $ENABLE_ZPROF }
 enable_zprof && zmodload zsh/zprof
 
 (( ${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
@@ -54,44 +54,24 @@ antigen bundle git
 antigen bundle wd
 antigen bundle zsh-users/zsh-syntax-highlighting
 
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zap-zsh/supercharge
+# antigen bundle zpm-zsh/ls
+antigen bundle zap-zsh/exa
+
+# https://github.com/skywind3000/z.lua/wiki/FAQ#fzsh-for-better-completion
+# antigen bundle skywind3000/z.lua
+# antigen bundle changyuheng/fz
+# zoxide is initialized after antigen apply to avoid conflicts
+
+# https://github.com/MichaelAquilina/zsh-autoswitch-virtualenv
+antigen bundle "MichaelAquilina/zsh-autoswitch-virtualenv"
+
 # java version manager
 # antigen bundle shihyuho/zsh-jenv-lazy
 
-# python version manager
-case $PYTHON_VERSION_MANAGER in
-  pyenv)
-    antigen bundle davidparsson/zsh-pyenv-lazy
-    antigen bundle pip
-    ;;
-  *)
-    # do nothing, assume asdf
-    ;;
-esac
-
-# ruby version manager
-case $RUBY_VERSION_MANAGER in
-  asdf)
-    # do nothing - the asdf plugin didn't work last time I checked
-    ;;
-  rvm)
-    # antigen bundle unixorn/rvm-plugin
-    antigen bundle FrederickGeek8/zsh-rvm-lazy
-    ;;
-  *)
-    antigen bundle rbenv
-    ;;
-esac
-
-# nodejs
-case $NODE_VERSION_MANAGER in
-  nvm)
-    export NVM_LAZY_LOAD=true
-    antigen bundle lukechilds/zsh-nvm
-    ;;
-  *)
-    # do nothing, assume asdf
-    ;;
-esac
+# Version managers - using asdf for all languages (python, ruby, nodejs)
+# No plugins needed - asdf is loaded directly via source_asdf function below
 
 # if you want these, add ANTIGEN_BUNDLE_NODE=y to ~/.dotfiles-config
 if [[ "$ANTIGEN_BUNDLE_NODE" = y* ]]; then
@@ -99,16 +79,16 @@ if [[ "$ANTIGEN_BUNDLE_NODE" = y* ]]; then
   antigen bundle g-plane/zsh-yarn-autocompletions
 fi
 
-# kubernetes
-enable_k8s() { bool "$ENABLE_K8S" }
-enable_k8s && antigen bundle mattbangert/kubectl-zsh-plugin
-
 antigen theme romkatv/powerlevel10k
 
 antigen apply
 
 # we want to use buf from https://docs.buf.build
 alias buf >/dev/null && unalias buf
+
+# Initialize zoxide and ensure z command is not overridden by fz plugin
+eval "$(zoxide init zsh)"
+alias z >/dev/null 2>&1 && unalias z
 
 # direnv
 # eval "$(direnv hook $0)"
@@ -123,13 +103,16 @@ setopt no_beep
 
 alias vim="nvim"
 alias vi="nvim"
+# Note: nvim is in PATH via ~/nvim-macos-x86_64/bin (set below)
 
 path=("$HOME/bin" $path)
 
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 
 # export FZF_DEFAULT_OPTS='--height=70% --preview="cat {}" --preview-window=right:60%:wrap'
-export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
+# export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
+# export FZF_DEFAULT_OPTS='--preview "([[ -f {} ]] && bat --style=numbers --color=always --line-range :500 {}) || ([[ -d {} ]] && tree -C {} || echo {})"'
+export FZF_DEFAULT_OPTS='--preview "([[ -f {} ]] && bat --style=numbers --color=always --line-range :500 {}) || ([[ -d {} ]] && eza -T --git-ignore --icons --group-directories-first -la {})"'
 # export FZF_DEFAULT_COMMAND='rg --files'
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -140,12 +123,7 @@ export FZF_CTRL_R_OPTS="--preview ''"
 # add psql to path
 [ -d /Applications/Postgres.app ] && path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)
 
-# sterm is used for k8s logging, not necessary if we aren't using k8s
-if enable_k8s && [ $commands[stern] ]; then
-  source <(stern --completion zsh)
-fi
-
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
 
@@ -220,13 +198,7 @@ gch() {
   fi
 }
 
-[ -f "$HOME/.cargo/bin" ] && path=("$HOME/.cargo/bin" $path)
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/google-cloud-sdk/path.zsh.inc"; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f "$HOME/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/google-cloud-sdk/completion.zsh.inc"; fi
+# [ -f $HOME/.cargo/env ] && source $HOME/.cargo/env
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -242,9 +214,129 @@ if type aws_completer >/dev/null; then
   complete -C "$(brew --prefix)/bin/aws_completer" aws
 fi
 
-asdf_direnv_zshrc="${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
-[[ -f $asdf_direnv_zshrc ]] && . $asdf_direnv_zshrc
+source "${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
 
-if command -v ngrok &>/dev/null; then
-  eval "$(ngrok completion)"
+# if [ -f "$HOME/.config/gcloud/application_default_credentials.json" ]; then
+#   export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/application_default_credentials.json"
+# fi
+
+[ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
+
+# https://github.com/eza-community/eza/blob/main/INSTALL.md#for-zsh-with-homebrew
+if type brew &>/dev/null; then
+  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+  autoload -Uz compinit
+  compinit
 fi
+
+# alias for eza
+alias ls='eza --color=always --group-directories-first --icons=always'
+alias ll='eza -la --icons --octal-permissions --group-directories-first'
+alias l='eza -bGF --header --git --color=always --group-directories-first --icons'
+# alias llm='eza -lbGd --header --git --sort=modified --color=always --group-directories-first --icons'
+alias la='eza --long --all --group --group-directories-first'
+alias lx='eza -lbhHigUmuSa@ --time-style=long-iso --git --color-scale --color=always --group-directories-first --icons'
+alias tree='ll --tree --level=2'
+
+alias lS='eza -1 --color=always --group-directories-first --icons=always'
+alias lt='eza --tree --level=2 --color=always --group-directories-first --icons=always'
+alias l.="eza -a | grep -E '^\.'"
+
+# source: https://github.com/astral-sh/uv/issues/8432
+# Fix completions for uv run to autocomplete .py files
+_uv_run_mod() {
+    if [[ "$words[2]" == "run" && "$words[CURRENT]" != -* ]]; then
+        _arguments '*:filename:_files -g "*.py"'
+    else
+        _uv "$@"
+    fi
+}
+compdef _uv_run_mod uv
+
+# Auto-activate venv when entering project directories
+autoload -U add-zsh-hook
+load-local-venv() {
+  if [[ -f .venv/bin/activate && "$VIRTUAL_ENV" != "$(pwd)/.venv" ]]; then
+    source .venv/bin/activate
+  fi
+}
+add-zsh-hook chpwd load-local-venv
+load-local-venv  # Load for current session
+
+# bun completions
+[ -s "/Users/josh/.bun/_bun" ] && source "/Users/josh/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+eval "$(just --completions zsh)"
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/josh/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions
+
+[ -f $HOME/.claude/local/claude ] && path=("$HOME/.claude/local" $path)
+
+# go - add GOPATH/bin to PATH if go is installed
+if command -v go &>/dev/null; then
+  path=("$(go env GOPATH)/bin" $path)
+fi
+
+# pnpm
+export PNPM_HOME="/Users/josh/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/josh/.lmstudio/bin"
+# End of LM Studio CLI section
+
+# Neovim nightly
+[ -d "$HOME/nvim-macos-x86_64/bin" ] && export PATH="$HOME/nvim-macos-x86_64/bin:$PATH"
+#
+# # Function to get tmux session names
+function _tmux_sessions_complete() {
+  local -a sessions
+  echo wtf
+  # Get session names from tmux and clean up the output
+  sessions=( "${(@f)$(tmux list-sessions -F '#{session_name}' 2>/dev/null)}" )
+  _describe 'sessions' sessions
+}
+
+# Assign the completion function to 'tmux attach -t'
+compdef _tmux_sessions_complete 'tmux attach -t'
+
+function sesh-sessions() {
+  {
+    exec </dev/tty
+    exec <&1
+    local session
+    session=$(sesh list -t -c | fzf --height 40% --reverse --border-label ' sesh ' --border --prompt '⚡  ')
+    zle reset-prompt > /dev/null 2>&1 || true
+    [[ -z "$session" ]] && return
+    sesh connect $session
+  }
+}
+
+zle     -N             sesh-sessions
+bindkey -M emacs '\es' sesh-sessions
+bindkey -M vicmd '\es' sesh-sessions
+bindkey -M viins '\es' sesh-sessions
+
+eval "$(atuin init zsh)"
+# Removed: nvim is now in PATH via ~/nvim-macos-x86_64/bin
+
+# seshc alias - connect to sesh session with fzf
+if type sesh &>/dev/null; then
+  alias seshc='sesh connect $(sesh list | fzf)'
+fi
+
+# updates PATH for the Google Cloud SDK (Homebrew installation)
+[ -f "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
+
+# enables shell command completion for gcloud (Homebrew installation).
+[ -f "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
