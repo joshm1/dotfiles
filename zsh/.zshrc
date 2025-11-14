@@ -264,14 +264,14 @@ add-zsh-hook chpwd load-local-venv
 load-local-venv  # Load for current session
 
 # bun completions
-[ -s "/Users/josh/.bun/_bun" ] && source "/Users/josh/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 eval "$(just --completions zsh)"
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
-fpath=(/Users/josh/.docker/completions $fpath)
+fpath=($HOME/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 # End of Docker CLI completions
@@ -284,7 +284,7 @@ if command -v go &>/dev/null; then
 fi
 
 # pnpm
-export PNPM_HOME="/Users/josh/Library/pnpm"
+export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -292,7 +292,7 @@ esac
 # pnpm end
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/josh/.lmstudio/bin"
+export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
 # Neovim nightly

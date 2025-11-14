@@ -164,6 +164,41 @@ When making changes to this dotfiles repo:
 5. **Tmux bindings**: Edit `.tmux.conf`
 6. **Neovim**: Edit `.config/nvim/init.lua`
 
+## Utility Scripts
+
+### Python Scripts (scripts/)
+Python utility scripts are stored in `scripts/` and follow [PEP 723](https://peps.python.org/pep-0723/) inline script metadata specification for dependency management.
+
+**Guidelines for writing Python scripts:**
+1. Use PEP 723 inline dependencies in script header:
+   ```python
+   # /// script
+   # dependencies = [
+   #   "click>=8.1.0",
+   #   "rich>=13.0.0",
+   # ]
+   # ///
+   ```
+2. Use `uv run` to execute scripts - it will automatically install dependencies
+3. Use `click` for CLI argument parsing
+4. Use `rich` for beautiful terminal output (tables, progress bars, colors)
+5. Make scripts executable: `chmod +x scripts/script-name.py`
+
+**Available Scripts:**
+- `scripts/check-homebrew-apps.py` - Finds apps in /Applications available in Homebrew but not installed via Homebrew
+  ```bash
+  # Basic usage
+  uv run scripts/check-homebrew-apps.py
+
+  # Show verbose progress
+  uv run scripts/check-homebrew-apps.py --verbose
+
+  # Different output formats
+  uv run scripts/check-homebrew-apps.py -f table    # Default: nice table
+  uv run scripts/check-homebrew-apps.py -f list     # Simple list
+  uv run scripts/check-homebrew-apps.py -f brewfile # Output as Brewfile entries
+  ```
+
 ## Notes
 
 - The repo expects to be cloned at `~/projects/joshm1/dotfiles`

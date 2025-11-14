@@ -25,6 +25,7 @@ cask 'cursor'                   # AI-powered code editor - https://www.cursor.co
 cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
 cask 'ghostty'                  # Fast, native terminal emulator - https://github.com/ghostty-org/ghostty
 cask 'lm-studio'                # Run local LLMs - https://lmstudio.ai
+cask 'termius'                  # SSH client - https://termius.com
 cask 'visual-studio-code'       # Code editor - https://github.com/microsoft/vscode
 cask 'sublime-text'             # Text editor - https://www.sublimetext.com
 cask 'zed'                      # Multiplayer code editor - https://zed.dev
@@ -44,7 +45,7 @@ cask 'zoom'                     # Video conferencing - https://zoom.us
 # Security & Privacy
 cask 'gpg-suite'                # GPG tools for macOS - used to sign git commits
                                 # https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits
-cask 'tailscale-app'            # VPN & secure networks - https://tailscale.com
+cask 'tailscale'                # VPN & secure networks - https://tailscale.com
 
 # Storage & Sync
 cask 'dropbox'                  # File sync & storage - https://www.dropbox.com
