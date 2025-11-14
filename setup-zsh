@@ -11,10 +11,8 @@ else
   chsh -s $(which zsh)
 fi
 
+# antigen.zsh stays in zsh/ since it's a third-party tool, not a dotfile
 symlink $DOTFILES/zsh/antigen.zsh $HOME/.antigen.zsh
-symlink $DOTFILES/zsh/p10k.zsh $HOME/.p10k.zsh
-symlink $DOTFILES/zsh/.zshrc $HOME/.zshrc
 
-# zsh tools
-symlink $DOTFILES/.wezterm.lua $HOME/.wezterm.lua
-symlink $DOTFILES/.fdignore $HOME/.fdignore
+# Note: .zshrc, .p10k.zsh, .wezterm.lua, and .fdignore are now symlinked
+# automatically via symlink_home_files() in the main setup script
