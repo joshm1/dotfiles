@@ -1,0 +1,40 @@
+{
+  "plugins": {
+    "cmp-buffer": {
+      "rev": "b74fab3",
+      "src": "https://github.com/hrsh7th/cmp-buffer"
+    },
+    "cmp-nvim-lsp": {
+      "rev": "bd5a7d6",
+      "src": "https://github.com/hrsh7th/cmp-nvim-lsp"
+    },
+    "cmp-path": {
+      "rev": "c642487",
+      "src": "https://github.com/hrsh7th/cmp-path"
+    },
+    "nvim": {
+      "rev": "af58927",
+      "src": "https://github.com/catppuccin/nvim"
+    },
+    "nvim-cmp": {
+      "rev": "a7bcf1d",
+      "src": "https://github.com/hrsh7th/nvim-cmp"
+    },
+    "nvim-lspconfig": {
+      "rev": "ac98db2",
+      "src": "https://github.com/neovim/nvim-lspconfig"
+    },
+    "plenary.nvim": {
+      "rev": "b9fd522",
+      "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
+    "telescope.nvim": {
+      "rev": "b4da76b",
+      "src": "https://github.com/nvim-telescope/telescope.nvim"
+    },
+    "vim-tmux-navigator": {
+      "rev": "c45243d",
+      "src": "https://github.com/christoomey/vim-tmux-navigator"
+    }
+  }
+}

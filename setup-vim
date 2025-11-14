@@ -2,14 +2,42 @@
 
 source ./utils.sh
 
-if [[ -d ~/.config/nvim ]]; then
-  echo "nvim already exists at ~/.config/nvim"
+NVIM_VERSION="nightly"
+NVIM_DIR="$HOME/nvim-macos-x86_64"
+NVIM_TARBALL="nvim-macos-x86_64.tar.gz"
+NVIM_URL="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/${NVIM_TARBALL}"
+
+echo "Setting up Neovim..."
+
+# Download and install Neovim nightly
+if [ ! -d "$NVIM_DIR" ]; then
+  echo "Downloading Neovim ${NVIM_VERSION}..."
+  cd ~
+  curl -LO "$NVIM_URL"
+
+  # Remove quarantine attribute to avoid "unknown developer" warning
+  echo "Removing quarantine attribute..."
+  xattr -c "./${NVIM_TARBALL}"
+
+  echo "Extracting Neovim..."
+  tar xzf "./${NVIM_TARBALL}"
+
+  echo "Cleaning up..."
+  rm "./${NVIM_TARBALL}"
+
+  echo "✓ Neovim installed to ${NVIM_DIR}"
 else
-  git clone https://github.com/AstroNvim/AstroNvim ~/.config/nvim
+  echo "Neovim already installed at ${NVIM_DIR}"
 fi
 
-symlink $DOTFILES/nvim $HOME/.nvim
-symlink $DOTFILES/nvim/init.vim $HOME/.nvimrc
-mkdir -p $HOME/.config/nvim/lua
-symlink $DOTFILES/nvim-config $HOME/.config/nvim/lua/user
-symlink $DOTFILES/vimrc $HOME/.vimrc
+# Verify installation
+if [ -f "${NVIM_DIR}/bin/nvim" ]; then
+  echo "✓ Neovim binary found"
+  "${NVIM_DIR}/bin/nvim" --version | head -1
+else
+  echo "✗ Neovim binary not found"
+  exit 1
+fi
+
+echo "Neovim setup complete!"
+echo "Note: Make sure ${NVIM_DIR}/bin is in your PATH"

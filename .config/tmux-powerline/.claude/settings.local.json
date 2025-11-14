@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tmux source-file:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

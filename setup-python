@@ -2,40 +2,25 @@
 
 [ -z "$DOTFILES" ] && source ./utils.sh
 
-echo "check INSTALL_PYTHON2=$INSTALL_PYTHON2"
+echo "Setting up Python with asdf..."
 
-# python2
-if [ "$INSTALL_PYTHON2" == true ] && ! pyenv versions | grep 2.7 >/dev/null; then
-  echo "Installing python 2.7..."
-  CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib" pyenv install 2.7
+# Install Python plugin for asdf if not already installed
+if ! asdf plugin list | grep python >/dev/null; then
+  echo "Adding asdf python plugin..."
+  asdf plugin add python
 fi
 
-# python3 (environment variables from https://github.com/pyenv/pyenv/wiki/Common-build-problems#error-the-python-ssl-extension-was-not-compiled-missing-the-openssl-lib)
-if ! pyenv versions | grep $DEFAULT_PYTHON_VERSION >/dev/null; then
-  echo "Installing python $DEFAULT_PYTHON_VERSION..."
-  CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib" pyenv install $DEFAULT_PYTHON_VERSION
+# Install default Python version if not already installed
+if ! asdf list python | grep $DEFAULT_PYTHON_VERSION >/dev/null; then
+  echo "Installing Python $DEFAULT_PYTHON_VERSION..."
+  asdf install python $DEFAULT_PYTHON_VERSION
 else
-  echo "python $DEFAULT_PYTHON_VERSION has already been installed."
+  echo "Python $DEFAULT_PYTHON_VERSION has already been installed."
 fi
 
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+# Set global Python version
+echo "Setting Python $DEFAULT_PYTHON_VERSION as global version..."
+asdf set --home python $DEFAULT_PYTHON_VERSION
 
-# setup python environments for neovim
-if [ "$INSTALL_PYTHON2" == true ] && [ ! -d ~/.pyenv/versions/neovim2 ]; then
-  echo "Setting up python virtualenv neovim2..."
-  pyenv virtualenv 2.7 neovim2
-  pyenv activate neovim2
-  pip install neovim
-fi
-
-if [ ! -d ~/.pyenv/versions/neovim3 ]; then
-  echo "Setting up python virtualenv neovim3..."
-  pyenv virtualenv $DEFAULT_PYTHON_VERSION neovim3
-  pyenv activate neovim3
-  pip install neovim
-  pip install flake8
-  symlink `pyenv which flake8` ~/bin/flake8
-else
-  echo "virtualenv neovim3 for $DEFAULT_PYTHON_VERSION has already been setup."
-fi
+echo "Python setup complete!"
+echo "Current Python version: $(python --version)"

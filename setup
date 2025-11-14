@@ -17,16 +17,22 @@ symlink $DOTFILES/git/gitignore $HOME/.gitignore
 
 symlink $DOTFILES/ruby/gemrc $HOME/.gemrc
 
+symlink $DOTFILES/.tmux.conf $HOME/.tmux.conf
+symlink $DOTFILES/.config/tmux $HOME/.config/tmux
+symlink $DOTFILES/.config/tmux-powerline $HOME/.config/tmux-powerline
+symlink $DOTFILES/.config/nvim $HOME/.config/nvim
+symlink $DOTFILES/.tool-versions.home $HOME/.tool-versions
+
 source ./setup-homebrew
 source ./setup-zsh
 source ./setup-vim
 # run this lazily when we call asdf for the first time
 # source ./setup-asdf
 
-# these deprecated in favor of asdf
-# source ./setup-ruby
-# source ./setup-python
-# source ./setup-nodejs
+# asdf-based setups
+source ./setup-python
+source ./setup-nodejs
+source ./setup-ruby
 
 # fzf: install useful keybindings and fuzzy completion
 [[ ! -f ~/.fzf.zsh ]] && /opt/homebrew/opt/fzf/install

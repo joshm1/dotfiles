@@ -92,10 +92,10 @@
   # tag
   t = tag -n                        # show tags with <n> lines of each tag message
 
-  # svn helpers
-  svnr = svn rebase
-  svnd = svn dcommit
-  svnl = svn log --oneline --show-commit
+  # additional useful aliases
+  br = branch --sort=-committerdate # show branches sorted by last commit
+  ri = rebase -i                    # interactive rebase
+  today = log --since=midnight --author='Josh' --oneline # show what you've done today
 [format]
   pretty = format:%C(blue)%ad%Creset %C(yellow)%h%C(green)%d%Creset %C(blue)%s %C(magenta) [%an]%Creset
 [mergetool]
@@ -107,6 +107,7 @@
   summary = true
   verbosity = 1
   tool = mvimdiff
+	conflictStyle = zdiff3
 [apply]
   whitespace = nowarn
 [branch]
@@ -116,10 +117,10 @@
   # the usual default is to push all branches
 	default = current
 [core]
-  autocrlf = false
+	autocrlf = input
   editor = nvim
 	excludesfile = ~/.gitignore
-	pager = diff-so-fancy | less --tabs=4 -RFX
+	pager = delta
 [advice]
   statusHints = false
 [diff]
@@ -127,32 +128,40 @@
   # instead of a/b/c/d as prefixes for patches
   mnemonicprefix = true
   algorithm = patience
+  colorMoved = default
 [rerere]
   # Remember my merges
   # http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
   enabled = true
 [include]
   path = ~/.gitconfig_local
-[difftool "sourcetree"]
-	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
 [hub]
 	host = github.com
 	protocol = https
 [init]
 	defaultBranch = main
+[pull]
+	rebase = true
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
 [interactive]
-	diffFilter = diff-so-fancy --patch
+	diffFilter = delta --color-only
 [color "diff-highlight"]
 	oldNormal = red bold
 	oldHighlight = red bold 52
 	newNormal = green bold
 	newHighlight = green bold 22
-[mergetool "sourcetree"]
-	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
-	trustExitCode = true
+[user]
+	signingkey = --unset
+[safe]
+	directory = /workspace/obsidian
+[delta]
+	navigate = true
+	line-numbers = true
+	syntax-theme = "Monokai Extended"
+  # side-by-side = true
+	line-numbers-left-format = ""
+	line-numbers-right-format = "│ "
