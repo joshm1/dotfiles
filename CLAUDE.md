@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a personal dotfiles repository for macOS that manages shell configuration (zsh), development tools (via Homebrew and asdf), tmux setup, neovim configuration, and git settings. The repository uses symlinks to install dotfiles from `~/projects/joshm1/dotfiles` (stored as `$DOTFILES` = `~/.dotfiles`) to their standard locations.
 
+## Git Workflow
+
+**IMPORTANT:** Do NOT proactively run `git add` or `git commit` commands unless the user explicitly asks you to create a commit. The user prefers to handle git operations themselves.
+
+- ✅ Make code changes, create files, edit files as requested
+- ✅ Show git status when asked or when changes are complete
+- ❌ Do NOT run `git add` without being asked
+- ❌ Do NOT run `git commit` without being asked
+- ❌ Do NOT run `git push` without being asked
+
+When the user explicitly says "commit this" or "create a commit", then and only then should you stage changes and create commits.
+
 ## Installation & Setup
 
 ### Initial Setup
@@ -58,18 +70,31 @@ Private/sensitive configs are stored in Dropbox (not in this repo):
 - `~/Dropbox/dotfiles/.zshrc.after` - Sourced at end of .zshrc
 
 ### Symlink Management
-The `symlink()` function in `utils.sh` safely creates symlinks by:
-1. Checking if target already exists and points to source
-2. Backing up existing files to timestamped directory (`$BCKDIR`)
-3. Creating the symlink
+Dotfiles are organized in the `home/` directory, which mirrors the `$HOME` directory structure. The setup script automatically discovers and symlinks all files from `home/` to `$HOME`.
 
-Key symlinks created by setup:
-- `.gitconfig` → `$DOTFILES/git/gitconfig`
-- `.tmux.conf` → `$DOTFILES/.tmux.conf`
-- `~/.config/nvim` → `$DOTFILES/.config/nvim`
-- `~/.tool-versions` → `$DOTFILES/.tool-versions.home`
+**Structure:**
+```
+dotfiles/
+  home/
+    .gitconfig → $HOME/.gitconfig
+    .zshrc → $HOME/.zshrc
+    .tmux.conf → $HOME/.tmux.conf
+    .config/
+      nvim/ → $HOME/.config/nvim/
+      tmux/ → $HOME/.config/tmux/
+    ...
+```
 
-### Shell Configuration Flow (zsh/.zshrc)
+**How it works:**
+1. Python script `symlink-home-files` (from `dotfiles_scripts/symlink_home.py`) auto-discovers files in `home/`
+2. For each file/directory, it creates a symlink to the corresponding location in `$HOME`
+3. Existing files are backed up to timestamped directory (`~/.dotfiles.YYYYMMDD-HHMMSS.bck/`)
+4. Already-correct symlinks are skipped
+
+**Adding new dotfiles:**
+Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig` → `~/.myconfig`), and it will be automatically symlinked on next setup run.
+
+### Shell Configuration Flow (home/.zshrc)
 1. Load private pre-config from Dropbox
 2. Enable Powerlevel10k instant prompt
 3. Configure direnv
@@ -96,7 +121,7 @@ Uses TPM (Tmux Plugin Manager) with plugins:
 
 ### Git Configuration
 The gitconfig includes:
-- Extensive git aliases (see `git/gitconfig`)
+- Extensive git aliases (see `home/.gitconfig`)
 - Delta as pager for better diffs
 - Pull with rebase by default
 - Custom functions in .zshrc:
@@ -105,7 +130,7 @@ The gitconfig includes:
   - `gch` - Interactive branch checkout with fzf preview
 
 ### Neovim
-Configuration is in `.config/nvim/init.lua`.
+Configuration is in `home/.config/nvim/init.lua`.
 
 ## Custom Shell Functions
 
@@ -159,45 +184,103 @@ When making changes to this dotfiles repo:
 
 1. **Adding new tools**: Edit `homebrew/Brewfile*` and re-run setup-homebrew
 2. **Changing default versions**: Edit version constants in `utils.sh`
-3. **Shell customization**: Edit `zsh/.zshrc` (or private configs in Dropbox)
-4. **Git aliases/config**: Edit `git/gitconfig`
-5. **Tmux bindings**: Edit `.tmux.conf`
-6. **Neovim**: Edit `.config/nvim/init.lua`
+3. **Shell customization**: Edit `home/.zshrc` (or private configs in Dropbox)
+4. **Git aliases/config**: Edit `home/.gitconfig`
+5. **Tmux bindings**: Edit `home/.tmux.conf`
+6. **Neovim**: Edit `home/.config/nvim/init.lua`
+7. **Adding new dotfiles**: Add to `home/` directory in desired structure
 
 ## Utility Scripts
 
-### Python Scripts (scripts/)
-Python utility scripts are stored in `scripts/` and follow [PEP 723](https://peps.python.org/pep-0723/) inline script metadata specification for dependency management.
+This repository uses a Python package structure for all utility scripts. Scripts are organized as a proper Python package with dependency management via uv.
 
-**Guidelines for writing Python scripts:**
-1. Use PEP 723 inline dependencies in script header:
-   ```python
-   # /// script
-   # dependencies = [
-   #   "click>=8.1.0",
-   #   "rich>=13.0.0",
-   # ]
-   # ///
-   ```
-2. Use `uv run` to execute scripts - it will automatically install dependencies
+### Project Structure
+```
+dotfiles/
+  pyproject.toml          # Python project configuration
+  dotfiles_scripts/       # Python package
+    __init__.py
+    utils.py              # Shared utilities
+    symlink_home.py       # Auto-symlink home/ files
+    check_homebrew.py     # Check Homebrew apps
+```
+
+### Writing New Scripts
+
+**Guidelines:**
+1. Add new scripts to `dotfiles_scripts/` as Python modules
+2. Use shared utilities from `dotfiles_scripts.utils` (e.g., `get_dotfiles_dir()`, `get_backup_dir()`)
 3. Use `click` for CLI argument parsing
 4. Use `rich` for beautiful terminal output (tables, progress bars, colors)
-5. Make scripts executable: `chmod +x scripts/script-name.py`
+5. Add console script entry points to `pyproject.toml`:
+   ```toml
+   [project.scripts]
+   my-script-name = "dotfiles_scripts.my_module:main"
+   ```
+6. Dependencies are managed in `pyproject.toml`, NOT inline PEP 723 headers
+
+**Running scripts:**
+```bash
+# Using console script (after adding to pyproject.toml)
+uv run script-name
+
+# Or run module directly
+uv run -m dotfiles_scripts.module_name
+```
 
 **Available Scripts:**
-- `scripts/check-homebrew-apps.py` - Finds apps in /Applications available in Homebrew but not installed via Homebrew
+- `symlink-home-files` - Auto-discover and symlink all files from `home/` to `$HOME`
+  ```bash
+  # Run symlink operation
+  uv run symlink-home-files
+
+  # Dry run - show what would be done without making changes
+  uv run symlink-home-files --dry-run
+  ```
+
+- `check-homebrew-apps` - Find apps in /Applications available in Homebrew but not installed via Homebrew
   ```bash
   # Basic usage
-  uv run scripts/check-homebrew-apps.py
+  uv run check-homebrew-apps
 
   # Show verbose progress
-  uv run scripts/check-homebrew-apps.py --verbose
+  uv run check-homebrew-apps --verbose
 
   # Different output formats
-  uv run scripts/check-homebrew-apps.py -f table    # Default: nice table
-  uv run scripts/check-homebrew-apps.py -f list     # Simple list
-  uv run scripts/check-homebrew-apps.py -f brewfile # Output as Brewfile entries
+  uv run check-homebrew-apps -f table    # Default: nice table
+  uv run check-homebrew-apps -f list     # Simple list
+  uv run check-homebrew-apps -f brewfile # Output as Brewfile entries
   ```
+
+### Example: Creating a New Script
+
+```python
+# dotfiles_scripts/my_new_script.py
+"""Description of what this script does."""
+
+import click
+from rich.console import Console
+from dotfiles_scripts.utils import get_dotfiles_dir
+
+console = Console()
+
+@click.command()
+@click.option('--verbose', '-v', is_flag=True, help='Verbose output')
+def main(verbose):
+    """My new utility script."""
+    dotfiles = get_dotfiles_dir()
+    console.print(f"[green]Dotfiles directory: {dotfiles}[/green]")
+    # Your logic here
+
+if __name__ == "__main__":
+    main()
+```
+
+Then add to `pyproject.toml`:
+```toml
+[project.scripts]
+my-new-script = "dotfiles_scripts.my_new_script:main"
+```
 
 ## Notes
 
