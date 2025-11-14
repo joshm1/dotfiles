@@ -31,6 +31,7 @@ source ./setup-vim
 
 # asdf-based setups
 source ./setup-python
+source ./setup-uv
 source ./setup-nodejs
 source ./setup-ruby
 
