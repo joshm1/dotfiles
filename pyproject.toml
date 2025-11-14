@@ -16,6 +16,12 @@ dependencies = [
 symlink-home-files = "dotfiles_scripts.symlink_home:main"
 check-homebrew-apps = "dotfiles_scripts.check_homebrew:main"
 
+[tool.uv]
+package = true
+
 [build-system]
-requires = ["uv_build>=0.8.24,<0.9.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatchling.build.targets.wheel]
+packages = ["dotfiles_scripts"]

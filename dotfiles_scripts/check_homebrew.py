@@ -1,14 +1,7 @@
-#!/usr/bin/env python3
-# /// script
-# dependencies = [
-#   "click>=8.1.0",
-#   "rich>=13.0.0",
-# ]
-# ///
 """
 Check which apps in /Applications are available in Homebrew but not installed via Homebrew.
 
-Usage: uv run scripts/check-homebrew-apps.py
+Usage: uv run check-homebrew-apps
 """
 
 import subprocess
