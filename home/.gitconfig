@@ -154,10 +154,6 @@
 	oldHighlight = red bold 52
 	newNormal = green bold
 	newHighlight = green bold 22
-[user]
-	signingkey = --unset
-[safe]
-	directory = /workspace/obsidian
 [delta]
 	navigate = true
 	line-numbers = true
