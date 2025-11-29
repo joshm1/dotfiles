@@ -34,17 +34,17 @@ vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagn
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Previous diagnostic' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Next diagnostic' })
 
--- Install plugins
+-- Install plugins (vim.pack is native to Neovim 0.12+)
 vim.pack.add({
-  'https://github.com/christoomey/vim-tmux-navigator',
-  'https://github.com/catppuccin/nvim',
-  'https://github.com/neovim/nvim-lspconfig',
-  'https://github.com/nvim-lua/plenary.nvim', -- Required by telescope
-  'https://github.com/nvim-telescope/telescope.nvim',
-  'https://github.com/hrsh7th/nvim-cmp',      -- Completion engine
-  'https://github.com/hrsh7th/cmp-nvim-lsp',  -- LSP completion source
-  'https://github.com/hrsh7th/cmp-buffer',    -- Buffer completion source
-  'https://github.com/hrsh7th/cmp-path',      -- Path completion source
+  { src = 'https://github.com/christoomey/vim-tmux-navigator' },
+  { src = 'https://github.com/catppuccin/nvim' },
+  { src = 'https://github.com/neovim/nvim-lspconfig' },
+  { src = 'https://github.com/nvim-lua/plenary.nvim' },  -- Required by telescope
+  { src = 'https://github.com/nvim-telescope/telescope.nvim' },
+  { src = 'https://github.com/hrsh7th/nvim-cmp' },       -- Completion engine
+  { src = 'https://github.com/hrsh7th/cmp-nvim-lsp' },   -- LSP completion source
+  { src = 'https://github.com/hrsh7th/cmp-buffer' },     -- Buffer completion source
+  { src = 'https://github.com/hrsh7th/cmp-path' },       -- Path completion source
 })
 
 -- Set colorscheme
