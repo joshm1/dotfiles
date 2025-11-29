@@ -340,3 +340,11 @@ fi
 
 # enables shell command completion for gcloud (Homebrew installation).
 [ -f "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+
+# Added by Antigravity
+export PATH="/Users/josh/.antigravity/antigravity/bin:$PATH"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/josh/.lmstudio/bin"
+# End of LM Studio CLI section
+
