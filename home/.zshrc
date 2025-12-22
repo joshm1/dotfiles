@@ -9,6 +9,8 @@ bool() {
 enable_zprof() { bool $ENABLE_ZPROF }
 enable_zprof && zmodload zsh/zprof
 
+# direnv export: Silently set up environment vars BEFORE instant prompt (no console output)
+# This is needed to prevent "direnv: unloading" messages during instant prompt
 (( ${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
@@ -17,8 +19,6 @@ enable_zprof && zmodload zsh/zprof
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-
-(( ${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
 
 export LANG=en_US.UTF-8
 
@@ -45,33 +45,16 @@ antigen use oh-my-zsh
 
 antigen bundle brew
 antigen bundle command-not-found
-
-# b/c of powerlevel10k and instant-prompt, we load direnv differently
-# antigen bundle direnv
-
 antigen bundle fzf
 antigen bundle git
 antigen bundle wd
 antigen bundle zsh-users/zsh-syntax-highlighting
-
 antigen bundle zsh-users/zsh-autosuggestions
 antigen bundle zap-zsh/supercharge
-# antigen bundle zpm-zsh/ls
 antigen bundle zap-zsh/exa
 
-# https://github.com/skywind3000/z.lua/wiki/FAQ#fzsh-for-better-completion
-# antigen bundle skywind3000/z.lua
-# antigen bundle changyuheng/fz
-# zoxide is initialized after antigen apply to avoid conflicts
-
-# https://github.com/MichaelAquilina/zsh-autoswitch-virtualenv
-antigen bundle "MichaelAquilina/zsh-autoswitch-virtualenv"
-
-# java version manager
-# antigen bundle shihyuho/zsh-jenv-lazy
-
-# Version managers - using asdf for all languages (python, ruby, nodejs)
-# No plugins needed - asdf is loaded directly via source_asdf function below
+# REMOVED: zsh-autoswitch-virtualenv conflicts with custom load-local-venv function (line ~258)
+# Causes "_default_venv:8: command not found: deactivate" error
 
 # if you want these, add ANTIGEN_BUNDLE_NODE=y to ~/.dotfiles-config
 if [[ "$ANTIGEN_BUNDLE_NODE" = y* ]]; then
@@ -90,9 +73,6 @@ alias buf >/dev/null && unalias buf
 eval "$(zoxide init zsh)"
 alias z >/dev/null 2>&1 && unalias z
 
-# direnv
-# eval "$(direnv hook $0)"
-
 alias be="bundle exec"
 alias rc="bundle exec rails console"
 
@@ -109,11 +89,7 @@ path=("$HOME/bin" $path)
 
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 
-# export FZF_DEFAULT_OPTS='--height=70% --preview="cat {}" --preview-window=right:60%:wrap'
-# export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
-# export FZF_DEFAULT_OPTS='--preview "([[ -f {} ]] && bat --style=numbers --color=always --line-range :500 {}) || ([[ -d {} ]] && tree -C {} || echo {})"'
 export FZF_DEFAULT_OPTS='--preview "([[ -f {} ]] && bat --style=numbers --color=always --line-range :500 {}) || ([[ -d {} ]] && eza -T --git-ignore --icons --group-directories-first -la {})"'
-# export FZF_DEFAULT_COMMAND='rg --files'
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_R_OPTS="--preview ''"
@@ -122,15 +98,6 @@ export FZF_CTRL_R_OPTS="--preview ''"
 
 # add psql to path
 [ -d /Applications/Postgres.app ] && path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)
-
-# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
-# test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
-
-# function git_prompt_info() {
-#   ref=$(git symbolic-ref HEAD 2> /dev/null) || return
-#   echo "$ZSH_THEME_GIT_PROMPT_PREFIX${ref#refs/heads/}$ZSH_THEME_GIT_PROMPT_SUFFIX"
-# }
 
 # load more configuration I don't care to add to a public repository
 test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"
@@ -198,8 +165,6 @@ gch() {
   fi
 }
 
-# [ -f $HOME/.cargo/env ] && source $HOME/.cargo/env
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 source_asdf
@@ -215,10 +180,6 @@ if type aws_completer >/dev/null; then
 fi
 
 source "${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
-
-# if [ -f "$HOME/.config/gcloud/application_default_credentials.json" ]; then
-#   export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/application_default_credentials.json"
-# fi
 
 [ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
 
@@ -297,8 +258,8 @@ export PATH="$PATH:$HOME/.lmstudio/bin"
 
 # Neovim nightly
 [ -d "$HOME/nvim-macos-x86_64/bin" ] && export PATH="$HOME/nvim-macos-x86_64/bin:$PATH"
-#
-# # Function to get tmux session names
+
+# Function to get tmux session names
 function _tmux_sessions_complete() {
   local -a sessions
   echo wtf
@@ -322,13 +283,31 @@ function sesh-sessions() {
   }
 }
 
+function sesh-sessions() {
+  local session
+  session=$(sesh list --icons | fzf \
+    --no-sort --ansi --border-label ' sesh ' --prompt '⚡  ' \
+    --header '  ^a all ^t tmux ^g configs ^x zoxide ^d tmux kill ^f find' \
+    --bind 'tab:down,btab:up' \
+    --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
+    --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
+    --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
+    --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
+    --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
+    --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
+    --preview-window 'right:55%' \
+    --preview 'sesh preview {}')
+  
+  [[ -z "$session" ]] && return
+  sesh connect "$session"
+}
+
 zle     -N             sesh-sessions
 bindkey -M emacs '\es' sesh-sessions
 bindkey -M vicmd '\es' sesh-sessions
 bindkey -M viins '\es' sesh-sessions
 
 eval "$(atuin init zsh)"
-# Removed: nvim is now in PATH via ~/nvim-macos-x86_64/bin
 
 # seshc alias - connect to sesh session with fzf
 if type sesh &>/dev/null; then
@@ -348,3 +327,15 @@ export PATH="/Users/josh/.antigravity/antigravity/bin:$PATH"
 export PATH="$PATH:/Users/josh/.lmstudio/bin"
 # End of LM Studio CLI section
 
+# asdf
+. "$(brew --prefix asdf)/libexec/asdf.sh"
+export PATH="$HOME/.asdf/shims:$PATH"
+
+# omnara
+export OMNARA_INSTALL="$HOME/.omnara"
+export PATH="$OMNARA_INSTALL/bin:$PATH"
+
+# GNU coreutils aliases (macOS compatibility)
+if ! command -v timeout &> /dev/null && command -v gtimeout &> /dev/null; then
+  alias timeout='gtimeout'
+fi

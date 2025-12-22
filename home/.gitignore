@@ -53,8 +53,14 @@ Session.vim
 # dir-env
 .envrc
 
+# dotenv
+.env*.local
+
 .capistrano/
 .agignore
 *.hprof # jvm
 routes.txt
 .metals/
+
+# CLAUDE settings.local.json
+settings.local.json
