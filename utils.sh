@@ -7,6 +7,10 @@ DEFAULT_RUBY_VERSION=2.7.4
 DEFAULT_JAVA_VERSION=adoptopenjdk-17.0.5+8
 DEFAULT_PYTHON_VERSION=3.12.7
 
+is_mac() {
+  uname | grep Darwin 1>/dev/null 2>&1
+}
+
 # set to "true" to install Python 2
 INSTALL_PYTHON2=false
 LOCAL_DEVICE_ID_FILE=$HOME/.device_id

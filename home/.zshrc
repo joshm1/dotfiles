@@ -5,6 +5,10 @@ bool() {
   [[ $1 = y* || $1 = true || $1 = 1 ]]
 }
 
+# Platform detection
+is_macos() { [[ "$OSTYPE" == darwin* ]] }
+is_linux() { [[ "$OSTYPE" == linux* ]] }
+
 # add ENABLE_ZPROF=yes to ~/.dotfiles-config to run
 enable_zprof() { bool $ENABLE_ZPROF }
 enable_zprof && zmodload zsh/zprof
@@ -155,16 +159,6 @@ gch() {
   git checkout $branch
 }
 
-# https://github.com/wting/autojump
-(){
-  if [ -f /usr/local/etc/profile.d/autojump.sh ]; then
-    . /usr/local/etc/profile.d/autojump.sh
-  else
-    local aj_file=$(brew --prefix autojump)/etc/autojump.sh
-    [ -f $aj_file ] && . $aj_file
-  fi
-}
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 source_asdf
@@ -245,7 +239,11 @@ if command -v go &>/dev/null; then
 fi
 
 # pnpm
-export PNPM_HOME="$HOME/Library/pnpm"
+if is_macos; then
+  export PNPM_HOME="$HOME/Library/pnpm"
+else
+  export PNPM_HOME="$HOME/.local/share/pnpm"
+fi
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -270,18 +268,6 @@ function _tmux_sessions_complete() {
 
 # Assign the completion function to 'tmux attach -t'
 compdef _tmux_sessions_complete 'tmux attach -t'
-
-function sesh-sessions() {
-  {
-    exec </dev/tty
-    exec <&1
-    local session
-    session=$(sesh list -t -c | fzf --height 40% --reverse --border-label ' sesh ' --border --prompt '⚡  ')
-    zle reset-prompt > /dev/null 2>&1 || true
-    [[ -z "$session" ]] && return
-    sesh connect $session
-  }
-}
 
 function sesh-sessions() {
   local session
@@ -321,11 +307,7 @@ fi
 [ -f "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
 
 # Added by Antigravity
-export PATH="/Users/josh/.antigravity/antigravity/bin:$PATH"
-
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/josh/.lmstudio/bin"
-# End of LM Studio CLI section
+[ -d "$HOME/.antigravity/antigravity/bin" ] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
 # asdf
 . "$(brew --prefix asdf)/libexec/asdf.sh"

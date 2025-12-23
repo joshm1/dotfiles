@@ -5,7 +5,8 @@ source ./utils.sh
 git submodule update --init
 
 # macOS config
-defaults write com.apple.finder AppleShowAllFiles YES.
+
+is_mac && defaults write com.apple.finder AppleShowAllFiles YES.
 
 # link dotfiles
 [ -d $DOTFILES ] || symlink $HOME/projects/joshm1/dotfiles $DOTFILES
@@ -30,7 +31,9 @@ echo "Symlinking dotfiles from home/ directory..."
 uv run --directory $DOTFILES symlink-home-files
 
 # fzf: install useful keybindings and fuzzy completion
-[[ ! -f ~/.fzf.zsh ]] && /opt/homebrew/opt/fzf/install
+if is_mac; then
+  [[ ! -f ~/.fzf.zsh ]] && /opt/homebrew/opt/fzf/install
+fi
 
 # private config files should be in Dropbox
 source ./setup-dropbox
