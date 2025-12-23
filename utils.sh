@@ -11,6 +11,24 @@ is_mac() {
   uname | grep Darwin 1>/dev/null 2>&1
 }
 
+is_wsl() {
+  grep -qi microsoft /proc/version 2>/dev/null
+}
+
+# Setup Dropbox symlink for WSL (Dropbox runs on Windows, not in WSL)
+setup_wsl_dropbox() {
+  if is_wsl && [ ! -e "$HOME/Dropbox" ]; then
+    local win_user=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+    local win_dropbox="/mnt/c/Users/${win_user}/Dropbox"
+    if [ -d "$win_dropbox" ]; then
+      echo "WSL detected: Creating symlink to Windows Dropbox..."
+      ln -s "$win_dropbox" "$HOME/Dropbox"
+    else
+      echo "Warning: Windows Dropbox not found at $win_dropbox"
+    fi
+  fi
+}
+
 # set to "true" to install Python 2
 INSTALL_PYTHON2=false
 LOCAL_DEVICE_ID_FILE=$HOME/.device_id
