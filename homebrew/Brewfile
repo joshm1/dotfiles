@@ -8,7 +8,8 @@ brew 'lazygit'                  # Terminal UI for git - https://github.com/jesse
 brew 'tig'                      # Text-mode interface for git - https://github.com/jonas/tig
 
 # Programming Languages & Runtimes
-brew 'asdf'                     # Multi-language version manager - https://github.com/asdf-vm/asdf
+brew 'mise'                     # Polyglot version manager - https://github.com/jdx/mise
+brew 'uv'                       # Fast Python package manager - https://github.com/astral-sh/uv
 brew 'go'                       # Go programming language
 brew 'php'                      # PHP scripting language
 brew 'rust'                     # Rust programming language

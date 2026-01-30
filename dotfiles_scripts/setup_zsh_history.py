@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Setup shared zsh history via Dropbox."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from dotfiles_scripts.setup_utils import (
+    DROPBOX_DIR,
+    create_symlink,
+    print_header,
+    print_step,
+    print_success,
+    print_warning,
+)
+
+
+DEVICE_ID_FILE = Path.home() / ".device_id"
+
+
+def get_device_id() -> str | None:
+    """Get the device ID, or prompt user to create one."""
+    if DEVICE_ID_FILE.exists():
+        return DEVICE_ID_FILE.read_text().strip()
+    return None
+
+
+def setup_device_id() -> str | None:
+    """Setup device ID interactively."""
+    print_step("No device ID found")
+    print("  A device ID is used to maintain separate zsh history files per machine.")
+
+    try:
+        device_id = input("  What would you like to name this device? ").strip()
+        if not device_id:
+            print_warning("No device ID provided, skipping zsh history setup")
+            return None
+
+        DEVICE_ID_FILE.write_text(device_id)
+        print_success(f"Device ID set to: {device_id}")
+        return device_id
+
+    except (EOFError, KeyboardInterrupt):
+        print()
+        print_warning("Skipping device ID setup")
+        return None
+
+
+def get_device_history_file(device_id: str) -> Path:
+    """Get the path to the device-specific zsh history file."""
+    return DROPBOX_DIR / "dotfiles" / f".zsh_history.{device_id}"
+
+
+def main() -> int:
+    """Main entry point."""
+    print_header("Setting up zsh history")
+
+    # Check Dropbox
+    dropbox_dotfiles = DROPBOX_DIR / "dotfiles"
+    if not dropbox_dotfiles.exists():
+        print_warning("Dropbox dotfiles not found, skipping zsh history setup")
+        return 0
+
+    # Get or create device ID
+    device_id = get_device_id()
+    if not device_id:
+        device_id = setup_device_id()
+        if not device_id:
+            return 0
+
+    # Get device-specific history file
+    device_history = get_device_history_file(device_id)
+
+    # Create if doesn't exist
+    if not device_history.exists():
+        local_history = Path.home() / ".zsh_history"
+
+        if local_history.exists() and not local_history.is_symlink():
+            print_step(f"Copying existing history to {device_history}")
+            device_history.write_bytes(local_history.read_bytes())
+        else:
+            device_history.touch()
+
+    # Symlink
+    create_symlink(device_history, Path.home() / ".zsh_history")
+
+    print_success("zsh history setup complete!")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
