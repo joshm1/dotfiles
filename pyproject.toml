@@ -3,18 +3,20 @@ name = "dotfiles-scripts"
 version = "0.1.0"
 description = "Utility scripts for managing dotfiles"
 readme = "README.md"
-authors = [
-    { name = "Josh McDade", email = "josh.ncsu@gmail.com" }
-]
-requires-python = ">=3.12"
-dependencies = [
-    "rich>=13.0.0",
-    "click>=8.1.0",
-]
+authors = [{ name = "Josh McDade", email = "josh.ncsu@gmail.com" }]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+rich = ["rich>=13.0.0", "click>=8.1.0"]
 
 [project.scripts]
-symlink-home-files = "dotfiles_scripts.symlink_home:main"
-check-homebrew-apps = "dotfiles_scripts.check_homebrew:main"
+# Main entry point
+dotfiles-setup = "dotfiles_scripts.setup:cli"
+
+# Utility scripts (require rich optional dependency)
+symlink-home-files = "dotfiles_scripts.symlink_home:cli"
+check-homebrew-apps = "dotfiles_scripts.check_homebrew:cli"
 
 [tool.uv]
 package = true

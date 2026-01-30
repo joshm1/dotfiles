@@ -98,7 +98,7 @@ def is_available_in_homebrew(app_name):
     default="table",
     help="Output format: table, list, or brewfile",
 )
-def main(verbose, output_format):
+def cli(verbose, output_format):
     """Check which apps in /Applications are available in Homebrew but not installed via Homebrew."""
 
     console.print(
@@ -198,4 +198,4 @@ def main(verbose, output_format):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli())

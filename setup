@@ -1,48 +1,37 @@
-#!/bin/zsh -e
+#!/bin/bash
+#
+# Dotfiles setup - bootstraps uv and runs the Python setup script.
+#
 
-source ./utils.sh
+set -e
 
-git submodule update --init
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
-# macOS config
+# Check for Homebrew
+if ! command -v brew &>/dev/null; then
+    echo "Homebrew not found. Installing..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-is_mac && defaults write com.apple.finder AppleShowAllFiles YES.
-
-# link dotfiles
-[ -d $DOTFILES ] || symlink $HOME/projects/joshm1/dotfiles $DOTFILES
-
-mkdir -p $HOME/.config
-
-source ./setup-homebrew
-source ./setup-zsh
-source ./setup-vim
-# run this lazily when we call asdf for the first time
-# source ./setup-asdf
-
-# asdf-based setups
-source ./setup-python
-source ./setup-uv
-source ./setup-nodejs
-source ./setup-ruby
-
-# Auto-discover and symlink all files from home/ directory
-# (runs after Python/uv setup so dependencies are available)
-echo "Symlinking dotfiles from home/ directory..."
-uv run --directory $DOTFILES symlink-home-files
-
-# fzf: install useful keybindings and fuzzy completion
-if is_mac; then
-  [[ ! -f ~/.fzf.zsh ]] && /opt/homebrew/opt/fzf/install
+    # Add Homebrew to PATH for this session
+    if [[ -f /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -f /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
 fi
 
-# private config files should be in Dropbox
-source ./setup-dropbox
+# Check for uv
+if ! command -v uv &>/dev/null; then
+    echo "uv not found. Installing via Homebrew..."
+    brew install uv
+fi
 
-# zsh-history has dropbox dependency
-source ./setup-zsh-history
+echo "Using uv: $(uv --version)"
 
-source ./setup-postgres
+# Sync the project (creates venv and installs package)
+echo "Syncing project..."
+uv sync
 
-# clone oh-my-zsh - do not run installer because our .zshrc already has includes the oh-my-zsh config
-# [[ ! -d ~/.oh-my-zsh ]] && \
-#   git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+# Run the setup script
+exec uv run dotfiles-setup "$@"

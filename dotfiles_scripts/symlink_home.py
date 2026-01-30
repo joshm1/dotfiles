@@ -129,10 +129,10 @@ def symlink_home_files(dry_run: bool = False) -> int:
     is_flag=True,
     help="Show what would be done without making any changes",
 )
-def main(dry_run):
-    """Entry point for the CLI command."""
+def cli(dry_run):
+    """CLI entry point."""
     sys.exit(symlink_home_files(dry_run))
 
 
 if __name__ == "__main__":
-    main()
+    cli()
