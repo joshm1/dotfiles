@@ -23,7 +23,7 @@ Copy/paste this prompt into Claude Code on a new machine:
 Clone my dotfiles repo and set up this machine.
 
 1. First, ask me two questions:
-   a. What device ID to use for this machine (e.g. macbook-pro, mac-mini-bot). Device IDs must be lowercase, dash-case, and start with a letter.
+   a. What device ID to use for this machine (e.g. macbook-pro, mac.personal, mac.work). Device IDs use dot-separated namespaces for hierarchical config.
    b. Should I copy the existing ~/.zsh_history to ~/Dropbox/dotfiles/zsh_history/.zsh_history.{device_id}? (Only if ~/.zsh_history exists and has content worth preserving)
 
 2. Verify Dropbox is set up:
@@ -56,12 +56,17 @@ After setup completes, remind me to run `p10k configure` in a new terminal tab.
 - [ ] Install BetterTouchTool license (optional - Raycast provides many similar features)
 - [ ] Install CleanShot X license: https://licenses.cleanshot.com/
 - [ ] Install SublimeText license: `pbcopy < ~/Dropbox/Apps/SublimeText3/license.txt`
-- [ ] Download and activate Wispr Flow: https://wisprflow.ai (use your work email)
-- [ ] [Install Powerlevel10k fonts](https://github.com/romkatv/powerlevel10k#automatic-font-installation)
 
-# Mac-specific configuration
+# Machine-specific configuration
 
-If you want different machines to behave differently and still use the same dotfiles repository, you can
-configure environment variables in the `~/.dotfiles-config` file.
+Each machine has a device-specific config file in Dropbox, symlinked to `~/.dotfiles-config`:
 
-* `ENABLE_K8S` - set to "true" to enable kubernetes plugins
+```
+~/Dropbox/dotfiles/machine-config/{device_id}.zsh  # actual file
+~/.dotfiles-config                                  # symlink
+```
+
+Available settings:
+
+* `ENABLE_ZPROF=yes` - enable zsh startup profiling
+* `ANTIGEN_BUNDLE_NODE=y` - enable Node.js completion bundles (npm/yarn tab completion)

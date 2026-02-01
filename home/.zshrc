@@ -1,4 +1,30 @@
-test -f "$HOME/Dropbox/dotfiles/.zshrc.before" && source "$HOME/Dropbox/dotfiles/.zshrc.before"
+# Load device ID for device-specific config (e.g., mac.personal, macbook-pro.work)
+[[ -f "$HOME/.device_id" ]] && _device_id=$(<"$HOME/.device_id")
+
+# Source hierarchical config files
+# For device_id=mac.personal: sources base, base.mac, base.mac.personal (if they exist)
+_source_hierarchy() {
+  local base="$1" id="$2" prefix=""
+  test -f "$base" && source "$base"
+  [[ -z "$id" ]] && return
+  for segment in ${(s:.:)id}; do
+    prefix="${prefix:+$prefix.}$segment"
+    test -f "$base.$prefix" && source "$base.$prefix"
+  done
+}
+
+# Machine-specific env vars (symlinked from ~/Dropbox/dotfiles/home/.config/dotfiles/)
+_source_hierarchy "$HOME/.config/dotfiles/.dotfiles-config" "$_device_id"
+
+# Edit dotfiles-config files (fzf to select)
+edit-dotfiles-config() {
+  local dir="$HOME/.config/dotfiles"
+  local file=$(ls -1 "$dir"/.dotfiles-config* 2>/dev/null | fzf --tac)
+  [[ -n "$file" ]] && ${EDITOR:-vim} "$file"
+}
+
+# Private config sourced before everything else
+_source_hierarchy "$HOME/Dropbox/dotfiles/.zshrc.before" "$_device_id"
 
 # var $1 is truthy if it starts with "y", equals "true", or equals "1"
 bool() {
@@ -9,7 +35,7 @@ bool() {
 is_macos() { [[ "$OSTYPE" == darwin* ]] }
 is_linux() { [[ "$OSTYPE" == linux* ]] }
 
-# add ENABLE_ZPROF=yes to ~/.dotfiles-config to run
+# set ENABLE_ZPROF=yes in ~/.dotfiles-config to enable
 enable_zprof() { bool $ENABLE_ZPROF }
 enable_zprof && zmodload zsh/zprof
 
@@ -60,7 +86,7 @@ antigen bundle zap-zsh/exa
 # REMOVED: zsh-autoswitch-virtualenv conflicts with custom load-local-venv function (line ~258)
 # Causes "_default_venv:8: command not found: deactivate" error
 
-# if you want these, add ANTIGEN_BUNDLE_NODE=y to ~/.dotfiles-config
+# set ANTIGEN_BUNDLE_NODE=y in ~/.dotfiles-config to enable
 if [[ "$ANTIGEN_BUNDLE_NODE" = y* ]]; then
   antigen bundle lukechilds/zsh-better-npm-completion
   antigen bundle g-plane/zsh-yarn-autocompletions
@@ -72,15 +98,14 @@ antigen apply
 
 # History file in Dropbox for sync across machines (must be after antigen/oh-my-zsh)
 # Uses device-specific file if ~/.device_id exists (created by setup-zsh-history)
-if [[ -f "$HOME/.device_id" ]]; then
-  _device_id=$(<"$HOME/.device_id")
+if [[ -n "$_device_id" ]]; then
   _histfile="$HOME/Dropbox/dotfiles/zsh_history/.zsh_history.${_device_id}"
   if [[ -f "$_histfile" ]]; then
     export HISTFILE="$_histfile"
   else
     echo "Warning: Device history file not found: $_histfile"
   fi
-  unset _device_id _histfile
+  unset _histfile
 elif [[ -f "$HOME/Dropbox/dotfiles/zsh_history/.zsh_history" ]]; then
   export HISTFILE="$HOME/Dropbox/dotfiles/zsh_history/.zsh_history"
 else
@@ -115,8 +140,12 @@ export FZF_CTRL_R_OPTS="--preview ''"
 
 [ -d $HOME/bin ] && path=("$HOME/bin" $path)
 
-# load more configuration I don't care to add to a public repository
-test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"
+# Private config sourced after everything else
+_source_hierarchy "$HOME/Dropbox/dotfiles/.zshrc.after" "$_device_id" ""
+
+# Cleanup
+unset _device_id
+unset -f _source_hierarchy
 
 enable_zprof && zprof
 unset -f enable_zprof

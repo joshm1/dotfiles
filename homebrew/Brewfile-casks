@@ -14,6 +14,7 @@ cask 'notion'                   # Notes & collaboration - https://www.notion.so
 cask 'notion-calendar'          # Calendar for professionals - https://www.notion.com/product/calendar
 cask 'obsidian'                 # Knowledge base with Markdown - https://obsidian.md
 cask 'raycast'                  # Launcher & productivity tool - https://raycast.com
+cask 'wispr-flow'               # Voice-to-text dictation - https://wisprflow.ai
 
 # Development Tools
 cask 'bruno'                    # Opensource API client - https://github.com/usebruno/bruno
