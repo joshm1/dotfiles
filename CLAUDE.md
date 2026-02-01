@@ -146,7 +146,6 @@ Configuration is in `home/.config/nvim/init.lua`.
 # Edit package lists
 vim homebrew/Brewfile        # Core CLI tools
 vim homebrew/Brewfile-casks  # GUI applications
-vim homebrew/Brewfile-mas    # Mac App Store apps
 
 # Re-run bundle installation
 rm homebrew/.installed

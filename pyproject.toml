@@ -15,6 +15,7 @@ rich = ["rich>=13.0.0", "click>=8.1.0"]
 dotfiles-setup = "dotfiles_scripts.setup:cli"
 
 # Individual setup scripts
+setup-device-id = "dotfiles_scripts.setup_device_id:main"
 setup-dropbox = "dotfiles_scripts.setup_dropbox:main"
 setup-fzf = "dotfiles_scripts.setup_fzf:main"
 setup-homebrew = "dotfiles_scripts.setup_homebrew:main"
