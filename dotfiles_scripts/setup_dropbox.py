@@ -256,6 +256,45 @@ def check_stale_symlinks(home_dir: Path) -> None:
         print("  Run 'rm <symlink>' to remove, or restore the file in Dropbox.")
 
 
+def wait_for_dropbox() -> bool:
+    """Check if Dropbox is available and wait for user to set it up if not."""
+    home_dir = DROPBOX_DIR / "dotfiles" / "home"
+
+    if home_dir.is_dir():
+        return True
+
+    # Check if Dropbox app is installed
+    dropbox_app = Path("/Applications/Dropbox.app")
+    if not dropbox_app.exists() and not DROPBOX_DIR.exists():
+        print_warning("Dropbox is not installed")
+        print("\nTo install Dropbox:")
+        print("  1. Run: brew install --cask dropbox")
+        print("  2. Or download from: https://www.dropbox.com/install")
+    else:
+        # Dropbox is installed but dotfiles not synced yet
+        print_warning("Dropbox dotfiles not found")
+        print(f"\nExpected path: {home_dir}")
+        print("\nTo fix this:")
+        print("  1. Open Dropbox and sign in")
+        print("  2. Go to Dropbox Preferences → Sync → Selective Sync")
+        print("  3. Make sure 'dotfiles' folder is selected to sync")
+        print("  4. Right-click dotfiles folder → Make Available Offline")
+
+    # Wait for user to set up Dropbox
+    while True:
+        try:
+            response = input("\nPress Enter to check again, or 's' to skip: ").strip().lower()
+            if response == "s":
+                return False
+            if home_dir.is_dir():
+                print_success("Dropbox dotfiles found!")
+                return True
+            print_warning("Still not found. Make sure Dropbox is synced...")
+        except (EOFError, KeyboardInterrupt):
+            print()
+            raise SystemExit(0) from None
+
+
 def main() -> int:
     """Main entry point."""
     print_header("Setting up Dropbox dotfiles")
@@ -265,10 +304,8 @@ def main() -> int:
 
     home_dir = DROPBOX_DIR / "dotfiles" / "home"
 
-    if not home_dir.is_dir():
-        print_warning("Dropbox dotfiles/home not found")
-        print("Make sure Dropbox is installed and ~/Dropbox/dotfiles/home is synced.")
-        print("Skipping Dropbox setup.")
+    if not wait_for_dropbox():
+        print_step("Skipping Dropbox setup")
         return 0
 
     check_stale_symlinks(home_dir)

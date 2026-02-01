@@ -37,24 +37,26 @@ cd ~/projects/joshm1/dotfiles
 3. Runs component-specific setup scripts in order
 
 ### Setup Scripts
-All setup scripts source `./utils.sh` for common functions and variables. Run these individually only when needed:
+Setup scripts are Python modules in `dotfiles_scripts/`. Run individually with `uv run <script-name>`:
 - `setup-zsh` - Configures zsh with antigen
 - `setup-vim` - Sets up neovim
-- `setup-asdf` - Installs asdf plugins (java, nodejs, python, ruby) with default versions
-- `setup-python`, `setup-nodejs`, `setup-ruby` - Language-specific setups (run after asdf)
-- `setup-dropbox` - Links private config files
+- `setup-neovim` - Installs neovim nightly
+- `setup-mise` - Installs mise for language version management
+- `setup-dropbox` - Links private config files from Dropbox
 - `setup-zsh-history` - Configures shared zsh history (requires Dropbox)
+- `setup-homebrew` - Installs Homebrew and runs Brewfiles
+- `setup-macos` - Configures macOS defaults
+- `setup-fzf` - Sets up fzf
 
 ## Key Architecture
 
-### Configuration Variables (utils.sh)
-Default versions for tools are defined in `utils.sh`:
-- `DEFAULT_NODE_VERSION=24.4.0`
-- `DEFAULT_RUBY_VERSION=2.7.4`
-- `DEFAULT_JAVA_VERSION=adoptopenjdk-17.0.5+8`
-- `DEFAULT_PYTHON_VERSION=3.12.7`
-- `DOTFILES=$HOME/.dotfiles`
-- `DROPBOX_DIR=$HOME/Dropbox`
+### Configuration Variables
+Common paths are defined in `dotfiles_scripts/setup_utils.py`:
+- `DOTFILES = $HOME/.dotfiles`
+- `DOTFILES_REPO = ~/projects/joshm1/dotfiles`
+- `DROPBOX_DIR = $HOME/Dropbox`
+
+Language versions are managed by mise (see `.mise.toml` files).
 
 ### Machine-Specific Configuration
 Device-specific config files use hierarchical namespaces (e.g., `mac.personal`).
@@ -171,18 +173,8 @@ rm homebrew/.installed
 ```
 
 ### Installing/upgrading language versions
-```bash
-# Check current versions in utils.sh
-vim utils.sh
-
-# Install new version with asdf
-source_asdf  # Initialize asdf if not loaded
-asdf install python 3.13.0
-asdf global python 3.13.0
-
-# Or re-run setup script
-source ./setup-python
-```
+Language versions are managed via `.tool-versions` or `.mise.toml` config files.
+Edit the config file and run `mise install` to apply changes.
 
 ### Testing changes to .zshrc
 ```bash
@@ -198,7 +190,7 @@ ENABLE_ZPROF=yes zsh -ic exit
 When making changes to this dotfiles repo:
 
 1. **Adding new tools**: Edit `homebrew/Brewfile*` and re-run `./setup` (or delete `homebrew/.installed` first)
-2. **Changing default versions**: Edit version constants in `utils.sh`
+2. **Changing default versions**: Edit `.mise.toml` or use `mise use <tool>@<version>`
 3. **Shell customization**: Edit `home/.zshrc` (or private configs in Dropbox)
 4. **Git aliases/config**: Edit `home/.gitconfig`
 5. **Tmux bindings**: Edit `home/.tmux.conf`
