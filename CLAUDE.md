@@ -57,15 +57,33 @@ Default versions for tools are defined in `utils.sh`:
 - `DROPBOX_DIR=$HOME/Dropbox`
 
 ### Machine-Specific Configuration
-Environment variables can be set in `~/.dotfiles-config` (not tracked in repo):
-- `ENABLE_K8S` - "true" to enable kubernetes plugins
-- `ENABLE_ZPROF` - "yes" to enable zsh profiling
-- `ANTIGEN_BUNDLE_NODE` - "y" to enable Node.js completion bundles
+Device-specific config files use hierarchical namespaces (e.g., `mac.personal`).
+Files are in `~/Dropbox/dotfiles/home/.config/dotfiles/` and symlinked to `~/.config/dotfiles/`:
+
+```
+.dotfiles-config              # shared across all devices
+.dotfiles-config.mac          # all mac devices
+.dotfiles-config.mac.personal # this specific device
+```
+
+Available settings:
+- `ENABLE_ZPROF=yes` - enable zsh profiling
+- `ANTIGEN_BUNDLE_NODE=y` - enable Node.js completion bundles
+
+Use `edit-dotfiles-config` to edit the most specific config for this device.
 
 ### Private Configuration
-Private/sensitive configs are stored in Dropbox (not in this repo):
-- `~/Dropbox/dotfiles/.zshrc.before` - Sourced at start of .zshrc
-- `~/Dropbox/dotfiles/.zshrc.after` - Sourced at end of .zshrc
+Private/sensitive configs are stored in Dropbox (not in this repo). Files are sourced hierarchically based on device_id (e.g., `mac.personal`):
+
+```
+.zshrc.before              # shared
+.zshrc.before.mac          # all mac devices
+.zshrc.before.mac.personal # this specific device
+...main zshrc...
+.zshrc.after               # shared
+.zshrc.after.mac           # all mac devices
+.zshrc.after.mac.personal  # this specific device
+```
 
 ### Symlink Management
 Dotfiles are organized in the `home/` directory, which mirrors the `$HOME` directory structure. The setup script automatically discovers and symlinks all files from `home/` to `$HOME`.

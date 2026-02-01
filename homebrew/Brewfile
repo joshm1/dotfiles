@@ -93,3 +93,4 @@ brew 'zlib'
 
 # Fonts (fonts are now in main homebrew/cask, no tap needed)
 cask 'font-3270-nerd-font'      # Nerd Fonts: https://www.nerdfonts.com/font-downloads
+cask 'font-meslo-for-powerlevel10k'  # Powerlevel10k recommended font
