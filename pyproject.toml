@@ -14,6 +14,17 @@ rich = ["rich>=13.0.0", "click>=8.1.0"]
 # Main entry point
 dotfiles-setup = "dotfiles_scripts.setup:cli"
 
+# Individual setup scripts
+setup-dropbox = "dotfiles_scripts.setup_dropbox:main"
+setup-fzf = "dotfiles_scripts.setup_fzf:main"
+setup-homebrew = "dotfiles_scripts.setup_homebrew:main"
+setup-macos = "dotfiles_scripts.setup_macos:main"
+setup-mise = "dotfiles_scripts.setup_mise:main"
+setup-vim = "dotfiles_scripts.setup_vim:main"
+setup-neovim = "dotfiles_scripts.setup_neovim:main"
+setup-zsh = "dotfiles_scripts.setup_zsh:main"
+setup-zsh-history = "dotfiles_scripts.setup_zsh_history:main"
+
 # Utility scripts (require rich optional dependency)
 symlink-home-files = "dotfiles_scripts.symlink_home:cli"
 check-homebrew-apps = "dotfiles_scripts.check_homebrew:cli"

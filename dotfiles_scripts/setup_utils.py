@@ -75,6 +75,11 @@ def run_cmd(
 
 def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -> bool:
     """Create a symlink, backing up existing files if needed."""
+    # Don't create broken symlinks
+    if not source.exists():
+        print_warning(f"Skipping {target.name}: source does not exist ({source})")
+        return False
+
     # Already correct symlink?
     if target.is_symlink() and target.resolve() == source.resolve():
         print(f"  {target.name} already linked")

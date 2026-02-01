@@ -8,7 +8,6 @@ from pathlib import Path
 
 from dotfiles_scripts.setup_utils import (
     DROPBOX_DIR,
-    create_symlink,
     print_header,
     print_step,
     print_success,
@@ -49,7 +48,7 @@ def setup_device_id() -> str | None:
 
 def get_device_history_file(device_id: str) -> Path:
     """Get the path to the device-specific zsh history file."""
-    return DROPBOX_DIR / "dotfiles" / f".zsh_history.{device_id}"
+    return DROPBOX_DIR / "dotfiles" / "zsh_history" / f".zsh_history.{device_id}"
 
 
 def main() -> int:
@@ -69,6 +68,10 @@ def main() -> int:
         if not device_id:
             return 0
 
+    # Ensure zsh_history directory exists
+    zsh_history_dir = DROPBOX_DIR / "dotfiles" / "zsh_history"
+    zsh_history_dir.mkdir(parents=True, exist_ok=True)
+
     # Get device-specific history file
     device_history = get_device_history_file(device_id)
 
@@ -80,12 +83,10 @@ def main() -> int:
             print_step(f"Copying existing history to {device_history}")
             device_history.write_bytes(local_history.read_bytes())
         else:
+            print_step(f"Creating {device_history}")
             device_history.touch()
 
-    # Symlink
-    create_symlink(device_history, Path.home() / ".zsh_history")
-
-    print_success("zsh history setup complete!")
+    print_success(f"HISTFILE will use: {device_history}")
     return 0
 
 

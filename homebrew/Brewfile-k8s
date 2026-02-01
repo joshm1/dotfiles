@@ -1,6 +1,0 @@
-# Kubernetes tools - not actively used, kept for reference
-# brew 'helm'
-# brew 'kubectl'
-# brew 'kubectx'
-# brew 'kube-ps1'
-# brew 'stern'

@@ -2,7 +2,7 @@
 """
 Setup mise (modern version manager, replacement for asdf).
 
-This script uses only the standard library so it can run with system Python (3.9+).
+Tool versions are defined in ~/.config/mise/config.toml (symlinked from dotfiles).
 """
 
 from __future__ import annotations
@@ -11,12 +11,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-
-
-# Default tool versions
-DEFAULT_PYTHON_VERSION = "3.13"
-DEFAULT_NODE_VERSION = "22"
-DEFAULT_RUBY_VERSION = "3.3"
 
 
 def print_step(msg: str) -> None:
@@ -68,7 +62,6 @@ def install_mise_via_homebrew() -> bool:
 
 def get_mise_path() -> str | None:
     """Get the path to mise binary."""
-    # Check common locations
     paths = [
         shutil.which("mise"),
         "/opt/homebrew/bin/mise",
@@ -79,25 +72,6 @@ def get_mise_path() -> str | None:
         if p and Path(p).exists():
             return p
     return None
-
-
-def mise_install_tool(mise_path: str, tool: str, version: str) -> bool:
-    """Install a tool version with mise."""
-    print_step(f"Installing {tool}@{version}...")
-    try:
-        run_cmd([mise_path, "use", "--global", f"{tool}@{version}"])
-        print_success(f"{tool}@{version} installed and set as global")
-        return True
-    except subprocess.CalledProcessError as e:
-        print_error(f"Failed to install {tool}@{version}: {e}")
-        return False
-
-
-def setup_mise_activation() -> None:
-    """Print instructions for activating mise in shell."""
-    print("\nTo activate mise in your shell, add to your .zshrc:")
-    print('  eval "$(mise activate zsh)"')
-    print("\nOr run: mise activate zsh >> ~/.zshrc")
 
 
 def main() -> int:
@@ -131,24 +105,19 @@ def main() -> int:
         print_step(f"Trusting {dotfiles} for mise config...")
         run_cmd([mise_path, "trust", str(dotfiles)], check=False)
 
-    # Install default tools
-    print("\nInstalling default tool versions...")
-    print()
-
-    tools = [
-        ("python", DEFAULT_PYTHON_VERSION),
-        ("node", DEFAULT_NODE_VERSION),
-        ("ruby", DEFAULT_RUBY_VERSION),
-    ]
-
-    for tool, version in tools:
-        mise_install_tool(mise_path, tool, version)
+    # Install tools from dotfiles and global config
+    for cwd in [dotfiles, Path.home()]:
+        if cwd.exists():
+            print_step(f"Installing tools from {cwd}...")
+            try:
+                run_cmd([mise_path, "install"], cwd=cwd)
+                print_success(f"Tools installed from {cwd}")
+            except subprocess.CalledProcessError as e:
+                print_warning(f"Some tools may have failed to install: {e}")
 
     # Show what's installed
     print("\nInstalled tools:")
     run_cmd([mise_path, "ls"])
-
-    setup_mise_activation()
 
     print()
     print_success("mise setup complete!")

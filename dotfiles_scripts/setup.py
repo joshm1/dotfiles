@@ -138,31 +138,31 @@ def cli() -> int:
         print_error("Homebrew setup failed")
         return 1
 
-    # Phase 4: mise (version manager)
+    # Phase 4: Neovim nightly (install early as a core editor)
+    run_setup_module("setup_neovim")
+
+    # Phase 5: mise (version manager)
     run_setup_module("setup_mise")
 
-    # Phase 5: Shell setup
+    # Phase 6: Shell setup
     run_setup_module("setup_zsh")
 
-    # Phase 6: Neovim
+    # Phase 7: Neovim config
     run_setup_module("setup_vim")
 
-    # Phase 7: Symlink home files
+    # Phase 8: Symlink home files
     symlink_home_files()
 
-    # Phase 8: fzf
+    # Phase 9: fzf
     run_setup_module("setup_fzf")
 
-    # Phase 9: Dropbox-dependent setup (optional)
+    # Phase 10: Dropbox-dependent setup (optional)
     if DROPBOX_DIR.exists():
         run_setup_module("setup_dropbox")
         run_setup_module("setup_zsh_history")
     else:
         print_warning("Dropbox not found - skipping Dropbox-dependent setup")
         print("  Run setup-dropbox and setup-zsh-history later after setting up Dropbox")
-
-    # Phase 10: Optional tools
-    run_setup_module("setup_postgres")
 
     print_header("Setup Complete!")
     print("Language runtimes (Python, Node, Ruby) are managed by mise.")

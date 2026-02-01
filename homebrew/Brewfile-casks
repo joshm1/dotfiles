@@ -1,15 +1,13 @@
 cask_args appdir: '/Applications'
-tap 'homebrew/cask-versions'
 
 # Password Managers
 cask '1password'                # Password manager - https://1password.com
 # cask '1password-cli'          # Only needed if using 'op' CLI for scripting
 
 # Productivity
-cask 'alfred'                   # Spotlight replacement & automation - https://www.alfredapp.com
+# cask 'alfred'                   # Spotlight replacement & automation - https://www.alfredapp.com
 # cask 'bettertouchtool'        # Advanced input customization - https://folivora.ai - replaced with Raycast Window Management
 cask 'cleanshot'                # Screen capturing tool - https://getcleanshot.com
-cask 'grammarly'                # Grammar & spell checker
 cask 'linear-linear'            # Project management & issue tracking - https://linear.app
 cask 'loom'                     # Screen recording & sharing - https://www.loom.com
 cask 'notion'                   # Notes & collaboration - https://www.notion.so
@@ -22,12 +20,12 @@ cask 'bruno'                    # Opensource API client - https://github.com/use
 cask 'chatgpt'                  # OpenAI's official ChatGPT desktop app - https://chatgpt.com
 cask 'claude'                   # Anthropic's official Claude AI desktop app - https://claude.ai
 cask 'cursor'                   # AI-powered code editor - https://www.cursor.com
-cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
+# cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
 cask 'ghostty'                  # Fast, native terminal emulator - https://github.com/ghostty-org/ghostty
 cask 'lm-studio'                # Run local LLMs - https://lmstudio.ai
 cask 'termius'                  # SSH client - https://termius.com
 cask 'visual-studio-code'       # Code editor - https://github.com/microsoft/vscode
-cask 'sublime-text'             # Text editor - https://www.sublimetext.com
+# cask 'sublime-text'             # Text editor - https://www.sublimetext.com
 cask 'zed'                      # Multiplayer code editor - https://zed.dev
 
 # Cloud & Infrastructure
@@ -35,11 +33,12 @@ cask 'gcloud-cli'               # Google Cloud SDK - https://cloud.google.com/sd
 cask 'ngrok'                    # Secure tunneling - https://ngrok.com
 
 # Database
-cask 'postgres-unofficial'      # PostgreSQL GUI - https://postgresapp.com
+# cask 'postgres-unofficial'      # PostgreSQL GUI - https://postgresapp.com (replaced with brew postgresql@18)
 
 # Communication
 cask 'slack'                    # Team chat - https://slack.com
 cask 'superhuman'               # Email client - https://superhuman.com
+cask 'telegram'                 # Messaging - https://telegram.org
 cask 'zoom'                     # Video conferencing - https://zoom.us
 
 # Security & Privacy
@@ -52,11 +51,11 @@ cask 'dropbox'                  # File sync & storage - https://www.dropbox.com
 
 # Browsers
 cask 'google-chrome'            # Web browser
-cask 'vivaldi'                  # Privacy-focused browser - https://vivaldi.com
+cask 'helium-browser'           # Floating browser window - https://helium.computer/
 # cask 'firefox'
 
-# Security
-cask 'authy'                    # 2FA authenticator - https://authy.com
+# Productivity (additional)
+cask 'ticktick'                 # Task manager - https://ticktick.com
 
 # Entertainment
 cask 'spotify'                  # Music streaming - https://www.spotify.com

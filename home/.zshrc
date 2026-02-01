@@ -70,6 +70,23 @@ antigen theme romkatv/powerlevel10k
 
 antigen apply
 
+# History file in Dropbox for sync across machines (must be after antigen/oh-my-zsh)
+# Uses device-specific file if ~/.device_id exists (created by setup-zsh-history)
+if [[ -f "$HOME/.device_id" ]]; then
+  _device_id=$(<"$HOME/.device_id")
+  _histfile="$HOME/Dropbox/dotfiles/zsh_history/.zsh_history.${_device_id}"
+  if [[ -f "$_histfile" ]]; then
+    export HISTFILE="$_histfile"
+  else
+    echo "Warning: Device history file not found: $_histfile"
+  fi
+  unset _device_id _histfile
+elif [[ -f "$HOME/Dropbox/dotfiles/zsh_history/.zsh_history" ]]; then
+  export HISTFILE="$HOME/Dropbox/dotfiles/zsh_history/.zsh_history"
+else
+  echo "Warning: Dropbox zsh_history not found, using default ~/.zsh_history"
+fi
+
 # we want to use buf from https://docs.buf.build
 alias buf >/dev/null && unalias buf
 
@@ -100,39 +117,12 @@ export FZF_CTRL_R_OPTS="--preview ''"
 
 [ -d $HOME/bin ] && path=("$HOME/bin" $path)
 
-# add psql to path
-[ -d /Applications/Postgres.app ] && path=("/Applications/Postgres.app/Contents/Versions/latest/bin" $path)
-
 # load more configuration I don't care to add to a public repository
 test -f "${HOME}/Dropbox/dotfiles/.zshrc.after" && source "${HOME}/Dropbox/dotfiles/.zshrc.after"
 
 enable_zprof && zprof
 unset -f enable_zprof
 
-# asdf
-source_asdf(){
-  local asdf_sh=$(brew --prefix asdf)/libexec/asdf.sh
-  if [ -f $asdf_sh ]; then
-    source $asdf_sh
-  else
-    asdf() {
-      echo -n "asdf is not installed. Install via homebrew? (y/n) > "
-      read answer
-      if [[ "$answer" = y* ]]; then
-        brew install asdf
-      fi
-    }
-  fi
-}
-
-set_java_home() {
-  local set_java_home_sh=$HOME/.asdf/plugins/java/set-java-home.zsh
-  if [ -f $set_java_home_sh ]; then
-    . $set_java_home_sh
-  else
-    echo "asdf java plugin is not installed"
-  fi
-}
 
 # https://buildpacks.io/docs/tools/pack/
 if type pack >/dev/null 2>&1; then
@@ -161,8 +151,6 @@ gch() {
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-source_asdf
-
 if [[ -f ~/.docker/init-zsh.sh ]]; then
   source ~/.docker/init-zsh.sh || true # Added by Docker Desktop
 fi
@@ -172,8 +160,6 @@ if type aws_completer >/dev/null; then
   autoload -Uz compinit && compinit
   complete -C "$(brew --prefix)/bin/aws_completer" aws
 fi
-
-source "${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
 
 [ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
 
@@ -309,9 +295,8 @@ fi
 # Added by Antigravity
 [ -d "$HOME/.antigravity/antigravity/bin" ] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
-# asdf
-. "$(brew --prefix asdf)/libexec/asdf.sh"
-export PATH="$HOME/.asdf/shims:$PATH"
+# mise (version manager)
+eval "$(mise activate zsh)"
 
 # omnara
 export OMNARA_INSTALL="$HOME/.omnara"

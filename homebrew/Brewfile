@@ -11,16 +11,13 @@ brew 'tig'                      # Text-mode interface for git - https://github.c
 brew 'mise'                     # Polyglot version manager - https://github.com/jdx/mise
 brew 'uv'                       # Fast Python package manager - https://github.com/astral-sh/uv
 brew 'go'                       # Go programming language
-brew 'php'                      # PHP scripting language
 brew 'rust'                     # Rust programming language
 
 # Shell & Terminal Tools
 brew 'antidote'                 # Zsh plugin manager - https://github.com/mattmc3/antidote
 brew 'atuin'                    # Shell history sync & search - https://github.com/atuinsh/atuin
-brew 'autojump'                 # Fast directory navigation - https://github.com/wting/autojump
 brew 'bat'                      # Cat clone with syntax highlighting - https://github.com/sharkdp/bat
 brew 'btop'                     # Resource monitor - https://github.com/aristocratos/btop
-brew 'direnv'                   # Load/unload env vars per directory - https://github.com/direnv/direnv
 brew 'eza'                      # Modern ls replacement - https://github.com/eza-community/eza
 brew 'fzf'                      # Fuzzy finder - https://github.com/junegunn/fzf
 brew 'mosh'                     # Mobile shell (SSH alternative) - https://github.com/mobile-shell/mosh
@@ -30,14 +27,16 @@ brew 'zoxide'                   # Smarter cd command - https://github.com/ajeetd
 brew 'zsh-completions'          # Additional zsh completions - https://github.com/zsh-users/zsh-completions
 
 # Text Editors
-brew 'neovim'                   # Modern vim - https://github.com/neovim/neovim
+# neovim installed via GitHub nightly (see setup-vim)
 brew 'lua-language-server'      # LSP for Lua/Neovim config - https://github.com/LuaLS/lua-language-server
+
+# Media
+brew 'ffmpeg'                   # Audio/video converter - https://ffmpeg.org
 
 # Search & File Tools
 brew 'fd'                       # Fast find alternative - https://github.com/sharkdp/fd
 brew 'fswatch'                  # File change monitor - https://github.com/emcrisostomo/fswatch
 brew 'ripgrep'                  # Fast grep alternative - https://github.com/BurntSushi/ripgrep
-brew 'the_silver_searcher'      # Fast code search (ag) - https://github.com/ggreer/the_silver_searcher
 brew 'tree'                     # Directory tree viewer
 
 # Data Processing
@@ -48,19 +47,17 @@ brew 'yq'                       # YAML processor - https://github.com/mikefarah/
 
 # Cloud & Infrastructure
 brew 'awscli'                   # AWS command line interface
+brew 'gcalcli'                  # Google Calendar CLI - https://github.com/insanum/gcalcli
 brew 'pulumi'                   # Infrastructure as code - https://github.com/pulumi/pulumi
 
 # Containers & VMs
 brew 'docker-compose'           # Multi-container Docker apps - https://github.com/docker/compose
 brew 'lima'                     # Linux VMs on macOS - https://github.com/lima-vm/lima
-brew 'podman'                   # Daemonless container engine - https://github.com/containers/podman
 brew 'qemu'                     # Generic machine emulator
 
-# Kubernetes Tools
-brew 'k9s'                      # Kubernetes TUI - https://github.com/derailed/k9s
 
 # Databases
-brew 'dbmate'                   # Database migration tool - https://github.com/amacneil/dbmate
+brew 'postgresql@18'            # PostgreSQL database
 brew 'redis', restart_service: :changed  # In-memory data store
 
 # Build & Task Tools
@@ -75,10 +72,10 @@ brew 'wget'                     # File downloader
 brew 'whois'                    # Domain lookup tool
 
 # Documentation & Conversion
-brew 'pandoc'                   # Universal document converter - https://github.com/jgm/pandoc
 brew 'tealdeer'                 # Fast tldr client - https://github.com/dbrgn/tealdeer
 
 # Utilities
+brew 'gnupg'                    # GPG encryption & signing - used by mise, git commit signing
 brew 'ctags'                    # Code indexing tool
 brew 'cscope'                   # Code browsing tool
 brew 'diff-so-fancy'            # Better diff output - https://github.com/so-fancy/diff-so-fancy
@@ -99,6 +96,5 @@ brew 'zlib'
 # AWS VPN
 # cask 'session-manager-plugin'
 
-# Fonts
-tap 'homebrew/cask-fonts'
+# Fonts (fonts are now in main homebrew/cask, no tap needed)
 cask 'font-3270-nerd-font'      # Nerd Fonts: https://www.nerdfonts.com/font-downloads
