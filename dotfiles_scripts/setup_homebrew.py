@@ -9,8 +9,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from dotfiles_scripts.setup_device_id import get_device_id
 from dotfiles_scripts.setup_utils import (
     DOTFILES_REPO,
+    DROPBOX_DIR,
     create_symlink,
     print_header,
     print_step,
@@ -66,6 +68,37 @@ def install_homebrew() -> bool:
         return False
 
 
+def get_brewfiles() -> list[Path]:
+    """Get all Brewfiles to install, including device-specific ones from Dropbox."""
+    brewfiles: list[Path] = []
+    homebrew_dir = DOTFILES_REPO / "homebrew"
+
+    # Get Brewfiles from dotfiles repo
+    for brewfile in sorted(homebrew_dir.glob("Brewfile*")):
+        if brewfile.name.startswith(".") or ".lock.json" in brewfile.name:
+            continue
+        brewfiles.append(brewfile)
+
+    # Check for device-specific Brewfiles in Dropbox
+    device_id = get_device_id()
+    if device_id:
+        dropbox_homebrew = DROPBOX_DIR / "dotfiles" / "homebrew"
+        if dropbox_homebrew.exists():
+            # Look for device-specific Brewfiles (e.g., Brewfile-macbook-pro)
+            device_brewfile = dropbox_homebrew / f"Brewfile-{device_id}"
+            if device_brewfile.exists():
+                print_step(f"Found device-specific Brewfile: {device_brewfile}")
+                brewfiles.append(device_brewfile)
+
+            # Also look for any Brewfile-casks-{device_id}
+            device_casks = dropbox_homebrew / f"Brewfile-casks-{device_id}"
+            if device_casks.exists():
+                print_step(f"Found device-specific casks: {device_casks}")
+                brewfiles.append(device_casks)
+
+    return brewfiles
+
+
 def run_brew_bundle() -> bool:
     """Run brew bundle for all Brewfiles."""
     homebrew_dir = DOTFILES_REPO / "homebrew"
@@ -83,15 +116,12 @@ def run_brew_bundle() -> bool:
 
     print_step("Running brew bundle...")
 
-    # Run bundle for each Brewfile (skip lock files and hidden files)
-    for brewfile in sorted(homebrew_dir.glob("Brewfile*")):
-        if brewfile.name.startswith(".") or ".lock.json" in brewfile.name:
-            continue
-
+    brewfiles = get_brewfiles()
+    for brewfile in brewfiles:
         print_step(f"Installing from {brewfile.name}...")
         try:
             run_cmd(["brew", "bundle", f"--file={brewfile}"])
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             print_warning(f"Some packages from {brewfile.name} failed to install")
 
     # Mark as installed

@@ -20,7 +20,7 @@ cask 'bruno'                    # Opensource API client - https://github.com/use
 cask 'chatgpt'                  # OpenAI's official ChatGPT desktop app - https://chatgpt.com
 cask 'claude'                   # Anthropic's official Claude AI desktop app - https://claude.ai
 cask 'cursor'                   # AI-powered code editor - https://www.cursor.com
-# cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
+cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
 cask 'ghostty'                  # Fast, native terminal emulator - https://github.com/ghostty-org/ghostty
 cask 'lm-studio'                # Run local LLMs - https://lmstudio.ai
 cask 'termius'                  # SSH client - https://termius.com
@@ -31,9 +31,6 @@ cask 'zed'                      # Multiplayer code editor - https://zed.dev
 # Cloud & Infrastructure
 cask 'gcloud-cli'               # Google Cloud SDK - https://cloud.google.com/sdk
 cask 'ngrok'                    # Secure tunneling - https://ngrok.com
-
-# Database
-# cask 'postgres-unofficial'      # PostgreSQL GUI - https://postgresapp.com (replaced with brew postgresql@18)
 
 # Communication
 cask 'slack'                    # Team chat - https://slack.com

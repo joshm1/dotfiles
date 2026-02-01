@@ -130,33 +130,36 @@ def cli() -> int:
             print_error(f"Failed: {name}")
             return 1
 
-    # Phase 2: macOS defaults
+    # Phase 2: Device ID (needed for device-specific Homebrew casks)
+    run_setup_module("setup_device_id")
+
+    # Phase 3: macOS defaults
     run_setup_module("setup_macos")
 
-    # Phase 3: Homebrew
+    # Phase 4: Homebrew (uses device_id for device-specific Dropbox Brewfiles)
     if not run_setup_module("setup_homebrew"):
         print_error("Homebrew setup failed")
         return 1
 
-    # Phase 4: Neovim nightly (install early as a core editor)
+    # Phase 5: Neovim nightly (install early as a core editor)
     run_setup_module("setup_neovim")
 
-    # Phase 5: mise (version manager)
+    # Phase 6: mise (version manager)
     run_setup_module("setup_mise")
 
-    # Phase 6: Shell setup
+    # Phase 7: Shell setup
     run_setup_module("setup_zsh")
 
-    # Phase 7: Neovim config
+    # Phase 8: Neovim config
     run_setup_module("setup_vim")
 
-    # Phase 8: Symlink home files
+    # Phase 9: Symlink home files
     symlink_home_files()
 
-    # Phase 9: fzf
+    # Phase 10: fzf
     run_setup_module("setup_fzf")
 
-    # Phase 10: Dropbox-dependent setup (optional)
+    # Phase 11: Dropbox-dependent setup (optional)
     if DROPBOX_DIR.exists():
         run_setup_module("setup_dropbox")
         run_setup_module("setup_zsh_history")

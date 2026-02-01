@@ -52,8 +52,6 @@ brew 'pulumi'                   # Infrastructure as code - https://github.com/pu
 
 # Containers & VMs
 brew 'docker-compose'           # Multi-container Docker apps - https://github.com/docker/compose
-brew 'lima'                     # Linux VMs on macOS - https://github.com/lima-vm/lima
-brew 'qemu'                     # Generic machine emulator
 
 
 # Databases
@@ -92,9 +90,6 @@ brew 'rsync'
 brew 'unzip'
 brew 'xz'
 brew 'zlib'
-
-# AWS VPN
-# cask 'session-manager-plugin'
 
 # Fonts (fonts are now in main homebrew/cask, no tap needed)
 cask 'font-3270-nerd-font'      # Nerd Fonts: https://www.nerdfonts.com/font-downloads
