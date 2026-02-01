@@ -104,9 +104,7 @@ setopt no_beep
 
 alias vim="nvim"
 alias vi="nvim"
-# Note: nvim is in PATH via ~/nvim-macos-x86_64/bin (set below)
-
-path=("$HOME/bin" $path)
+path=("$HOME/.local/bin" "$HOME/bin" $path)
 
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 

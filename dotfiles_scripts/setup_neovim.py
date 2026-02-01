@@ -20,8 +20,8 @@ from dotfiles_scripts.setup_utils import (
     print_error,
 )
 
-INSTALL_DIR = Path("/opt/nvim")
-SYMLINK_PATH = Path("/usr/local/bin/nvim")
+INSTALL_DIR = Path.home() / ".local" / "nvim"
+SYMLINK_PATH = Path.home() / ".local" / "bin" / "nvim"
 NIGHTLY_URL_TEMPLATE = "https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-{arch}.tar.gz"
 
 
@@ -88,20 +88,18 @@ def install_neovim(tarball: Path) -> None:
         print_step(f"Removing existing installation at {INSTALL_DIR}")
         shutil.rmtree(INSTALL_DIR)
 
-    # Move to /opt/nvim (requires sudo)
+    # Ensure parent directories exist
+    INSTALL_DIR.parent.mkdir(parents=True, exist_ok=True)
+    SYMLINK_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    # Move to ~/.local/nvim
     print_step(f"Installing to {INSTALL_DIR}")
-    subprocess.run(
-        ["sudo", "mv", str(extracted), str(INSTALL_DIR)],
-        check=True,
-    )
+    shutil.move(str(extracted), str(INSTALL_DIR))
 
     # Create symlink
     print_step(f"Creating symlink at {SYMLINK_PATH}")
-    SYMLINK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        ["sudo", "ln", "-sf", str(INSTALL_DIR / "bin" / "nvim"), str(SYMLINK_PATH)],
-        check=True,
-    )
+    SYMLINK_PATH.unlink(missing_ok=True)
+    SYMLINK_PATH.symlink_to(INSTALL_DIR / "bin" / "nvim")
 
 
 def main() -> int:
