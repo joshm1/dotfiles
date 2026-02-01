@@ -25,6 +25,7 @@ setup-vim = "dotfiles_scripts.setup_vim:main"
 setup-neovim = "dotfiles_scripts.setup_neovim:main"
 setup-zsh = "dotfiles_scripts.setup_zsh:main"
 setup-zsh-history = "dotfiles_scripts.setup_zsh_history:main"
+setup-gpg = "dotfiles_scripts.setup_gpg:main"
 
 # Utility scripts (require rich optional dependency)
 symlink-home-files = "dotfiles_scripts.symlink_home:cli"

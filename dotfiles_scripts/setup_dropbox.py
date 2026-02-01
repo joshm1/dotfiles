@@ -26,7 +26,7 @@ SYMLINK_DIR_TAG = ".symlink-dir"
 DOTFILES_CONFIG = ".dotfiles.yaml"
 
 # Files to skip when traversing
-SKIP_FILES = {".DS_Store", SYMLINK_DIR_TAG, DOTFILES_CONFIG}
+SKIP_FILES = {".DS_Store", ".git", SYMLINK_DIR_TAG, DOTFILES_CONFIG}
 
 
 def is_mac() -> bool:
@@ -256,6 +256,34 @@ def check_stale_symlinks(home_dir: Path) -> None:
         print("  Run 'rm <symlink>' to remove, or restore the file in Dropbox.")
 
 
+def create_device_gitconfigs(home_dir: Path) -> None:
+    """Create device-specific gitconfig files with placeholder content if they don't exist."""
+    device_id_file = Path.home() / ".device_id"
+    if not device_id_file.exists():
+        return
+
+    device_id = device_id_file.read_text().strip()
+    if not device_id:
+        return
+
+    placeholder = """\
+# Device-specific git config
+# Uncomment and set your signing key:
+# [user]
+#   signingkey = TODO
+"""
+
+    for src in home_dir.glob(".gitconfig_*"):
+        # Skip files that already have a device_id suffix
+        if src.name.endswith(f".{device_id}"):
+            continue
+
+        config_file = Path.home() / f"{src.name}.{device_id}"
+        if not config_file.exists():
+            config_file.write_text(placeholder)
+            print_step(f"Created {config_file}")
+
+
 def wait_for_dropbox() -> bool:
     """Check if Dropbox is available and wait for user to set it up if not."""
     home_dir = DROPBOX_DIR / "dotfiles" / "home"
@@ -309,6 +337,7 @@ def main() -> int:
         return 0
 
     check_stale_symlinks(home_dir)
+    create_device_gitconfigs(home_dir)
     symlink_home_dir(home_dir)
     fix_permissions(home_dir)
     setup_macos_app_configs()

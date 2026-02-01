@@ -70,3 +70,22 @@ Available settings:
 
 * `ENABLE_ZPROF=yes` - enable zsh startup profiling
 * `ANTIGEN_BUNDLE_NODE=y` - enable Node.js completion bundles (npm/yarn tab completion)
+
+# GPG Keys (Optional)
+
+To auto-generate GPG keys during setup, create `~/Dropbox/dotfiles/.gpg-keys.yaml`:
+
+```yaml
+keys:
+  - name: Your Name
+    email: personal@example.com
+  - name: Your Name
+    email: work@example.com
+```
+
+The `setup-gpg` script will:
+- Skip keys that already exist (matched by email)
+- Generate 4096-bit RSA keys with no passphrase
+- Keys never expire
+
+Run manually with: `uv run setup-gpg`
