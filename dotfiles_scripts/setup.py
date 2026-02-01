@@ -167,6 +167,9 @@ def cli() -> int:
         print_warning("Dropbox not found - skipping Dropbox-dependent setup")
         print("  Run setup-dropbox and setup-zsh-history later after setting up Dropbox")
 
+    # Phase 12: GPG keys (optional, skips if no manifest)
+    run_setup_module("setup_gpg")
+
     print_header("Setup Complete!")
     print("Language runtimes (Python, Node, Ruby) are managed by mise.")
     print("Run 'mise doctor' to verify your setup.")
