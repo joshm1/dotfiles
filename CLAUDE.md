@@ -38,14 +38,12 @@ cd ~/projects/joshm1/dotfiles
 
 ### Setup Scripts
 All setup scripts source `./utils.sh` for common functions and variables. Run these individually only when needed:
-- `setup-homebrew` - Installs Homebrew and bundles from `homebrew/Brewfile*`
 - `setup-zsh` - Configures zsh with antigen
 - `setup-vim` - Sets up neovim
 - `setup-asdf` - Installs asdf plugins (java, nodejs, python, ruby) with default versions
 - `setup-python`, `setup-nodejs`, `setup-ruby` - Language-specific setups (run after asdf)
 - `setup-dropbox` - Links private config files
 - `setup-zsh-history` - Configures shared zsh history (requires Dropbox)
-- `setup-postgres` - Sets up PostgreSQL
 
 ## Key Architecture
 
@@ -152,7 +150,7 @@ vim homebrew/Brewfile-mas    # Mac App Store apps
 
 # Re-run bundle installation
 rm homebrew/.installed
-source ./setup-homebrew
+./setup
 ```
 
 ### Installing/upgrading language versions
@@ -182,7 +180,7 @@ ENABLE_ZPROF=yes zsh -ic exit
 
 When making changes to this dotfiles repo:
 
-1. **Adding new tools**: Edit `homebrew/Brewfile*` and re-run setup-homebrew
+1. **Adding new tools**: Edit `homebrew/Brewfile*` and re-run `./setup` (or delete `homebrew/.installed` first)
 2. **Changing default versions**: Edit version constants in `utils.sh`
 3. **Shell customization**: Edit `home/.zshrc` (or private configs in Dropbox)
 4. **Git aliases/config**: Edit `home/.gitconfig`

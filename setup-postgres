@@ -1,8 +1,0 @@
-#!/bin/bash
-
-[ -z "$DOTFILES" ] && source ./utils.sh
-
-if ! command -v psql; then
-  echo "psql is not installed."
-  echo "Try installing from https://postgresapp.com/downloads.html"
-fi

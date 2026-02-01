@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Setup Dropbox-synced dotfiles and private config files."""
+"""Setup Dropbox-synced dotfiles by symlinking from ~/Dropbox/dotfiles/home/ to $HOME."""
 
 from __future__ import annotations
 
-import os
 import platform
 import stat
 import subprocess
@@ -18,6 +17,12 @@ from dotfiles_scripts.setup_utils import (
     print_success,
     print_warning,
 )
+
+# Tag file that indicates a directory should be symlinked as a whole
+SYMLINK_DIR_TAG = ".symlink-dir"
+
+# Files to skip when traversing
+SKIP_FILES = {".DS_Store", SYMLINK_DIR_TAG}
 
 
 def is_mac() -> bool:
@@ -41,7 +46,6 @@ def setup_wsl_dropbox() -> None:
     if dropbox_link.exists():
         return
 
-    # Get Windows username
     try:
         result = subprocess.run(
             ["cmd.exe", "/c", "echo %USERNAME%"],
@@ -61,109 +65,74 @@ def setup_wsl_dropbox() -> None:
         print_warning(f"Could not setup WSL Dropbox: {e}")
 
 
-def symlink_project_files() -> None:
-    """Symlink project-specific files only if target directory exists."""
-    projects_dir = DROPBOX_DIR / "dotfiles" / "projects"
-    if not projects_dir.is_dir():
-        return
+def symlink_home_dir(home_dir: Path) -> None:
+    """
+    Traverse home_dir and symlink everything to $HOME.
 
-    for src in projects_dir.rglob("*"):
-        if not src.is_file():
-            continue
+    If a directory contains .symlink-dir, symlink the directory itself.
+    Otherwise, recurse into it and symlink children.
+    """
 
-        # Skip .DS_Store files
-        if src.name == ".DS_Store":
-            continue
+    def process_dir(src_dir: Path, target_dir: Path) -> None:
+        """Process a directory, symlinking contents or the dir itself."""
+        for src in sorted(src_dir.iterdir()):
+            if src.name in SKIP_FILES:
+                continue
 
-        rel_path = src.relative_to(DROPBOX_DIR / "dotfiles")
-        target = Path.home() / rel_path
-        target_dir = target.parent
+            target = target_dir / src.name
 
-        if target_dir.is_dir():
-            if target.exists() or target.is_symlink():
-                target.unlink()
-            target.symlink_to(src)
-            print_success(f"Linked {target.name}")
+            if src.is_dir():
+                # Check for .symlink-dir tag
+                if (src / SYMLINK_DIR_TAG).exists():
+                    # Symlink the whole directory
+                    create_symlink(src, target)
+                else:
+                    # Recurse into directory
+                    target.mkdir(parents=True, exist_ok=True)
+                    process_dir(src, target)
+            else:
+                # Symlink the file
+                create_symlink(src, target)
 
-
-def symlink_history_files() -> None:
-    """Symlink shell history and config files from Dropbox."""
-    # Note: .gitignore comes from home/ directory, not Dropbox
-    history_files = [
-        ".zsh_history",
-        ".node_repl_history",
-        ".python_history",
-        ".psql_history",
-        ".pry_history",
-        ".npmrc",
-        ".warprc",
-    ]
-
-    dropbox_dotfiles = DROPBOX_DIR / "dotfiles"
-
-    for filename in history_files:
-        src = dropbox_dotfiles / filename
-        if src.exists():
-            create_symlink(src, Path.home() / filename)
+    process_dir(home_dir, Path.home())
 
 
-def symlink_secret_dirs() -> None:
-    """Symlink directories containing secrets."""
-    secret_dirs = [".aws", ".ssh", ".docker", ".kube"]
-
-    dropbox_dotfiles = DROPBOX_DIR / "dotfiles"
-
-    for dirname in secret_dirs:
-        src = dropbox_dotfiles / dirname
-        if src.exists():
-            create_symlink(src, Path.home() / dirname)
-
-    # Also link bin and scripts
-    if (dropbox_dotfiles / "bin").exists():
-        create_symlink(dropbox_dotfiles / "bin", Path.home() / "bin")
-
-    if (DROPBOX_DIR / "scripts").exists():
-        create_symlink(DROPBOX_DIR / "scripts", Path.home() / "scripts")
-
-
-def fix_permissions() -> None:
+def fix_permissions(home_dir: Path) -> None:
     """Adjust permissions on secret files."""
     print_step("Adjusting permissions on secret files...")
 
-    dropbox_dotfiles = DROPBOX_DIR / "dotfiles"
-
-    # Docker config
-    docker_config = dropbox_dotfiles / ".docker" / "config.json"
-    if docker_config.exists():
-        docker_config.chmod(0o600)
-
     # AWS - remove group/other permissions
-    aws_dir = dropbox_dotfiles / ".aws"
+    aws_dir = home_dir / ".aws"
     if aws_dir.exists():
         for path in aws_dir.rglob("*"):
+            if path.name == SYMLINK_DIR_TAG:
+                continue
             path.chmod(path.stat().st_mode & ~(stat.S_IRWXG | stat.S_IRWXO))
 
     # SSH
-    ssh_dir = dropbox_dotfiles / ".ssh"
+    ssh_dir = home_dir / ".ssh"
     if ssh_dir.exists():
         for path in ssh_dir.rglob("*"):
+            if path.name == SYMLINK_DIR_TAG:
+                continue
             if path.is_file():
                 path.chmod(0o600)
             elif path.is_dir():
                 path.chmod(0o700)
 
-    # Kube
-    kube_dir = dropbox_dotfiles / ".kube"
-    if kube_dir.exists():
-        for path in kube_dir.rglob("*"):
-            path.chmod(path.stat().st_mode & ~(stat.S_IRWXG | stat.S_IRWXO))
+    # Docker config
+    docker_config = home_dir / ".docker" / "config.json"
+    if docker_config.exists():
+        docker_config.chmod(0o600)
 
-    # Bin
-    bin_dir = dropbox_dotfiles / "bin"
+    # Bin - make executable, remove group/other
+    bin_dir = home_dir / "bin"
     if bin_dir.exists():
         for path in bin_dir.rglob("*"):
+            if path.name == SYMLINK_DIR_TAG:
+                continue
             if path.is_file():
-                path.chmod(path.stat().st_mode & ~(stat.S_IRWXG | stat.S_IRWXO))
+                path.chmod(0o700)
 
     print_success("Permissions adjusted")
 
@@ -211,19 +180,22 @@ def main() -> int:
     # WSL support
     setup_wsl_dropbox()
 
-    dropbox_dotfiles = DROPBOX_DIR / "dotfiles"
+    home_dir = DROPBOX_DIR / "dotfiles" / "home"
 
-    if not dropbox_dotfiles.is_dir():
-        print_warning("Dropbox dotfiles not found")
-        print("Make sure Dropbox is installed and ~/Dropbox/dotfiles is synced.")
+    if not home_dir.is_dir():
+        print_warning("Dropbox dotfiles/home not found")
+        print("Make sure Dropbox is installed and ~/Dropbox/dotfiles/home is synced.")
         print("Skipping Dropbox setup.")
         return 0
 
-    symlink_project_files()
-    symlink_history_files()
-    symlink_secret_dirs()
-    fix_permissions()
+    symlink_home_dir(home_dir)
+    fix_permissions(home_dir)
     setup_macos_app_configs()
+
+    # Also link scripts from Dropbox root if it exists
+    scripts_dir = DROPBOX_DIR / "scripts"
+    if scripts_dir.exists():
+        create_symlink(scripts_dir, Path.home() / "scripts")
 
     print_success("Dropbox setup complete!")
     return 0
