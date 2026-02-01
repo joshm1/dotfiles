@@ -38,7 +38,7 @@ def is_mac() -> bool:
 
 def is_wsl() -> bool:
     try:
-        with open("/proc/version", "r") as f:
+        with Path("/proc/version").open() as f:
             return "microsoft" in f.read().lower()
     except FileNotFoundError:
         return False

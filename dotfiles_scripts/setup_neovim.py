@@ -13,11 +13,11 @@ from pathlib import Path
 from urllib.request import urlretrieve
 
 from dotfiles_scripts.setup_utils import (
+    print_error,
     print_header,
     print_step,
     print_success,
     print_warning,
-    print_error,
 )
 
 INSTALL_DIR = Path.home() / ".local" / "nvim"

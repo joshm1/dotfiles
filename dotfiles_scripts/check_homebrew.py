@@ -10,15 +10,14 @@ from pathlib import Path
 
 import click
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from rich.panel import Panel
-
 
 console = Console()
 
 
-def get_installed_casks():
+def get_installed_casks() -> set[str]:
     """Get list of currently installed Homebrew casks."""
     try:
         result = subprocess.run(
@@ -33,27 +32,27 @@ def get_installed_casks():
         return set()
 
 
-def get_applications():
+def get_applications() -> list[str]:
     """Get list of all applications in /Applications."""
     apps_dir = Path("/Applications")
     if not apps_dir.exists():
         console.print("[red]/Applications directory not found[/red]")
         return []
 
-    apps = []
+    apps: list[str] = []
     for item in apps_dir.iterdir():
         if item.suffix == ".app":
             apps.append(item.stem)
     return sorted(apps)
 
 
-def normalize_name(name):
+def normalize_name(name: str) -> str:
     """Normalize app name for Homebrew comparison."""
     # Convert to lowercase and replace spaces with hyphens
     return name.lower().replace(" ", "-").replace(".", "")
 
 
-def is_available_in_homebrew(app_name):
+def is_available_in_homebrew(app_name: str) -> bool:
     """Check if an app is available as a Homebrew cask."""
     normalized = normalize_name(app_name)
 
@@ -98,8 +97,8 @@ def is_available_in_homebrew(app_name):
     default="table",
     help="Output format: table, list, or brewfile",
 )
-def cli(verbose, output_format):
-    """Check which apps in /Applications are available in Homebrew but not installed via Homebrew."""
+def cli(verbose: bool, output_format: str) -> int:
+    """Check which apps in /Applications are available but not installed via Homebrew."""
 
     console.print(
         Panel.fit(
@@ -118,7 +117,7 @@ def cli(verbose, output_format):
     console.print(f"[green]✓[/green] Found {len(all_apps)} total apps in /Applications\n")
 
     # Check each app
-    available_not_installed = []
+    available_not_installed: list[str] = []
 
     with Progress(
         SpinnerColumn(),
@@ -172,7 +171,9 @@ def cli(verbose, output_format):
     console.print()
 
     if not available_not_installed:
-        console.print("[green]All apps are either installed via Homebrew or not available as casks![/green]")
+        console.print(
+            "[green]All apps are either installed via Homebrew or not available as casks![/green]"
+        )
         return 0
 
     if output_format == "table":

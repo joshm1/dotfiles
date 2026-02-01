@@ -18,7 +18,6 @@ from dotfiles_scripts.setup_utils import (
     print_warning,
 )
 
-
 NVIM_VERSION = "nightly"
 
 
@@ -28,10 +27,7 @@ def get_nvim_info() -> tuple[str, Path]:
     machine = platform.machine()
 
     if system == "Darwin":
-        if machine == "arm64":
-            archive = "nvim-macos-arm64.tar.gz"
-        else:
-            archive = "nvim-macos-x86_64.tar.gz"
+        archive = "nvim-macos-arm64.tar.gz" if machine == "arm64" else "nvim-macos-x86_64.tar.gz"
         install_dir = Path.home() / archive.replace(".tar.gz", "")
     elif system == "Linux":
         archive = "nvim-linux64.tar.gz"
