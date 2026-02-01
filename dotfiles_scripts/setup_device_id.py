@@ -15,7 +15,6 @@ from dotfiles_scripts.setup_utils import (
     print_warning,
 )
 
-
 DEVICE_ID_FILE = Path.home() / ".device_id"
 # Allows: mac, macbook-pro, mac.personal, macbook-pro.work
 # Each segment must start with letter, can contain lowercase letters, numbers, hyphens
@@ -41,7 +40,7 @@ def get_known_device_ids() -> list[str]:
     if not zsh_history_dir.exists():
         return []
 
-    device_ids = []
+    device_ids: list[str] = []
     for f in zsh_history_dir.iterdir():
         if f.name.startswith(".zsh_history."):
             device_id = f.name.removeprefix(".zsh_history.")
@@ -69,7 +68,10 @@ def setup_device_id_interactive() -> str | None:
             if is_valid_device_id(device_id):
                 break
 
-            print_warning("Invalid format. Use lowercase letters, numbers, hyphens, dots. Start each segment with a letter.")
+            print_warning(
+                "Invalid format. Use lowercase letters, numbers, hyphens, dots. "
+                "Start each segment with a letter."
+            )
 
         DEVICE_ID_FILE.write_text(device_id)
         print_success(f"Device ID set to: {device_id}")

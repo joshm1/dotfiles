@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 import platform
-import stat
 import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 from dotfiles_scripts.setup_utils import (
     DROPBOX_DIR,
@@ -21,8 +22,11 @@ from dotfiles_scripts.setup_utils import (
 # Tag file that indicates a directory should be symlinked as a whole
 SYMLINK_DIR_TAG = ".symlink-dir"
 
+# Config file for directory-specific settings
+DOTFILES_CONFIG = ".dotfiles.yaml"
+
 # Files to skip when traversing
-SKIP_FILES = {".DS_Store", SYMLINK_DIR_TAG}
+SKIP_FILES = {".DS_Store", SYMLINK_DIR_TAG, DOTFILES_CONFIG}
 
 
 def is_mac() -> bool:
@@ -31,7 +35,7 @@ def is_mac() -> bool:
 
 def is_wsl() -> bool:
     try:
-        with open("/proc/version", "r") as f:
+        with Path("/proc/version").open() as f:
             return "microsoft" in f.read().lower()
     except FileNotFoundError:
         return False
@@ -97,44 +101,79 @@ def symlink_home_dir(home_dir: Path) -> None:
     process_dir(home_dir, Path.home())
 
 
+def apply_chmod_config(directory: Path, chmod_config: dict[int | str, str | list[str]]) -> int:
+    """Apply chmod settings from a .dotfiles.yaml config.
+
+    Format:
+        chmod:
+          600:
+            - "**/*"
+          700:
+            - "**/"
+            - "*.sh"
+    """
+    count = 0
+    for mode_str, globs in chmod_config.items():
+        try:
+            mode = int(str(mode_str), 8)
+        except ValueError:
+            print_warning(f"Invalid mode: {mode_str}")
+            continue
+
+        if isinstance(globs, str):
+            globs = [globs]
+
+        for pattern in globs:
+            # Handle "." specially - chmod the directory itself
+            if pattern == ".":
+                try:
+                    directory.chmod(mode)
+                    count += 1
+                except PermissionError:
+                    print_warning(f"Permission denied: {directory}")
+                continue
+
+            # Pattern ending with / should only match directories
+            dirs_only = pattern.endswith("/")
+            glob_pattern = pattern.rstrip("/") if dirs_only else pattern
+
+            for path in directory.glob(glob_pattern):
+                if path.name in SKIP_FILES:
+                    continue
+                if dirs_only and not path.is_dir():
+                    continue
+                try:
+                    path.chmod(mode)
+                    count += 1
+                except (PermissionError, FileNotFoundError):
+                    pass  # Silently skip permission errors and broken symlinks
+
+    return count
+
+
 def fix_permissions(home_dir: Path) -> None:
-    """Adjust permissions on secret files."""
-    print_step("Adjusting permissions on secret files...")
+    """Apply permissions based on .dotfiles.yaml config files."""
+    print_step("Applying permissions from .dotfiles.yaml configs...")
 
-    # AWS - remove group/other permissions
-    aws_dir = home_dir / ".aws"
-    if aws_dir.exists():
-        for path in aws_dir.rglob("*"):
-            if path.name == SYMLINK_DIR_TAG:
-                continue
-            path.chmod(path.stat().st_mode & ~(stat.S_IRWXG | stat.S_IRWXO))
+    total = 0
+    for config_file in home_dir.rglob(DOTFILES_CONFIG):
+        try:
+            config: dict[str, dict[int | str, str | list[str]]] = (
+                yaml.safe_load(config_file.read_text()) or {}
+            )
+        except yaml.YAMLError as e:
+            print_warning(f"Invalid YAML in {config_file}: {e}")
+            continue
 
-    # SSH
-    ssh_dir = home_dir / ".ssh"
-    if ssh_dir.exists():
-        for path in ssh_dir.rglob("*"):
-            if path.name == SYMLINK_DIR_TAG:
-                continue
-            if path.is_file():
-                path.chmod(0o600)
-            elif path.is_dir():
-                path.chmod(0o700)
+        chmod_config = config.get("chmod")
+        if chmod_config:
+            count = apply_chmod_config(config_file.parent, chmod_config)
+            total += count
 
-    # Docker config
-    docker_config = home_dir / ".docker" / "config.json"
-    if docker_config.exists():
-        docker_config.chmod(0o600)
-
-    # Bin - make executable, remove group/other
-    bin_dir = home_dir / "bin"
-    if bin_dir.exists():
-        for path in bin_dir.rglob("*"):
-            if path.name == SYMLINK_DIR_TAG:
-                continue
-            if path.is_file():
-                path.chmod(0o700)
-
-    print_success("Permissions adjusted")
+    if total:
+        print_success(f"Applied chmod to {total} path(s)")
+    else:
+        print_step("No chmod configs found")
 
 
 def setup_macos_app_configs() -> None:
@@ -173,6 +212,50 @@ def setup_macos_app_configs() -> None:
         print_success(f"Linked {target} → {src}")
 
 
+def check_stale_symlinks(home_dir: Path) -> None:
+    """Warn about symlinks pointing to removed Dropbox dotfiles."""
+    print_step("Checking for stale symlinks...")
+
+    home = Path.home()
+    stale: list[Path] = []
+
+    def check_dir(directory: Path) -> None:
+        """Recursively check for stale symlinks."""
+        try:
+            for path in directory.iterdir():
+                if path.is_symlink():
+                    # Check if symlink points into Dropbox dotfiles but target is gone
+                    try:
+                        target_str = str(path.readlink())
+                    except OSError:
+                        continue
+                    if str(home_dir) in target_str and not path.exists():
+                        stale.append(path)
+                elif path.is_dir() and not path.is_symlink():
+                    # Only recurse into real directories, not symlinked ones
+                    check_dir(path)
+        except PermissionError:
+            pass
+
+    # Check common dotfile locations
+    for item in home.iterdir():
+        if item.name.startswith(".") and item.is_symlink():
+            try:
+                target_str = str(item.readlink())
+            except OSError:
+                continue
+            if str(home_dir) in target_str and not item.exists():
+                stale.append(item)
+        elif item.name.startswith(".") and item.is_dir() and not item.is_symlink():
+            check_dir(item)
+
+    if stale:
+        print_warning(f"Found {len(stale)} stale symlink(s) pointing to removed Dropbox files:")
+        for path in stale:
+            print(f"  {path}")
+        print("  Run 'rm <symlink>' to remove, or restore the file in Dropbox.")
+
+
 def main() -> int:
     """Main entry point."""
     print_header("Setting up Dropbox dotfiles")
@@ -188,6 +271,7 @@ def main() -> int:
         print("Skipping Dropbox setup.")
         return 0
 
+    check_stale_symlinks(home_dir)
     symlink_home_dir(home_dir)
     fix_permissions(home_dir)
     setup_macos_app_configs()

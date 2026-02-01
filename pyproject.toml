@@ -5,10 +5,10 @@ description = "Utility scripts for managing dotfiles"
 readme = "README.md"
 authors = [{ name = "Josh McDade", email = "josh.ncsu@gmail.com" }]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = ["pyyaml>=6.0", "rich>=13.0.0", "click>=8.1.0"]
 
-[project.optional-dependencies]
-rich = ["rich>=13.0.0", "click>=8.1.0"]
+[dependency-groups]
+dev = ["ruff>=0.9", "pyright>=1.1"]
 
 [project.scripts]
 # Main entry point
@@ -39,3 +39,15 @@ build-backend = "hatchling.build"
 
 [tool.hatchling.build.targets.wheel]
 packages = ["dotfiles_scripts"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "PTH"]
+
+[tool.pyright]
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
+include = ["dotfiles_scripts"]

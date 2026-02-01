@@ -1,8 +1,8 @@
 """Common utilities for dotfiles scripts."""
 
 import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def get_dotfiles_dir() -> Path:

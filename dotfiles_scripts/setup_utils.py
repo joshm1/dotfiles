@@ -6,6 +6,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any, cast
 
 # Configuration
 DOTFILES_REPO = Path.home() / "projects" / "joshm1" / "dotfiles"
@@ -59,18 +60,32 @@ def run_cmd(
     capture: bool = False,
     cwd: Path | None = None,
     quiet: bool = False,
-    **kwargs,
-) -> subprocess.CompletedProcess:
-    """Run a command and return the result."""
+    **kwargs: Any,
+) -> subprocess.CompletedProcess[Any]:
+    """Run a command and return the result.
+
+    Additional keyword arguments are passed directly to subprocess.run().
+    Common examples include: env, timeout, stdin, stdout, stderr, encoding, etc.
+    """
+    # Type narrowing: kwargs is dict[str, Any] at runtime
+    typed_kwargs: dict[str, Any] = kwargs
+
     if capture:
-        kwargs.setdefault("capture_output", True)
-        kwargs.setdefault("text", True)
+        typed_kwargs.setdefault("capture_output", True)
+        typed_kwargs.setdefault("text", True)
     if cwd:
-        kwargs["cwd"] = cwd
+        typed_kwargs["cwd"] = cwd
     if not quiet:
         cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
         print_step(f"Running: {cmd_str}")
-    return subprocess.run(cmd, check=check, shell=shell, **kwargs)
+
+    # cast() required: subprocess.run has complex overloads that pyright cannot resolve
+    # when using **kwargs. The return type depends on runtime kwargs values (text, capture_output).
+    # Using Any for the generic parameter is correct since stdout/stderr can be str, bytes, or None.
+    return cast(
+        subprocess.CompletedProcess[Any],
+        subprocess.run(cmd, check=check, shell=shell, **typed_kwargs),
+    )
 
 
 def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -> bool:

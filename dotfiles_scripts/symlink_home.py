@@ -9,15 +9,18 @@ existing files.
 
 import sys
 from pathlib import Path
+
 import click
 from rich.console import Console
 
-from dotfiles_scripts.utils import get_dotfiles_dir, get_backup_dir
+from dotfiles_scripts.utils import get_backup_dir, get_dotfiles_dir
 
 console = Console()
 
 
-def create_symlink(source: Path, target: Path, backup_dir: Path, dry_run: bool = False) -> tuple[bool, str]:
+def create_symlink(
+    source: Path, target: Path, backup_dir: Path, dry_run: bool = False
+) -> tuple[bool, str]:
     """
     Create a symlink from source to target.
 
@@ -79,13 +82,13 @@ def symlink_home_files(dry_run: bool = False) -> int:
         return 1
 
     if dry_run:
-        console.print(f"[bold cyan]DRY RUN MODE[/bold cyan] - No changes will be made\n")
+        console.print("[bold cyan]DRY RUN MODE[/bold cyan] - No changes will be made\n")
 
     console.print(f"[bold]Auto-discovering files in {home_dir}...[/bold]\n")
 
     backup_dir = get_backup_dir()
-    results = []
-    errors = []
+    results: list[str] = []
+    errors: list[str] = []
 
     # Symlink all top-level files in home/
     for source_path in sorted(home_dir.glob("*")):
@@ -129,7 +132,7 @@ def symlink_home_files(dry_run: bool = False) -> int:
     is_flag=True,
     help="Show what would be done without making any changes",
 )
-def cli(dry_run):
+def cli(dry_run: bool) -> None:
     """CLI entry point."""
     sys.exit(symlink_home_files(dry_run))
 

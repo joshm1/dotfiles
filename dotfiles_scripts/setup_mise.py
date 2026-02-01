@@ -30,13 +30,27 @@ def print_error(msg: str) -> None:
 
 
 def run_cmd(
-    cmd: list[str], check: bool = True, capture: bool = False, **kwargs
-) -> subprocess.CompletedProcess:
+    cmd: list[str],
+    check: bool = True,
+    capture: bool = False,
+    cwd: Path | str | None = None,
+) -> subprocess.CompletedProcess[str]:
     """Run a command."""
     if capture:
-        kwargs.setdefault("capture_output", True)
-        kwargs.setdefault("text", True)
-    return subprocess.run(cmd, check=check, **kwargs)
+        return subprocess.run(
+            cmd,
+            check=check,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
+    else:
+        return subprocess.run(
+            cmd,
+            check=check,
+            text=True,
+            cwd=cwd,
+        )
 
 
 def is_mise_installed() -> bool:

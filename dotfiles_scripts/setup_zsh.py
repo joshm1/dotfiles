@@ -36,7 +36,7 @@ def set_zsh_default() -> bool:
 
     # Add to /etc/shells if not present
     try:
-        with open("/etc/shells", "r") as f:
+        with Path("/etc/shells").open() as f:
             shells = f.read()
 
         if zsh_path not in shells:
