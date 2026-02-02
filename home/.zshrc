@@ -24,7 +24,7 @@ edit-dotfiles-config() {
 }
 
 # Private config sourced before everything else
-_source_hierarchy "$HOME/Dropbox/dotfiles/.zshrc.before" "$_device_id"
+_source_hierarchy "$HOME/.zshrc.before" "$_device_id"
 
 # var $1 is truthy if it starts with "y", equals "true", or equals "1"
 bool() {
@@ -139,7 +139,7 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_R_OPTS="--preview ''"
 
 # Private config sourced after everything else
-_source_hierarchy "$HOME/Dropbox/dotfiles/.zshrc.after" "$_device_id" ""
+_source_hierarchy "$HOME/.zshrc.after" "$_device_id"
 
 # Cleanup
 unset _device_id
