@@ -1,4 +1,5 @@
-.claude/settings.local.json
+*.local.json
+.claude/logs
 .installed
 
 # Environment files with secrets
