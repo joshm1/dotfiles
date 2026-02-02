@@ -46,6 +46,7 @@ cask 'tailscale'                # VPN & secure networks - https://tailscale.com
 
 # Storage & Sync
 cask 'dropbox'                  # File sync & storage - https://www.dropbox.com
+cask 'google-drive'             # Google Drive sync - https://www.google.com/drive/
 
 # Browsers
 cask 'google-chrome'            # Web browser
