@@ -116,11 +116,10 @@ fi
 alias buf >/dev/null && unalias buf
 
 # Initialize zoxide and ensure z command is not overridden by fz plugin
-eval "$(zoxide init zsh)"
-alias z >/dev/null 2>&1 && unalias z
-
-alias be="bundle exec"
-alias rc="bundle exec rails console"
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+  alias z >/dev/null 2>&1 && unalias z
+fi
 
 export NODE_REPL_HISTORY_FILE=~/.node_history
 
@@ -129,7 +128,8 @@ setopt no_beep
 
 alias vim="nvim"
 alias vi="nvim"
-path=("$HOME/.local/bin" "$HOME/bin" $path)
+[ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
+[ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
 
 alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 
@@ -137,8 +137,6 @@ export FZF_DEFAULT_OPTS='--preview "([[ -f {} ]] && bat --style=numbers --color=
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_R_OPTS="--preview ''"
-
-[ -d $HOME/bin ] && path=("$HOME/bin" $path)
 
 # Private config sourced after everything else
 _source_hierarchy "$HOME/Dropbox/dotfiles/.zshrc.after" "$_device_id" ""
@@ -159,7 +157,8 @@ fi
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-test -d $HOME/.yarn && path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" $path)
+[ -d "$HOME/.yarn/bin" ] && path=("$HOME/.yarn/bin" $path)
+[ -d "$HOME/.config/yarn/global/node_modules/.bin" ] && path=("$HOME/.config/yarn/global/node_modules/.bin" $path)
 
 git-stats() {
   local refs=${1:-HEAD^..HEAD}
@@ -192,7 +191,7 @@ fi
 
 # https://github.com/eza-community/eza/blob/main/INSTALL.md#for-zsh-with-homebrew
 if type brew &>/dev/null; then
-  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+  fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
   autoload -Uz compinit
   compinit
 fi
@@ -236,10 +235,14 @@ load-local-venv  # Load for current session
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-eval "$(just --completions zsh)"
-# The following lines have been added by Docker Desktop to enable Docker CLI completions.
-fpath=($HOME/.docker/completions $fpath)
+[ -d "$BUN_INSTALL/bin" ] && path=("$BUN_INSTALL/bin" $path)
+command -v just &>/dev/null && eval "$(just --completions zsh)"
+
+if [ -d $HOME/.docker/completions/ ]; then
+  # The following lines have been added by Docker Desktop to enable Docker CLI completions.
+  fpath=($HOME/.docker/completions $fpath)
+fi
+
 autoload -Uz compinit
 compinit
 # End of Docker CLI completions
@@ -248,7 +251,9 @@ compinit
 
 # go - add GOPATH/bin to PATH if go is installed
 if command -v go &>/dev/null; then
-  path=("$(go env GOPATH)/bin" $path)
+  _gobin="$(go env GOPATH)/bin"
+  [ -d "$_gobin" ] && path=("$_gobin" $path)
+  unset _gobin
 fi
 
 # pnpm
@@ -257,18 +262,20 @@ if is_macos; then
 else
   export PNPM_HOME="$HOME/.local/share/pnpm"
 fi
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
+if [ -d "$PNPM_HOME" ]; then
+  case ":$PATH:" in
+    *":$PNPM_HOME:"*) ;;
+    *) path=("$PNPM_HOME" $path) ;;
+  esac
+fi
 # pnpm end
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:$HOME/.lmstudio/bin"
+[ -d "$HOME/.lmstudio/bin" ] && path=($path "$HOME/.lmstudio/bin")
 # End of LM Studio CLI section
 
 # Neovim nightly
-[ -d "$HOME/nvim-macos-x86_64/bin" ] && export PATH="$HOME/nvim-macos-x86_64/bin:$PATH"
+[ -d "$HOME/nvim-macos-x86_64/bin" ] && path=("$HOME/nvim-macos-x86_64/bin" $path)
 
 # Function to get tmux session names
 function _tmux_sessions_complete() {
@@ -306,7 +313,7 @@ bindkey -M emacs '\es' sesh-sessions
 bindkey -M vicmd '\es' sesh-sessions
 bindkey -M viins '\es' sesh-sessions
 
-eval "$(atuin init zsh)"
+command -v atuin &>/dev/null && eval "$(atuin init zsh)"
 
 # seshc alias - connect to sesh session with fzf
 if type sesh &>/dev/null; then
@@ -319,15 +326,12 @@ fi
 # enables shell command completion for gcloud (Homebrew installation).
 [ -f "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
 
-# Added by Antigravity
-[ -d "$HOME/.antigravity/antigravity/bin" ] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
-
 # mise (version manager)
-eval "$(mise activate zsh)"
+command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
 # omnara
 export OMNARA_INSTALL="$HOME/.omnara"
-export PATH="$OMNARA_INSTALL/bin:$PATH"
+[ -d "$OMNARA_INSTALL/bin" ] && path=("$OMNARA_INSTALL/bin" $path)
 
 # GNU coreutils aliases (macOS compatibility)
 if ! command -v timeout &> /dev/null && command -v gtimeout &> /dev/null; then
