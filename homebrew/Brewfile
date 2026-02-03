@@ -5,6 +5,7 @@ brew 'git'                      # Version control system
 brew 'git-delta'                # Better git diff viewer - https://github.com/dandavison/delta
 brew 'git-recent'               # View recent git branches - https://github.com/paulirish/git-recent
 brew 'lazygit'                  # Terminal UI for git - https://github.com/jesseduffield/lazygit
+brew 'git-lfs'                  # Git Large File Storage - https://github.com/git-lfs/git-lfs
 brew 'tig'                      # Text-mode interface for git - https://github.com/jonas/tig
 
 # Programming Languages & Runtimes
@@ -71,6 +72,9 @@ brew 'whois'                    # Domain lookup tool
 
 # Documentation & Conversion
 brew 'tealdeer'                 # Fast tldr client - https://github.com/dbrgn/tealdeer
+
+# Backup Tools
+brew 'restic'                   # Fast, secure backup program - https://github.com/restic/restic
 
 # Utilities
 brew 'gnupg'                    # GPG encryption & signing - used by mise, git commit signing

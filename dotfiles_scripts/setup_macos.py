@@ -28,10 +28,10 @@ def main() -> int:
     defaults = [
         # Disable press-and-hold for keys (enable key repeat)
         ("-g", "ApplePressAndHoldEnabled", "-bool", "false"),
-        # Fast initial key repeat (normal minimum is 15 = 225ms)
-        ("-g", "InitialKeyRepeat", "-int", "10"),
-        # Fast key repeat (normal minimum is 2 = 30ms)
-        ("-g", "KeyRepeat", "-int", "1"),
+        # Delay until key repeat (higher = longer delay; default ~25, range 15-120)
+        ("-g", "InitialKeyRepeat", "-int", "25"),
+        # Key repeat rate (lower = faster; default 2, range 1-6)
+        ("-g", "KeyRepeat", "-int", "2"),
         # Show hidden files in Finder
         ("com.apple.finder", "AppleShowAllFiles", "YES"),
     ]
