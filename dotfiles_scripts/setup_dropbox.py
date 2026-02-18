@@ -10,6 +10,7 @@ from pathlib import Path
 
 import yaml
 
+from dotfiles_scripts.setup_device_id import get_device_id, get_hierarchy_levels
 from dotfiles_scripts.setup_utils import (
     DROPBOX_DIR,
     create_symlink,
@@ -256,6 +257,28 @@ def check_stale_symlinks(home_dir: Path) -> None:
         print("  Run 'rm <symlink>' to remove, or restore the file in Dropbox.")
 
 
+def create_device_zshrc_configs(home_dir: Path) -> None:
+    """Create device-specific .zshrc.before and .zshrc.after hierarchy files if they don't exist."""
+    device_id = get_device_id()
+    if not device_id:
+        return
+
+    levels = get_hierarchy_levels(device_id)
+
+    for base_name in (".zshrc.before", ".zshrc.after"):
+        for level in levels:
+            suffix = f".{level}" if level else ""
+            config_file = home_dir / f"{base_name}{suffix}"
+
+            if not config_file.exists():
+                label = level if level else "all devices"
+                config_file.write_text(
+                    f"# {base_name} for {label}\n"
+                    f"# Sourced by ~/.zshrc {'before' if 'before' in base_name else 'after'} main config\n"
+                )
+                print_success(f"Created {config_file}")
+
+
 def create_device_gitconfigs(home_dir: Path) -> None:
     """Create device-specific gitconfig files with placeholder content if they don't exist."""
     device_id_file = Path.home() / ".device_id"
@@ -337,6 +360,7 @@ def main() -> int:
         return 0
 
     check_stale_symlinks(home_dir)
+    create_device_zshrc_configs(home_dir)
     create_device_gitconfigs(home_dir)
     symlink_home_dir(home_dir)
     fix_permissions(home_dir)
