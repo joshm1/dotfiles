@@ -13,21 +13,18 @@ import yaml
 from dotfiles_scripts.setup_device_id import get_device_id, get_hierarchy_levels
 from dotfiles_scripts.setup_utils import (
     DROPBOX_DIR,
+    SKIP_FILES,
+    SYMLINK_DIR_TAG,
     create_symlink,
     print_header,
     print_step,
     print_success,
     print_warning,
+    symlink_home_dir,
 )
-
-# Tag file that indicates a directory should be symlinked as a whole
-SYMLINK_DIR_TAG = ".symlink-dir"
 
 # Config file for directory-specific settings
 DOTFILES_CONFIG = ".dotfiles.yaml"
-
-# Files to skip when traversing
-SKIP_FILES = {".DS_Store", ".git", SYMLINK_DIR_TAG, DOTFILES_CONFIG}
 
 
 def is_mac() -> bool:
@@ -68,38 +65,6 @@ def setup_wsl_dropbox() -> None:
             print_warning(f"Windows Dropbox not found at {win_dropbox}")
     except Exception as e:
         print_warning(f"Could not setup WSL Dropbox: {e}")
-
-
-def symlink_home_dir(home_dir: Path) -> None:
-    """
-    Traverse home_dir and symlink everything to $HOME.
-
-    If a directory contains .symlink-dir, symlink the directory itself.
-    Otherwise, recurse into it and symlink children.
-    """
-
-    def process_dir(src_dir: Path, target_dir: Path) -> None:
-        """Process a directory, symlinking contents or the dir itself."""
-        for src in sorted(src_dir.iterdir()):
-            if src.name in SKIP_FILES:
-                continue
-
-            target = target_dir / src.name
-
-            if src.is_dir():
-                # Check for .symlink-dir tag
-                if (src / SYMLINK_DIR_TAG).exists():
-                    # Symlink the whole directory
-                    create_symlink(src, target)
-                else:
-                    # Recurse into directory
-                    target.mkdir(parents=True, exist_ok=True)
-                    process_dir(src, target)
-            else:
-                # Symlink the file
-                create_symlink(src, target)
-
-    process_dir(home_dir, Path.home())
 
 
 def apply_chmod_config(directory: Path, chmod_config: dict[int | str, str | list[str]]) -> int:

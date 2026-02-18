@@ -1,0 +1,3 @@
+local dir="$HOME/.config/dotfiles"
+local file=$(ls -1 "$dir"/.dotfiles-config* 2>/dev/null | fzf --tac)
+[[ -n "$file" ]] && ${EDITOR:-vim} "$file"

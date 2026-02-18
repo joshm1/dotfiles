@@ -1,0 +1,3 @@
+local preview_cmd="git log --pretty=tformat:'%C(bold blue)%h %C(bold red)%ad %C(bold blue)%aN%C(auto) %<|(100,trunc)%s%C(reset)' --date=short --graph {}"
+local branch=$(git branch --format='%(refname:short)' --sort=-committerdate | fzf --preview "$preview_cmd" | tr -d '[:space:]')
+git checkout $branch

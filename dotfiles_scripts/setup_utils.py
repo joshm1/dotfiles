@@ -88,6 +88,13 @@ def run_cmd(
     )
 
 
+# Tag file that indicates a directory should be symlinked as a whole
+SYMLINK_DIR_TAG = ".symlink-dir"
+
+# Files to skip when traversing
+SKIP_FILES = {".DS_Store", ".git", SYMLINK_DIR_TAG, ".dotfiles.yaml"}
+
+
 def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -> bool:
     """Create a symlink, backing up existing files if needed."""
     # Don't create broken symlinks
@@ -116,3 +123,30 @@ def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -
     target.symlink_to(source)
     print_success(f"Linked {target} → {source}")
     return True
+
+
+def symlink_home_dir(home_dir: Path) -> None:
+    """
+    Traverse home_dir and symlink everything to $HOME.
+
+    If a directory contains .symlink-dir, symlink the directory itself.
+    Otherwise, recurse into it and symlink children.
+    """
+
+    def process_dir(src_dir: Path, target_dir: Path) -> None:
+        for src in sorted(src_dir.iterdir()):
+            if src.name in SKIP_FILES:
+                continue
+
+            target = target_dir / src.name
+
+            if src.is_dir():
+                if (src / SYMLINK_DIR_TAG).exists():
+                    create_symlink(src, target)
+                else:
+                    target.mkdir(parents=True, exist_ok=True)
+                    process_dir(src, target)
+            else:
+                create_symlink(src, target)
+
+    process_dir(home_dir, Path.home())
