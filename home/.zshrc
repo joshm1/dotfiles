@@ -181,20 +181,18 @@ if [[ -f ~/.docker/init-zsh.sh ]]; then
   source ~/.docker/init-zsh.sh || true # Added by Docker Desktop
 fi
 
+# Cache brew prefix (called multiple times below)
+if type brew &>/dev/null; then
+  _brew_prefix="$(brew --prefix)"
+  fpath=("$_brew_prefix/share/zsh/site-functions" $fpath)
+fi
+
 if type aws_completer >/dev/null; then
   autoload bashcompinit && bashcompinit
-  autoload -Uz compinit && compinit
-  complete -C "$(brew --prefix)/bin/aws_completer" aws
+  complete -C "$_brew_prefix/bin/aws_completer" aws
 fi
 
 [ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
-
-# https://github.com/eza-community/eza/blob/main/INSTALL.md#for-zsh-with-homebrew
-if type brew &>/dev/null; then
-  fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
-  autoload -Uz compinit
-  compinit
-fi
 
 # alias for eza
 alias ls='eza --color=always --group-directories-first --icons=always'
@@ -238,14 +236,12 @@ export BUN_INSTALL="$HOME/.bun"
 [ -d "$BUN_INSTALL/bin" ] && path=("$BUN_INSTALL/bin" $path)
 command -v just &>/dev/null && eval "$(just --completions zsh)"
 
-if [ -d $HOME/.docker/completions/ ]; then
-  # The following lines have been added by Docker Desktop to enable Docker CLI completions.
-  fpath=($HOME/.docker/completions $fpath)
-fi
+# Docker CLI completions
+[ -d "$HOME/.docker/completions" ] && fpath=("$HOME/.docker/completions" $fpath)
 
+# Single compinit call (after all fpath modifications)
 autoload -Uz compinit
 compinit
-# End of Docker CLI completions
 
 [ -f $HOME/.claude/local/claude ] && path=("$HOME/.claude/local" $path)
 
@@ -320,11 +316,11 @@ if type sesh &>/dev/null; then
   alias seshc='sesh connect $(sesh list | fzf)'
 fi
 
-# updates PATH for the Google Cloud SDK (Homebrew installation)
-[ -f "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
-
-# enables shell command completion for gcloud (Homebrew installation).
-[ -f "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc" ] && . "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+# Google Cloud SDK (Homebrew installation)
+if [[ -n "$_brew_prefix" ]]; then
+  [ -f "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc" ] && . "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc"
+  [ -f "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc" ] && . "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc"
+fi
 
 # mise (version manager)
 command -v mise &>/dev/null && eval "$(mise activate zsh)"
@@ -332,6 +328,8 @@ command -v mise &>/dev/null && eval "$(mise activate zsh)"
 # omnara
 export OMNARA_INSTALL="$HOME/.omnara"
 [ -d "$OMNARA_INSTALL/bin" ] && path=("$OMNARA_INSTALL/bin" $path)
+
+unset _brew_prefix
 
 # GNU coreutils aliases (macOS compatibility)
 if ! command -v timeout &> /dev/null && command -v gtimeout &> /dev/null; then
