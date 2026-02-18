@@ -5,6 +5,7 @@ brew 'git'                      # Version control system
 brew 'git-delta'                # Better git diff viewer - https://github.com/dandavison/delta
 brew 'git-recent'               # View recent git branches - https://github.com/paulirish/git-recent
 brew 'lazygit'                  # Terminal UI for git - https://github.com/jesseduffield/lazygit
+brew 'git-filter-repo'          # Rewrite git history safely - https://github.com/newren/git-filter-repo
 brew 'git-lfs'                  # Git Large File Storage - https://github.com/git-lfs/git-lfs
 brew 'tig'                      # Text-mode interface for git - https://github.com/jonas/tig
 
@@ -91,6 +92,7 @@ brew 'grep'
 brew 'ncurses'
 brew 'readline'
 brew 'rsync'
+brew 'p7zip'                    # 7-Zip file archiver - https://github.com/p7zip-project/p7zip
 brew 'unzip'
 brew 'xz'
 brew 'zlib'

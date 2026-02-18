@@ -1,10 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Repository Overview
 
-This is a personal dotfiles repository for macOS that manages shell configuration (zsh), development tools (via Homebrew and asdf), tmux setup, neovim configuration, and git settings. The repository uses symlinks to install dotfiles from `~/projects/joshm1/dotfiles` (stored as `$DOTFILES` = `~/.dotfiles`) to their standard locations.
+This is a personal dotfiles repository for macOS that manages shell configuration (zsh), development tools (via Homebrew and mise), tmux setup, neovim configuration, and git settings. The repository uses symlinks to install dotfiles from `~/projects/joshm1/dotfiles` (stored as `$DOTFILES` = `~/.dotfiles`) to their standard locations.
 
 ## Git Workflow
 
@@ -20,33 +18,31 @@ When the user explicitly says "commit this" or "create a commit", then and only 
 
 ## Installation & Setup
 
-### Initial Setup
-```bash
-xcode-select --install
-mkdir -p ~/projects/joshm1
-git clone https://github.com/joshm1/dotfiles.git ~/projects/joshm1/dotfiles
-cd ~/projects/joshm1/dotfiles
-./setup
-# In new tab: p10k configure
-```
-
 ### Main Setup Script
-`./setup` is the main entry point that:
+`./setup` is a bootstrap wrapper that installs Homebrew and uv if missing, then runs `uv run dotfiles-setup`. The actual orchestration logic is in `dotfiles_scripts/setup.py`. For subsequent runs: `uv run dotfiles-setup`.
+
+The setup:
 1. Updates git submodules
-2. Creates symlinks for all dotfiles
-3. Runs component-specific setup scripts in order
+2. Configures device identity and macOS defaults
+3. Installs Homebrew packages
+4. Installs neovim nightly and mise
+5. Configures zsh and neovim
+6. Symlinks all dotfiles from `home/` to `$HOME`
+7. Sets up fzf, Dropbox config, zsh history, and GPG keys
 
 ### Setup Scripts
 Setup scripts are Python modules in `dotfiles_scripts/`. Run individually with `uv run <script-name>`:
-- `setup-zsh` - Configures zsh with antigen
-- `setup-vim` - Sets up neovim
+- `setup-device-id` - Sets machine identity for device-specific config
+- `setup-macos` - Configures macOS defaults
+- `setup-homebrew` - Installs Homebrew and runs Brewfiles
 - `setup-neovim` - Installs neovim nightly
 - `setup-mise` - Installs mise for language version management
+- `setup-zsh` - Configures zsh with antigen
+- `setup-vim` - Sets up neovim
+- `setup-fzf` - Sets up fzf
 - `setup-dropbox` - Links private config files from Dropbox
 - `setup-zsh-history` - Configures shared zsh history (requires Dropbox)
-- `setup-homebrew` - Installs Homebrew and runs Brewfiles
-- `setup-macos` - Configures macOS defaults
-- `setup-fzf` - Sets up fzf
+- `setup-gpg` - Generates GPG keys and device-specific gitconfig
 
 ## Key Architecture
 
@@ -98,37 +94,44 @@ dotfiles/
     .zshrc → $HOME/.zshrc
     .tmux.conf → $HOME/.tmux.conf
     .config/
-      nvim/ → $HOME/.config/nvim/
-      tmux/ → $HOME/.config/tmux/
-    ...
+      mise/.symlink-dir → $HOME/.config/mise/
+      nvim/.symlink-dir → $HOME/.config/nvim/
+      tmux/.symlink-dir → $HOME/.config/tmux/
+      tmux-powerline/.symlink-dir → $HOME/.config/tmux-powerline/
 ```
 
 **How it works:**
 1. Python script `symlink-home-files` (from `dotfiles_scripts/symlink_home.py`) auto-discovers files in `home/`
 2. For each file/directory, it creates a symlink to the corresponding location in `$HOME`
-3. Existing files are backed up to timestamped directory (`~/.dotfiles.YYYYMMDD-HHMMSS.bck/`)
-4. Already-correct symlinks are skipped
+3. Directories containing a `.symlink-dir` tag file are symlinked as a whole (not recursed into). This is defined in `setup_utils.py:SYMLINK_DIR_TAG`.
+4. Existing files are backed up to timestamped directory (`~/.dotfiles.YYYYMMDD-HHMMSS.bck/`)
+5. Already-correct symlinks are skipped
 
 **Adding new dotfiles:**
-Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig` → `~/.myconfig`), and it will be automatically symlinked on next setup run.
+Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig` → `~/.myconfig`), and it will be automatically symlinked on next setup run. For config directories that should be symlinked as a whole, add a `.symlink-dir` tag file inside.
 
 ### Shell Configuration Flow (home/.zshrc)
-1. Load private pre-config from Dropbox
-2. Enable Powerlevel10k instant prompt
-3. Configure direnv
-4. Load antigen (zsh plugin manager) and bundles:
-   - oh-my-zsh base
+1. Load device ID and hierarchical config (`_source_hierarchy`)
+2. Source private pre-config from Dropbox (`.zshrc.before.*`)
+3. Configure direnv (silent export before instant prompt)
+4. Enable Powerlevel10k instant prompt
+5. Load antigen (zsh plugin manager) and bundles:
+   - oh-my-zsh base, brew, command-not-found
    - zsh-syntax-highlighting, zsh-autosuggestions
-   - fzf, git, wd (warp directory)
-   - Language version managers (conditional on env vars)
-5. Apply antigen theme (Powerlevel10k)
-6. Initialize zoxide (better cd)
-7. Set up custom aliases and functions
-8. Load private post-config from Dropbox
-9. Initialize asdf (lazy loaded via `source_asdf` function)
+   - fzf, git, wd, zap-zsh/supercharge, zap-zsh/exa
+   - Node.js bundles (conditional on `ANTIGEN_BUNDLE_NODE=y`)
+6. Apply antigen theme (Powerlevel10k)
+7. Autoload custom functions from `~/.zsh/functions/`
+8. Configure Dropbox-synced zsh history (device-specific files)
+9. Initialize zoxide (better cd)
+10. Set up eza aliases, fzf config, tool completions (Docker, AWS, bun, just, uv)
+11. Configure PATH for go, pnpm, bun, cargo, Claude CLI, neovim nightly
+12. Source private post-config from Dropbox (`.zshrc.after.*`)
+13. Initialize atuin (shell history search)
+14. Activate mise (`eval "$(mise activate zsh)"`)
 
 ### Version Management Strategy
-This dotfiles repo uses asdf for all language version management (Java, Node.js, Python, Ruby, Go).
+This dotfiles repo uses mise for language version management. Legacy asdf support exists as a lazy-loaded fallback.
 
 ### Tmux Configuration
 Uses TPM (Tmux Plugin Manager) with plugins:
@@ -153,11 +156,10 @@ Configuration is in `home/.config/nvim/init.lua`.
 ## Custom Shell Functions
 
 ### Notable zsh functions
-- `source_asdf()` - Lazy loads asdf or prompts to install via Homebrew
-- `set_java_home()` - Sets JAVA_HOME for asdf-managed Java
-- `gch()` - Interactive git branch checkout with fzf and log preview
-- `sesh-sessions()` - Fuzzy find tmux/zellij sessions (bound to Alt+s)
-- `load-local-venv()` - Auto-activates `.venv` when entering project directories
+Custom functions are autoloaded from `~/.zsh/functions/` via `fpath` (add new functions there):
+- `load-local-venv` - Auto-activates `.venv` when entering project directories (triggered via `chpwd` hook)
+- `sesh-sessions` - Fuzzy find tmux/zellij sessions (bound to Alt+s)
+- `gch` - Interactive git branch checkout with fzf and log preview
 
 ## Common Development Tasks
 
@@ -207,7 +209,10 @@ dotfiles/
   pyproject.toml          # Python project configuration
   dotfiles_scripts/       # Python package
     __init__.py
-    utils.py              # Shared utilities
+    setup.py              # Main orchestrator (dotfiles-setup CLI)
+    setup_utils.py        # Shared setup utilities (DOTFILES, DOTFILES_REPO, run_cmd, create_symlink)
+    setup_*.py            # Per-component setup modules (device_id, homebrew, mise, zsh, etc.)
+    utils.py              # Lightweight utilities for standalone scripts
     symlink_home.py       # Auto-symlink home/ files
     check_homebrew.py     # Check Homebrew apps
 ```
@@ -216,7 +221,7 @@ dotfiles/
 
 **Guidelines:**
 1. Add new scripts to `dotfiles_scripts/` as Python modules
-2. Use shared utilities from `dotfiles_scripts.utils` (e.g., `get_dotfiles_dir()`, `get_backup_dir()`)
+2. Use `dotfiles_scripts.setup_utils` for setup scripts (constants, `run_cmd`, `create_symlink`) or `dotfiles_scripts.utils` for standalone utility scripts (`get_dotfiles_dir`)
 3. Use `click` for CLI argument parsing
 4. Use `rich` for beautiful terminal output (tables, progress bars, colors)
 5. Add console script entry points to `pyproject.toml`:
@@ -259,31 +264,8 @@ uv run -m dotfiles_scripts.module_name
   uv run check-homebrew-apps -f brewfile # Output as Brewfile entries
   ```
 
-### Example: Creating a New Script
-
-```python
-# dotfiles_scripts/my_new_script.py
-"""Description of what this script does."""
-
-import click
-from rich.console import Console
-from dotfiles_scripts.utils import get_dotfiles_dir
-
-console = Console()
-
-@click.command()
-@click.option('--verbose', '-v', is_flag=True, help='Verbose output')
-def main(verbose):
-    """My new utility script."""
-    dotfiles = get_dotfiles_dir()
-    console.print(f"[green]Dotfiles directory: {dotfiles}[/green]")
-    # Your logic here
-
-if __name__ == "__main__":
-    main()
-```
-
-Then add to `pyproject.toml`:
+### Adding a New Script
+Add module to `dotfiles_scripts/`, then register in `pyproject.toml`:
 ```toml
 [project.scripts]
 my-new-script = "dotfiles_scripts.my_new_script:main"
@@ -295,4 +277,4 @@ my-new-script = "dotfiles_scripts.my_new_script:main"
 - Symlink target is always `~/.dotfiles`
 - Setup is idempotent - scripts check for existing installations
 - Homebrew bundle only runs once (tracked by `homebrew/.installed`)
-- asdf setup is commented out in main setup and loaded lazily via zsh function
+- Language runtimes are managed by mise (see `.mise.toml`)

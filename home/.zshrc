@@ -16,13 +16,6 @@ _source_hierarchy() {
 # Machine-specific env vars (symlinked from ~/Dropbox/dotfiles/home/.config/dotfiles/)
 _source_hierarchy "$HOME/.config/dotfiles/.dotfiles-config" "$_device_id"
 
-# Edit dotfiles-config files (fzf to select)
-edit-dotfiles-config() {
-  local dir="$HOME/.config/dotfiles"
-  local file=$(ls -1 "$dir"/.dotfiles-config* 2>/dev/null | fzf --tac)
-  [[ -n "$file" ]] && ${EDITOR:-vim} "$file"
-}
-
 # Private config sourced before everything else
 _source_hierarchy "$HOME/.zshrc.before" "$_device_id"
 
@@ -96,6 +89,10 @@ antigen theme romkatv/powerlevel10k
 
 antigen apply
 
+# Autoload custom functions from ~/.zsh/functions
+fpath=(~/.zsh/functions $fpath)
+autoload -Uz ~/.zsh/functions/*(.:t) 2>/dev/null
+
 # History file in Dropbox for sync across machines (must be after antigen/oh-my-zsh)
 # Uses device-specific file if ~/.device_id exists (created by setup-zsh-history)
 if [[ -n "$_device_id" ]]; then
@@ -160,21 +157,6 @@ fi
 [ -d "$HOME/.yarn/bin" ] && path=("$HOME/.yarn/bin" $path)
 [ -d "$HOME/.config/yarn/global/node_modules/.bin" ] && path=("$HOME/.config/yarn/global/node_modules/.bin" $path)
 
-git-stats() {
-  local refs=${1:-HEAD^..HEAD}
-  git log $refs --shortstat | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' -
-}
-
-git-diff-stats() {
-  git diff --stat | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' -
-}
-
-gch() {
-  local preview_cmd="git log --pretty=tformat:'%C(bold blue)%h %C(bold red)%ad %C(bold blue)%aN%C(auto) %<|(100,trunc)%s%C(reset)' --date=short --graph {}"
-  local branch=$(git branch --format='%(refname:short)' --sort=-committerdate | fzf --preview "$preview_cmd" | tr -d '[:space:]')
-  git checkout $branch
-}
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 if [[ -f ~/.docker/init-zsh.sh ]]; then
@@ -220,11 +202,6 @@ compdef _uv_run_mod uv
 
 # Auto-activate venv when entering project directories
 autoload -U add-zsh-hook
-load-local-venv() {
-  if [[ -f .venv/bin/activate && "$VIRTUAL_ENV" != "$(pwd)/.venv" ]]; then
-    source .venv/bin/activate
-  fi
-}
 add-zsh-hook chpwd load-local-venv
 load-local-venv  # Load for current session
 
@@ -284,25 +261,6 @@ function _tmux_sessions_complete() {
 
 # Assign the completion function to 'tmux attach -t'
 compdef _tmux_sessions_complete 'tmux attach -t'
-
-function sesh-sessions() {
-  local session
-  session=$(sesh list --icons | fzf \
-    --no-sort --ansi --border-label ' sesh ' --prompt '⚡  ' \
-    --header '  ^a all ^t tmux ^g configs ^x zoxide ^d tmux kill ^f find' \
-    --bind 'tab:down,btab:up' \
-    --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
-    --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
-    --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
-    --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
-    --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-    --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
-    --preview-window 'right:55%' \
-    --preview 'sesh preview {}')
-  
-  [[ -z "$session" ]] && return
-  sesh connect "$session"
-}
 
 zle     -N             sesh-sessions
 bindkey -M emacs '\es' sesh-sessions
