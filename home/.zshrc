@@ -152,7 +152,12 @@ if type pack >/dev/null 2>&1; then
 fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# Use a lean config for SSH sessions (e.g., Terminus/mosh)
+if [[ -n "$SSH_CONNECTION" ]] && [[ -f ~/.p10k-ssh.zsh ]]; then
+  source ~/.p10k-ssh.zsh
+else
+  [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+fi
 
 [ -d "$HOME/.yarn/bin" ] && path=("$HOME/.yarn/bin" $path)
 [ -d "$HOME/.config/yarn/global/node_modules/.bin" ] && path=("$HOME/.config/yarn/global/node_modules/.bin" $path)
@@ -163,18 +168,26 @@ if [[ -f ~/.docker/init-zsh.sh ]]; then
   source ~/.docker/init-zsh.sh || true # Added by Docker Desktop
 fi
 
-# Cache brew prefix (called multiple times below)
+# aws completion: lazy-loaded on first aws<tab> to avoid startup cost
+_lazy_aws_completer() {
+  unfunction _lazy_aws_completer
+  autoload -Uz bashcompinit && bashcompinit
+  complete -C "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/aws_completer" aws
+  # Re-trigger completion for the current command line
+  _bash_complete
+}
+type aws_completer &>/dev/null && compdef _lazy_aws_completer aws
+
+[ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
+
+# Cache brew prefix to avoid repeated subprocess calls
+_brew_prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
+
+# https://github.com/eza-community/eza/blob/main/INSTALL.md#for-zsh-with-homebrew
 if type brew &>/dev/null; then
-  _brew_prefix="$(brew --prefix)"
   fpath=("$_brew_prefix/share/zsh/site-functions" $fpath)
 fi
 
-if type aws_completer >/dev/null; then
-  autoload bashcompinit && bashcompinit
-  complete -C "$_brew_prefix/bin/aws_completer" aws
-fi
-
-[ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
 
 # alias for eza
 alias ls='eza --color=always --group-directories-first --icons=always'
@@ -216,15 +229,15 @@ command -v just &>/dev/null && eval "$(just --completions zsh)"
 # Docker CLI completions
 [ -d "$HOME/.docker/completions" ] && fpath=("$HOME/.docker/completions" $fpath)
 
-# Single compinit call (after all fpath modifications)
+# Consolidated compinit — called once after all fpath modifications
 autoload -Uz compinit
-compinit
+compinit -C
 
 [ -f $HOME/.claude/local/claude ] && path=("$HOME/.claude/local" $path)
 
 # go - add GOPATH/bin to PATH if go is installed
 if command -v go &>/dev/null; then
-  _gobin="$(go env GOPATH)/bin"
+  _gobin="${GOPATH:-$HOME/go}/bin"
   [ -d "$_gobin" ] && path=("$_gobin" $path)
   unset _gobin
 fi
@@ -274,11 +287,11 @@ if type sesh &>/dev/null; then
   alias seshc='sesh connect $(sesh list | fzf)'
 fi
 
-# Google Cloud SDK (Homebrew installation)
-if [[ -n "$_brew_prefix" ]]; then
-  [ -f "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc" ] && . "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc"
-  [ -f "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc" ] && . "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc"
-fi
+# updates PATH for the Google Cloud SDK (Homebrew installation)
+[ -f "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc" ] && . "$_brew_prefix/share/google-cloud-sdk/path.zsh.inc"
+
+# enables shell command completion for gcloud (Homebrew installation).
+[ -f "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc" ] && . "$_brew_prefix/share/google-cloud-sdk/completion.zsh.inc"
 
 # mise (version manager)
 command -v mise &>/dev/null && eval "$(mise activate zsh)"
