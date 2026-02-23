@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Setup zsh as default shell with antigen plugin manager."""
+"""Setup zsh as default shell with antidote plugin manager."""
 
 from __future__ import annotations
 
@@ -10,8 +10,6 @@ import sys
 from pathlib import Path
 
 from dotfiles_scripts.setup_utils import (
-    DOTFILES_REPO,
-    create_symlink,
     print_header,
     print_step,
     print_success,
@@ -58,19 +56,6 @@ def set_zsh_default() -> bool:
         return False
 
 
-def setup_antigen() -> bool:
-    """Setup antigen zsh plugin manager."""
-    antigen_src = DOTFILES_REPO / "zsh" / "antigen.zsh"
-    antigen_target = Path.home() / ".antigen.zsh"
-
-    if antigen_src.exists():
-        create_symlink(antigen_src, antigen_target)
-        return True
-    else:
-        print_warning(f"antigen.zsh not found at {antigen_src}")
-        return False
-
-
 def main() -> int:
     """Main entry point."""
     print_header("Setting up zsh")
@@ -79,8 +64,6 @@ def main() -> int:
         print_success("zsh is already the default shell")
     else:
         set_zsh_default()
-
-    setup_antigen()
 
     print_success("zsh setup complete!")
     return 0

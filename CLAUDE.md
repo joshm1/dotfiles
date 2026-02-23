@@ -37,7 +37,7 @@ Setup scripts are Python modules in `dotfiles_scripts/`. Run individually with `
 - `setup-homebrew` - Installs Homebrew and runs Brewfiles
 - `setup-neovim` - Installs neovim nightly
 - `setup-mise` - Installs mise for language version management
-- `setup-zsh` - Configures zsh with antigen
+- `setup-zsh` - Configures zsh with antidote
 - `setup-vim` - Sets up neovim
 - `setup-fzf` - Sets up fzf
 - `setup-dropbox` - Links private config files from Dropbox
@@ -115,12 +115,12 @@ Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig`
 2. Source private pre-config from Dropbox (`.zshrc.before.*`)
 3. Configure direnv (silent export before instant prompt)
 4. Enable Powerlevel10k instant prompt
-5. Load antigen (zsh plugin manager) and bundles:
-   - oh-my-zsh base, brew, command-not-found
-   - zsh-syntax-highlighting, zsh-autosuggestions
+5. Load antidote (zsh plugin manager) from static plugin list (`~/.zsh_plugins.txt`):
+   - oh-my-zsh lib, brew, command-not-found
+   - zsh-syntax-highlighting, zsh-autosuggestions (deferred)
    - fzf, git, wd, zap-zsh/supercharge, zap-zsh/exa
+   - Powerlevel10k theme
    - Node.js bundles (conditional on `ANTIGEN_BUNDLE_NODE=y`)
-6. Apply antigen theme (Powerlevel10k)
 7. Autoload custom functions from `~/.zsh/functions/`
 8. Configure Dropbox-synced zsh history (device-specific files)
 9. Initialize zoxide (better cd)

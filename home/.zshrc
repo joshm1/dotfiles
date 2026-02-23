@@ -51,43 +51,18 @@ export EDITOR="$VISUAL"
 export GIT_EDITOR="$EDITOR"
 export FZF_DEFAULT_COMMAND='ag -g ""'
 
-if [ -f $HOME/.antigen.zsh ]; then
-  source $HOME/.antigen.zsh
-else
-  (){
-    declare -i i=0
-    antigen() {
-      [[ $i -eq 0 ]] && echo "ERROR: ~/.antigen.zsh does not exist"
-      echo "  * cannot run antigen $@"
-      ((i++))
-    }
-  }
+# Helper for conditional node.js plugin loading
+is_node_enabled() { [[ "$ANTIGEN_BUNDLE_NODE" = y* ]] }
+
+# Antidote plugin manager (installed via Homebrew)
+source "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/antidote/share/antidote/antidote.zsh"
+antidote load
+
+# Conditional node.js plugins (set ANTIGEN_BUNDLE_NODE=y in dotfiles-config)
+if is_node_enabled; then
+  antidote bundle lukechilds/zsh-better-npm-completion
+  antidote bundle g-plane/zsh-yarn-autocompletions
 fi
-
-antigen use oh-my-zsh
-
-antigen bundle brew
-antigen bundle command-not-found
-antigen bundle fzf
-antigen bundle git
-antigen bundle wd
-antigen bundle zsh-users/zsh-syntax-highlighting
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle zap-zsh/supercharge
-antigen bundle zap-zsh/exa
-
-# REMOVED: zsh-autoswitch-virtualenv conflicts with custom load-local-venv function (line ~258)
-# Causes "_default_venv:8: command not found: deactivate" error
-
-# set ANTIGEN_BUNDLE_NODE=y in ~/.dotfiles-config to enable
-if [[ "$ANTIGEN_BUNDLE_NODE" = y* ]]; then
-  antigen bundle lukechilds/zsh-better-npm-completion
-  antigen bundle g-plane/zsh-yarn-autocompletions
-fi
-
-antigen theme romkatv/powerlevel10k
-
-antigen apply
 
 # Autoload custom functions from ~/.zsh/functions
 fpath=(~/.zsh/functions $fpath)
