@@ -103,7 +103,6 @@ alias vi="nvim"
 [ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
 [ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
 
-alias gitpurge="git checkout master && git remote update --prune | git branch -r --merged | grep -v master | grep origin/ | sed -e 's/origin\//:/' | xargs git push origin"
 
 export FZF_DEFAULT_OPTS='--preview "([[ -f {} ]] && bat --style=numbers --color=always --line-range :500 {}) || ([[ -d {} ]] && eza -T --git-ignore --icons --group-directories-first -la {})"'
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow'
