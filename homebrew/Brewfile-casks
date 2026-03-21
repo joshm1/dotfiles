@@ -1,10 +1,15 @@
 cask_args appdir: '/Applications'
 
+# Taps
+tap 'supabase/tap'
+tap 'withgraphite/tap'
+
 # Password Managers
 cask '1password'                # Password manager - https://1password.com
-# cask '1password-cli'          # Only needed if using 'op' CLI for scripting
+cask '1password-cli'            # 1Password CLI for scripting & SSH agent - https://developer.1password.com/docs/cli
 
 # Productivity
+cask 'alt-tab'                  # Windows-style alt-tab window switcher - https://alt-tab-macos.netlify.app
 # cask 'alfred'                   # Spotlight replacement & automation - https://www.alfredapp.com
 # cask 'bettertouchtool'        # Advanced input customization - https://folivora.ai - replaced with Raycast Window Management
 cask 'cleanshot'                # Screen capturing tool - https://getcleanshot.com
@@ -29,6 +34,8 @@ cask 'visual-studio-code'       # Code editor - https://github.com/microsoft/vsc
 # cask 'sublime-text'             # Text editor - https://www.sublimetext.com
 cask 'zed'                      # Multiplayer code editor - https://zed.dev
 
+cask 'codex'                    # OpenAI Codex CLI - https://github.com/openai/codex
+
 tap 'manaflow-ai/cmux'
 cask 'cmux'                     # AI-powered terminal multiplexer - https://github.com/manaflow-ai/cmux
 
@@ -40,12 +47,14 @@ cask 'ngrok'                    # Secure tunneling - https://ngrok.com
 cask 'slack'                    # Team chat - https://slack.com
 cask 'superhuman'               # Email client - https://superhuman.com
 cask 'telegram'                 # Messaging - https://telegram.org
+cask 'whatsapp'                 # Messaging - https://www.whatsapp.com
 cask 'zoom'                     # Video conferencing - https://zoom.us
 
 # Security & Privacy
 cask 'gpg-suite'                # GPG tools for macOS - used to sign git commits
                                 # https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits
 cask 'tailscale'                # VPN & secure networks - https://tailscale.com
+cask 'tailscale-app'            # Tailscale standalone app (non-App Store) - https://tailscale.com
 
 # Storage & Sync
 cask 'dropbox'                  # File sync & storage - https://www.dropbox.com
@@ -54,6 +63,7 @@ cask 'google-drive'             # Google Drive sync - https://www.google.com/dri
 # Browsers
 cask 'google-chrome'            # Web browser
 cask 'helium-browser'           # Floating browser window - https://helium.computer/
+cask 'vivaldi'                  # Feature-rich web browser - https://vivaldi.com
 # cask 'firefox'
 
 # Productivity (additional)
