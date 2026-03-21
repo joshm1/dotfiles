@@ -17,6 +17,7 @@ brew 'rust'                     # Rust programming language
 
 # Shell & Terminal Tools
 brew 'antidote'                 # Zsh plugin manager - https://github.com/mattmc3/antidote
+brew 'direnv'                   # Directory-scoped environment variables - https://github.com/direnv/direnv
 brew 'atuin'                    # Shell history sync & search - https://github.com/atuinsh/atuin
 brew 'bat'                      # Cat clone with syntax highlighting - https://github.com/sharkdp/bat
 brew 'btop'                     # Resource monitor - https://github.com/aristocratos/btop
@@ -49,6 +50,7 @@ brew 'yq'                       # YAML processor - https://github.com/mikefarah/
 
 # Cloud & Infrastructure
 brew 'awscli'                   # AWS command line interface
+brew 'cloudflared'              # Cloudflare Tunnel client - https://github.com/cloudflare/cloudflared
 brew 'gcalcli'                  # Google Calendar CLI - https://github.com/insanum/gcalcli
 brew 'helm'                     # Kubernetes package manager - https://github.com/helm/helm
 brew 'pulumi'                   # Infrastructure as code - https://github.com/pulumi/pulumi
@@ -73,12 +75,14 @@ brew 'wget'                     # File downloader
 brew 'whois'                    # Domain lookup tool
 
 # Documentation & Conversion
+brew 'poppler'                  # PDF rendering library - https://poppler.freedesktop.org
 brew 'tealdeer'                 # Fast tldr client - https://github.com/dbrgn/tealdeer
 
 # Backup Tools
 brew 'restic'                   # Fast, secure backup program - https://github.com/restic/restic
 
 # Utilities
+brew 'duti'                     # Select default apps for documents/URLs - https://github.com/moretension/duti
 brew 'gnupg'                    # GPG encryption & signing - used by mise, git commit signing
 brew 'ctags'                    # Code indexing tool
 brew 'cscope'                   # Code browsing tool
@@ -87,7 +91,15 @@ brew 'dos2unix'                 # Convert line endings
 brew 'gettext'                  # Internationalization library
 brew 'mas'                      # Mac App Store CLI - https://github.com/mas-cli/mas
 
+# AI & Automation
+brew 'agent-browser'            # Browser automation CLI for AI agents - https://github.com/anthropics/agent-browser
+brew 'ralph-orchestrator'       # Multi-agent orchestration framework - https://github.com/ralph-group/ralph-orchestrator
+
+# Linting & Formatting
+brew 'ktlint'                   # Kotlin linter with built-in formatter - https://github.com/pinterest/ktlint
+
 # System Libraries (for building from source)
+brew 'librsvg'                  # SVG rendering library - https://gitlab.gnome.org/GNOME/librsvg
 brew 'bzip2'
 brew 'grep'
 brew 'ncurses'
