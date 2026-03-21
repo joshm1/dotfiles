@@ -29,6 +29,9 @@ cask 'visual-studio-code'       # Code editor - https://github.com/microsoft/vsc
 # cask 'sublime-text'             # Text editor - https://www.sublimetext.com
 cask 'zed'                      # Multiplayer code editor - https://zed.dev
 
+tap 'manaflow-ai/cmux'
+cask 'cmux'                     # AI-powered terminal multiplexer - https://github.com/manaflow-ai/cmux
+
 # Cloud & Infrastructure
 cask 'gcloud-cli'               # Google Cloud SDK - https://cloud.google.com/sdk
 cask 'ngrok'                    # Secure tunneling - https://ngrok.com

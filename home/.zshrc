@@ -68,6 +68,14 @@ fi
 fpath=(~/.zsh/functions $fpath)
 autoload -Uz ~/.zsh/functions/*(.:t) 2>/dev/null
 
+# Autoload private functions from Dropbox (if available)
+_dropbox_functions="$HOME/Dropbox/dotfiles/zsh_functions"
+if [[ -d "$_dropbox_functions" ]]; then
+  fpath=("$_dropbox_functions" $fpath)
+  autoload -Uz "$_dropbox_functions"/*(.:t) 2>/dev/null
+fi
+unset _dropbox_functions
+
 # History file in Dropbox for sync across machines (must be after antigen/oh-my-zsh)
 # Uses device-specific file if ~/.device_id exists (created by setup-zsh-history)
 if [[ -n "$_device_id" ]]; then

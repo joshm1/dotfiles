@@ -50,6 +50,7 @@ brew 'yq'                       # YAML processor - https://github.com/mikefarah/
 # Cloud & Infrastructure
 brew 'awscli'                   # AWS command line interface
 brew 'gcalcli'                  # Google Calendar CLI - https://github.com/insanum/gcalcli
+brew 'helm'                     # Kubernetes package manager - https://github.com/helm/helm
 brew 'pulumi'                   # Infrastructure as code - https://github.com/pulumi/pulumi
 
 # Containers & VMs
