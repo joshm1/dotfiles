@@ -92,6 +92,10 @@
   # tag
   t = tag -n                        # show tags with <n> lines of each tag message
 
+  # worktree
+  wt = worktree
+  wtrm = worktree remove
+
   # additional useful aliases
   br = branch --sort=-committerdate # show branches sorted by last commit
   ri = rebase -i                    # interactive rebase
