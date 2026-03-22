@@ -28,6 +28,7 @@ cd ~/projects/joshm1/dotfiles
 # Post-Install
 
 - [ ] Install CleanShot X license: https://licenses.cleanshot.com/
+- [ ] Setup Default Obsidian vault at `~/Obsidian`
 
 # Machine-specific configuration
 
