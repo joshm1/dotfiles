@@ -311,6 +311,53 @@ def wait_for_dropbox() -> bool:
             raise SystemExit(0) from None
 
 
+def check_dropbox_sync(home_dir: Path) -> bool:
+    """Check if Dropbox files are actually synced vs online-only placeholders.
+
+    Smart Sync can leave 0-byte placeholder files that look present but have no content.
+    This checks critical files to ensure they've been downloaded.
+    """
+    critical_files = [
+        ".gitconfig_local",
+        ".zshrc.before",
+        ".zshrc.after",
+    ]
+
+    unsynced: list[Path] = []
+    for name in critical_files:
+        path = home_dir / name
+        if path.exists() and path.stat().st_size == 0:
+            unsynced.append(path)
+
+    if not unsynced:
+        return True
+
+    print_warning("Dropbox files appear to be online-only (0 bytes — not synced locally)")
+    print("\n  Unsynced files:")
+    for path in unsynced:
+        print(f"    {path}")
+    print("\n  To fix this:")
+    print("    1. Open Finder and navigate to ~/Dropbox/dotfiles")
+    print("    2. Select all files (Cmd+A)")
+    print("    3. Right-click → Make Available Offline")
+    print("    Or: right-click the 'dotfiles' folder itself → Make Available Offline")
+
+    while True:
+        try:
+            response = input("\nPress Enter to check again, or 's' to skip: ").strip().lower()
+            if response == "s":
+                return False
+            # Re-check
+            still_unsynced = [p for p in unsynced if p.stat().st_size == 0]
+            if not still_unsynced:
+                print_success("Dropbox files are now synced!")
+                return True
+            print_warning(f"Still {len(still_unsynced)} file(s) unsynced...")
+        except (EOFError, KeyboardInterrupt):
+            print()
+            raise SystemExit(0) from None
+
+
 def main() -> int:
     """Main entry point."""
     print_header("Setting up Dropbox dotfiles")
@@ -323,6 +370,9 @@ def main() -> int:
     if not wait_for_dropbox():
         print_step("Skipping Dropbox setup")
         return 0
+
+    if not check_dropbox_sync(home_dir):
+        print_warning("Continuing with unsynced files — some configs may be empty")
 
     check_stale_symlinks(home_dir)
     create_device_zshrc_configs(home_dir)
