@@ -58,3 +58,10 @@ htmlcov/
 
 # Ruff
 .ruff_cache/
+
+# Certificates & private keys
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
