@@ -23,12 +23,12 @@ from dotfiles_scripts.setup_utils import (
     DOTFILES_REPO,
     DROPBOX_DIR,
     create_symlink,
-    get_backup_dir,
     print_error,
     print_header,
     print_success,
     print_warning,
     run_cmd,
+    symlink_home_dir,
 )
 
 
@@ -77,25 +77,8 @@ def symlink_home_files() -> bool:
         print_error(f"home/ directory not found at {home_dir}")
         return False
 
-    backup_dir = get_backup_dir()
-    success = True
-
-    # Symlink top-level files
-    for source_path in sorted(home_dir.glob("*")):
-        if source_path.is_file():
-            target_path = Path.home() / source_path.name
-            if not create_symlink(source_path, target_path, backup_dir):
-                success = False
-
-    # Symlink .config subdirectories
-    config_dir = home_dir / ".config"
-    if config_dir.exists():
-        for source_path in sorted(config_dir.glob("*")):
-            target_path = Path.home() / ".config" / source_path.name
-            if not create_symlink(source_path, target_path, backup_dir):
-                success = False
-
-    return success
+    symlink_home_dir(home_dir)
+    return True
 
 
 def run_setup_module(module_name: str) -> bool:
