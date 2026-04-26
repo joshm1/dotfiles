@@ -13,7 +13,7 @@ _source_hierarchy() {
   done
 }
 
-# Machine-specific env vars (symlinked from ~/Dropbox/dotfiles/home/.config/dotfiles/)
+# Machine-specific env vars (symlinked from ~/.dotfiles-private/home/.config/dotfiles/)
 _source_hierarchy "$HOME/.config/dotfiles/.dotfiles-config" "$_device_id"
 
 # Private config sourced before everything else
@@ -68,28 +68,31 @@ fi
 fpath=(~/.zsh/functions $fpath)
 autoload -Uz ~/.zsh/functions/*(.:t) 2>/dev/null
 
-# Autoload private functions from Dropbox (if available)
-_dropbox_functions="$HOME/Dropbox/dotfiles/zsh_functions"
-if [[ -d "$_dropbox_functions" ]]; then
-  fpath=("$_dropbox_functions" $fpath)
-  autoload -Uz "$_dropbox_functions"/*(.:t) 2>/dev/null
+# Autoload private functions from the cloud-synced dotfiles tree (if mounted).
+# ~/.dotfiles-private is a symlink set up at machine bootstrap that points to
+# whichever cloud provider holds the user's private configs (Google Drive,
+# Dropbox, ...).
+_private_functions="$HOME/.dotfiles-private/zsh_functions"
+if [[ -d "$_private_functions" ]]; then
+  fpath=("$_private_functions" $fpath)
+  autoload -Uz "$_private_functions"/*(.:t) 2>/dev/null
 fi
-unset _dropbox_functions
+unset _private_functions
 
-# History file in Dropbox for sync across machines (must be after antigen/oh-my-zsh)
-# Uses device-specific file if ~/.device_id exists (created by setup-zsh-history)
+# History file in the cloud-synced tree for cross-machine sync (must be after
+# antigen/oh-my-zsh). Uses device-specific file when ~/.device_id exists.
 if [[ -n "$_device_id" ]]; then
-  _histfile="$HOME/Dropbox/dotfiles/zsh_history/.zsh_history.${_device_id}"
+  _histfile="$HOME/.dotfiles-private/zsh_history/.zsh_history.${_device_id}"
   if [[ -f "$_histfile" ]]; then
     export HISTFILE="$_histfile"
   else
     echo "Warning: Device history file not found: $_histfile"
   fi
   unset _histfile
-elif [[ -f "$HOME/Dropbox/dotfiles/zsh_history/.zsh_history" ]]; then
-  export HISTFILE="$HOME/Dropbox/dotfiles/zsh_history/.zsh_history"
+elif [[ -f "$HOME/.dotfiles-private/zsh_history/.zsh_history" ]]; then
+  export HISTFILE="$HOME/.dotfiles-private/zsh_history/.zsh_history"
 else
-  echo "Warning: Dropbox zsh_history not found, using default ~/.zsh_history"
+  echo "Warning: ~/.dotfiles-private zsh_history not found, using default ~/.zsh_history"
 fi
 
 # we want to use buf from https://docs.buf.build

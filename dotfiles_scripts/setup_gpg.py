@@ -11,14 +11,20 @@ from pathlib import Path
 import yaml
 
 from dotfiles_scripts.setup_utils import (
-    DROPBOX_DIR,
+    get_private_dotfiles,
     print_header,
     print_step,
     print_success,
     print_warning,
 )
 
-GPG_KEYS_MANIFEST = DROPBOX_DIR / "dotfiles" / ".gpg-keys.yaml"
+
+def _gpg_keys_manifest() -> Path | None:
+    """Return the path to the GPG keys YAML manifest under ``~/.dotfiles-private``."""
+    private = get_private_dotfiles()
+    if private is None:
+        return None
+    return private / ".gpg-keys.yaml"
 
 
 def get_key_id_for_email(email: str) -> str | None:
@@ -132,14 +138,16 @@ def main() -> int:
     """Main entry point."""
     print_header("Setting up GPG keys")
 
-    if not GPG_KEYS_MANIFEST.exists():
-        print_warning(f"No GPG keys manifest found at {GPG_KEYS_MANIFEST}")
+    manifest = _gpg_keys_manifest()
+    if manifest is None or not manifest.exists():
+        target = manifest if manifest is not None else "<no cloud-synced dotfiles dir>"
+        print_warning(f"No GPG keys manifest found at {target}")
         return 0
 
     try:
-        config = yaml.safe_load(GPG_KEYS_MANIFEST.read_text()) or {}
+        config = yaml.safe_load(manifest.read_text()) or {}
     except yaml.YAMLError as e:
-        print_warning(f"Invalid YAML in {GPG_KEYS_MANIFEST}: {e}")
+        print_warning(f"Invalid YAML in {manifest}: {e}")
         return 1
 
     keys = config.get("keys", [])

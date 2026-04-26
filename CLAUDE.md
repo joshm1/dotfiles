@@ -48,15 +48,35 @@ Setup scripts are Python modules in `dotfiles_scripts/`. Run individually with `
 
 ### Configuration Variables
 Common paths are defined in `dotfiles_scripts/setup_utils.py`:
-- `DOTFILES = $HOME/.dotfiles`
-- `DOTFILES_REPO = ~/projects/joshm1/dotfiles`
-- `DROPBOX_DIR = $HOME/Dropbox`
+- `DOTFILES = $HOME/.dotfiles` — symlink to this repo (public)
+- `DOTFILES_REPO = ~/projects/joshm1/dotfiles` — clone location
+- `PRIVATE_DOTFILES = $HOME/.dotfiles-private` — local symlink that points
+  at whichever cloud provider currently holds the user's private dotfiles
+  tree (Google Drive preferred, Dropbox as fallback)
+- `DROPBOX_DIR = $HOME/Dropbox` — kept for the Dropbox fallback path
+
+Cloud-storage discovery is glob-based and never hardcodes the user's email:
+`get_cloud_dotfiles_dir()`-style helpers were replaced with the single
+indirection above. Setup scripts and `home/.zshrc` always read through
+`~/.dotfiles-private/...`; only the migration script and bootstrap touch
+the cloud roots directly.
+
+Migrating between clouds: see `migrate-to-gdrive` (Python module
+`dotfiles_scripts/migrate_to_gdrive.py`). The script copies data into
+`<google-drive>/dotfiles-private/`, retargets the local symlink atomically,
+rewrites any home-directory symlinks that still pointed at the old source,
+and journals everything for `--rollback`. It includes a per-file
+sha256-based divergence report so a *second* laptop can see what differs
+between its local Dropbox copy and what was previously published to
+Google Drive (resolve via `--prefer-gdrive`, `--prefer-dropbox`, or
+`--ignore-divergence`).
 
 Language versions are managed by mise (see `.mise.toml` files).
 
 ### Machine-Specific Configuration
 Device-specific config files use hierarchical namespaces (e.g., `mac.personal`).
-Files are in `~/Dropbox/dotfiles/home/.config/dotfiles/` and symlinked to `~/.config/dotfiles/`:
+Files live in `~/.dotfiles-private/home/.config/dotfiles/` (the cloud-synced
+tree) and are symlinked to `~/.config/dotfiles/`:
 
 ```
 .dotfiles-config              # shared across all devices
@@ -71,7 +91,11 @@ Available settings:
 Use `edit-dotfiles-config` to edit the most specific config for this device.
 
 ### Private Configuration
-Private/sensitive configs are stored in Dropbox (not in this repo). Files are sourced hierarchically based on device_id (e.g., `mac.personal`):
+Private/sensitive configs are stored in cloud storage (not in this repo).
+The local entry point is always `~/.dotfiles-private/`, which is a symlink
+to whichever provider this machine uses (Google Drive preferred, Dropbox
+fallback for un-migrated machines). Files are sourced hierarchically based
+on `device_id` (e.g., `mac.personal`):
 
 ```
 .zshrc.before              # shared
@@ -112,7 +136,7 @@ Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig`
 
 ### Shell Configuration Flow (home/.zshrc)
 1. Load device ID and hierarchical config (`_source_hierarchy`)
-2. Source private pre-config from Dropbox (`.zshrc.before.*`)
+2. Source private pre-config from `~/.dotfiles-private/...` via the symlinked `~/.zshrc.before.*`
 3. Configure direnv (silent export before instant prompt)
 4. Enable Powerlevel10k instant prompt
 5. Load antidote (zsh plugin manager) from static plugin list (`~/.zsh_plugins.txt`):
@@ -122,11 +146,11 @@ Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig`
    - Powerlevel10k theme
    - Node.js bundles (conditional on `ANTIGEN_BUNDLE_NODE=y`)
 7. Autoload custom functions from `~/.zsh/functions/`
-8. Configure Dropbox-synced zsh history (device-specific files)
+8. Configure cloud-synced zsh history at `~/.dotfiles-private/zsh_history/.zsh_history.${device_id}`
 9. Initialize zoxide (better cd)
 10. Set up eza aliases, fzf config, tool completions (Docker, AWS, bun, just, uv)
 11. Configure PATH for go, pnpm, bun, cargo, Claude CLI, neovim nightly
-12. Source private post-config from Dropbox (`.zshrc.after.*`)
+12. Source private post-config from `~/.dotfiles-private/...` via the symlinked `~/.zshrc.after.*`
 13. Initialize atuin (shell history search)
 14. Activate mise (`eval "$(mise activate zsh)"`)
 

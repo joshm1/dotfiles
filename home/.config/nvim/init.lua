@@ -1,5 +1,4 @@
 -- Minimal Neovim Config with native package system
--- Josh's clean setup - 2025-10-19
 
 -- Basic settings
 vim.opt.number = true         -- Line numbers
