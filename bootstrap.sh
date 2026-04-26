@@ -5,15 +5,16 @@
 #   bash <(curl -fsSL https://raw.githubusercontent.com/joshm1/dotfiles/main/bootstrap.sh)
 #
 # This script handles the chicken-and-egg problem: you need a browser to sign
-# into Dropbox/1Password, but those are installed by the setup script.
+# into your cloud provider (Google Drive or Dropbox) and 1Password, but those
+# are installed by the setup script.
 #
 # Flow:
 #   1. Install Xcode CLI tools (for git)
 #   2. Install Homebrew
 #   3. Clone the dotfiles repo
-#   4. Install essential apps (browser, 1Password, Dropbox, Claude Code)
+#   4. Install essential apps (browser, 1Password, cloud sync app, Claude Code)
 #   5. Prompt user to sign in
-#   6. Wait for Dropbox to sync
+#   6. Wait for the cloud-synced "dotfiles-private" / "dotfiles" folder to land
 #   7. Hand off to Claude Code to finish setup
 #
 
@@ -24,7 +25,25 @@ FORCE=false
 
 REPO_DIR="$HOME/projects/joshm1/dotfiles"
 REPO_URL="https://github.com/joshm1/dotfiles.git"
-DROPBOX_DOTFILES="$HOME/Dropbox/dotfiles"
+
+# Find the user's cloud-synced private dotfiles directory. Prints the absolute
+# path on stdout (and returns 0) if found, otherwise returns 1. Probes Google
+# Drive accounts first, then Dropbox; matches either "dotfiles-private" (new
+# convention) or "dotfiles" (legacy Dropbox layout).
+find_cloud_private_dotfiles() {
+    local base name candidate
+    for base in "$HOME"/Library/CloudStorage/GoogleDrive-*/My\ Drive "$HOME/Dropbox"; do
+        [[ -d "$base" ]] || continue
+        for name in dotfiles-private dotfiles; do
+            candidate="$base/$name"
+            if [[ -d "$candidate" ]]; then
+                printf '%s\n' "$candidate"
+                return 0
+            fi
+        done
+    done
+    return 1
+}
 
 # --- Helpers ---
 
@@ -105,7 +124,9 @@ fi
 
 info "Installing essential apps..."
 
-ESSENTIAL_CASKS=(google-chrome 1password dropbox)
+# Cloud-sync app: prefer Google Drive (current convention) but fall back to
+# Dropbox if Drive isn't installable or the user has it on Dropbox already.
+ESSENTIAL_CASKS=(google-chrome 1password google-drive)
 for cask in "${ESSENTIAL_CASKS[@]}"; do
     if brew list --cask "$cask" &>/dev/null; then
         success "$cask already installed"
@@ -145,9 +166,12 @@ fi
 info "Opening essential apps..."
 open -a "Google Chrome"
 open -a "1Password"
-open -a "Dropbox"
+# Open whichever cloud-sync app is installed. Both can coexist during a
+# migration window.
+[[ -d /Applications/Google\ Drive.app ]] && open -a "Google Drive"
+[[ -d /Applications/Dropbox.app ]] && open -a "Dropbox"
 
-prompt_continue "Sign into Google Chrome, 1Password, and Dropbox, then come back here."
+prompt_continue "Sign into Google Chrome, 1Password, and your cloud-sync app, then come back here."
 
 # Authenticate Claude Code
 if claude auth status 2>&1 | grep -q 'subscriptionType.*max'; then
@@ -157,19 +181,32 @@ else
     claude auth login --claudeai
 fi
 
-# --- Phase 5: Wait for Dropbox sync ---
+# --- Phase 5: Wait for the cloud-synced private dotfiles to land ---
 
-if [[ -d "$DROPBOX_DOTFILES" ]]; then
-    success "Dropbox dotfiles already synced"
+CLOUD_PRIVATE_DOTFILES="$(find_cloud_private_dotfiles || true)"
+if [[ -n "$CLOUD_PRIVATE_DOTFILES" ]]; then
+    success "Cloud private dotfiles already synced at $CLOUD_PRIVATE_DOTFILES"
 else
-    info "Waiting for Dropbox to sync ~/Dropbox/dotfiles..."
-    echo "    (Tip: in Dropbox preferences, prioritize syncing the 'dotfiles' folder)"
-    while [[ ! -d "$DROPBOX_DOTFILES" ]]; do
+    info "Waiting for cloud-synced private dotfiles to appear..."
+    echo "    Probing for: <Google Drive>/(dotfiles-private|dotfiles), ~/Dropbox/(dotfiles-private|dotfiles)"
+    echo "    (Tip: in your cloud app's preferences, prioritize syncing that folder)"
+    while [[ -z "$CLOUD_PRIVATE_DOTFILES" ]]; do
         printf '.'
         sleep 5
+        CLOUD_PRIVATE_DOTFILES="$(find_cloud_private_dotfiles || true)"
     done
     echo
-    success "Dropbox dotfiles synced"
+    success "Cloud private dotfiles synced at $CLOUD_PRIVATE_DOTFILES"
+fi
+
+# Set up the canonical local symlink so every setup step and the shell read
+# through ~/.dotfiles-private regardless of which cloud provider holds the
+# data. The setup script also re-runs ensure_private_dotfiles_symlink() so a
+# missing or broken symlink is self-healing on every invocation.
+if [[ ! -L "$HOME/.dotfiles-private" || ! -d "$HOME/.dotfiles-private" ]]; then
+    rm -f "$HOME/.dotfiles-private"
+    ln -s "$CLOUD_PRIVATE_DOTFILES" "$HOME/.dotfiles-private"
+    success "Linked ~/.dotfiles-private → $CLOUD_PRIVATE_DOTFILES"
 fi
 
 # --- Phase 6: Hand off to Claude Code ---
@@ -187,8 +224,8 @@ Set up this machine using the dotfiles in this repo.
    echo "{device_id}" > ~/.device_id
 
 3. If I said yes to copying zsh_history:
-   mkdir -p ~/Dropbox/dotfiles/zsh_history
-   cp ~/.zsh_history ~/Dropbox/dotfiles/zsh_history/.zsh_history.{device_id}
+   mkdir -p ~/.dotfiles-private/zsh_history
+   cp ~/.zsh_history ~/.dotfiles-private/zsh_history/.zsh_history.{device_id}
 
 4. Run the setup script:
    ./setup

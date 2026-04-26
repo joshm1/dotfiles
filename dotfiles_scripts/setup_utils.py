@@ -13,6 +13,92 @@ DOTFILES_REPO = Path.home() / "projects" / "joshm1" / "dotfiles"
 DOTFILES = Path.home() / ".dotfiles"
 DROPBOX_DIR = Path.home() / "Dropbox"
 
+# Single canonical local pointer to the user's cloud-synced "private" dotfiles
+# tree. Setup scripts and shell config always read through this path; cloud
+# provider discovery only happens when this symlink does not yet exist (or is
+# being repointed by the migration script). Named to match the public
+# ``~/.dotfiles`` symlink (DOTFILES) for visual grouping.
+PRIVATE_DOTFILES = Path.home() / ".dotfiles-private"
+
+# Names this script will look for inside each cloud root, in order. Newer
+# machines use "dotfiles-private" (matches the local symlink name); older
+# machines on Dropbox keep the legacy "dotfiles" directory.
+_PRIVATE_DIR_NAMES: tuple[str, ...] = ("dotfiles-private", "dotfiles")
+
+# Cloud-storage discovery: probe Google Drive (preferred) then Dropbox, returning
+# the first cloud root whose requested subdir exists. Google Drive's
+# account-scoped path is discovered via glob so the email address is not
+# hardcoded — works for any Google account signed into "Drive for Desktop".
+_GDRIVE_BASE = Path.home() / "Library" / "CloudStorage"
+_GDRIVE_ACCOUNT_GLOB = "GoogleDrive-*"
+_GDRIVE_ROOT_NAME = "My Drive"
+
+
+def gdrive_candidates() -> list[Path]:
+    """All ``GoogleDrive-*/My Drive`` roots currently mounted, sorted for stability."""
+    if not _GDRIVE_BASE.is_dir():
+        return []
+    return sorted(
+        (account / _GDRIVE_ROOT_NAME)
+        for account in _GDRIVE_BASE.glob(_GDRIVE_ACCOUNT_GLOB)
+        if (account / _GDRIVE_ROOT_NAME).is_dir()
+    )
+
+
+def _cloud_candidates() -> list[Path]:
+    """Ordered cloud roots to probe (Google Drive accounts, then Dropbox)."""
+    return [*gdrive_candidates(), DROPBOX_DIR]
+
+
+def discover_cloud_private_dotfiles() -> Path | None:
+    """Return the first ``<cloud>/<private-dir>`` directory that exists.
+
+    Probes each cloud root in order, then each known directory name. Used only
+    when the local ``~/.private-dotfiles`` symlink needs to be (re)created.
+    """
+    for base in _cloud_candidates():
+        for name in _PRIVATE_DIR_NAMES:
+            candidate = base / name
+            if candidate.is_dir():
+                return candidate
+    return None
+
+
+def get_private_dotfiles() -> Path | None:
+    """Return the resolved ``~/.private-dotfiles`` directory, or None if absent.
+
+    Returns the symlink path itself (not the target) when it resolves to an
+    existing directory; callers can ``.resolve()`` if they need the real path.
+    """
+    if PRIVATE_DOTFILES.is_dir():
+        return PRIVATE_DOTFILES
+    return None
+
+
+def ensure_private_dotfiles_symlink() -> Path | None:
+    """Make sure ``~/.private-dotfiles`` points at a real cloud-synced directory.
+
+    Behavior:
+    - If the symlink already exists and resolves to a directory, leaves it
+      alone and returns the path.
+    - If it does not exist (or is broken), probes available cloud providers
+      (Google Drive accounts, then Dropbox) for a ``private-dotfiles`` or
+      ``dotfiles`` subdirectory and creates the symlink if found.
+    - Returns ``None`` if no candidate exists (caller should warn the user).
+    """
+    if PRIVATE_DOTFILES.is_dir():
+        return PRIVATE_DOTFILES
+
+    target = discover_cloud_private_dotfiles()
+    if target is None:
+        return None
+
+    # Replace any stale broken symlink before creating the new one.
+    if PRIVATE_DOTFILES.is_symlink() or PRIVATE_DOTFILES.exists():
+        PRIVATE_DOTFILES.unlink()
+    PRIVATE_DOTFILES.symlink_to(target)
+    return PRIVATE_DOTFILES
+
 # Backup directory (created lazily)
 _backup_dir: Path | None = None
 

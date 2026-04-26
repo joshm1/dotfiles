@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Setup Dropbox-synced dotfiles by symlinking from ~/Dropbox/dotfiles/home/ to $HOME."""
+"""Setup cloud-synced dotfiles by symlinking from ~/.dotfiles-private/home/ to $HOME.
+
+``~/.dotfiles-private`` is a single, machine-local symlink that points at the
+user's cloud-synced private dotfiles (Google Drive or Dropbox). Migrating
+between clouds is a matter of retargeting this one symlink — every setup
+script and the shell read through it, so they don't care which provider is
+behind it. The filename is kept as ``setup_dropbox.py`` so the registered
+``setup-dropbox`` console script and existing muscle memory keep working.
+"""
 
 from __future__ import annotations
 
@@ -13,9 +21,11 @@ import yaml
 from dotfiles_scripts.setup_device_id import get_device_id, get_hierarchy_levels
 from dotfiles_scripts.setup_utils import (
     DROPBOX_DIR,
+    PRIVATE_DOTFILES,
     SKIP_FILES,
-    SYMLINK_DIR_TAG,
     create_symlink,
+    ensure_private_dotfiles_symlink,
+    get_private_dotfiles,
     print_header,
     print_step,
     print_success,
@@ -40,7 +50,11 @@ def is_wsl() -> bool:
 
 
 def setup_wsl_dropbox() -> None:
-    """On WSL, create symlink to Windows Dropbox if needed."""
+    """On WSL, create symlink to Windows Dropbox if needed.
+
+    Note: WSL machines have not migrated to Google Drive — we still link the
+    Windows Dropbox folder so cloud discovery picks it up via DROPBOX_DIR.
+    """
     if not is_wsl():
         return
 
@@ -142,44 +156,8 @@ def fix_permissions(home_dir: Path) -> None:
         print_step("No chmod configs found")
 
 
-def setup_macos_app_configs() -> None:
-    """Symlink macOS application config directories."""
-    if not is_mac():
-        return
-
-    app_configs = [
-        ("Apps/SublimeText3/User", "Library/Application Support/Sublime Text 3/Packages/User"),
-        ("Apps/Code/User", "Library/Application Support/Code/User"),
-    ]
-
-    for dropbox_rel, target_rel in app_configs:
-        src = DROPBOX_DIR / dropbox_rel
-        target = Path.home() / target_rel
-
-        if not src.is_dir():
-            continue
-
-        if target.is_symlink():
-            print_step(f"{target} is already a symlink")
-            continue
-
-        # Backup existing directory
-        if target.is_dir():
-            import time
-            backup = target.with_name(f"{target.name}_backup_{int(time.time())}")
-            target.rename(backup)
-            print_warning(f"Backed up {target} → {backup}")
-
-        # Create parent directories
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        # Create symlink
-        target.symlink_to(src)
-        print_success(f"Linked {target} → {src}")
-
-
 def check_stale_symlinks(home_dir: Path) -> None:
-    """Warn about symlinks pointing to removed Dropbox dotfiles."""
+    """Warn about symlinks pointing to removed cloud dotfiles."""
     print_step("Checking for stale symlinks...")
 
     home = Path.home()
@@ -190,7 +168,7 @@ def check_stale_symlinks(home_dir: Path) -> None:
         try:
             for path in directory.iterdir():
                 if path.is_symlink():
-                    # Check if symlink points into Dropbox dotfiles but target is gone
+                    # Check if symlink points into the cloud dotfiles tree but target is gone
                     try:
                         target_str = str(path.readlink())
                     except OSError:
@@ -216,10 +194,10 @@ def check_stale_symlinks(home_dir: Path) -> None:
             check_dir(item)
 
     if stale:
-        print_warning(f"Found {len(stale)} stale symlink(s) pointing to removed Dropbox files:")
+        print_warning(f"Found {len(stale)} stale symlink(s) pointing to removed cloud files:")
         for path in stale:
             print(f"  {path}")
-        print("  Run 'rm <symlink>' to remove, or restore the file in Dropbox.")
+        print("  Run 'rm <symlink>' to remove, or restore the file in your cloud folder.")
 
 
 def create_device_zshrc_configs(home_dir: Path) -> None:
@@ -272,50 +250,59 @@ def create_device_gitconfigs(home_dir: Path) -> None:
             print_step(f"Created {config_file}")
 
 
-def wait_for_dropbox() -> bool:
-    """Check if Dropbox is available and wait for user to set it up if not."""
-    home_dir = DROPBOX_DIR / "dotfiles" / "home"
+def wait_for_cloud() -> Path | None:
+    """Ensure ``~/.dotfiles-private`` resolves to a cloud-synced directory.
 
-    if home_dir.is_dir():
-        return True
+    Calls :func:`ensure_private_dotfiles_symlink` to (re)create the local
+    pointer if a cloud provider is mounted but the symlink is missing. If no
+    cloud provider can be found, prompts the user and re-tries until they
+    skip or the symlink resolves. Returns the ``home`` subdirectory or
+    ``None``.
+    """
+    home_dir = _resolve_home_dir()
+    if home_dir is not None:
+        return home_dir
 
-    # Check if Dropbox app is installed
-    dropbox_app = Path("/Applications/Dropbox.app")
-    if not dropbox_app.exists() and not DROPBOX_DIR.exists():
-        print_warning("Dropbox is not installed")
-        print("\nTo install Dropbox:")
-        print("  1. Run: brew install --cask dropbox")
-        print("  2. Or download from: https://www.dropbox.com/install")
-    else:
-        # Dropbox is installed but dotfiles not synced yet
-        print_warning("Dropbox dotfiles not found")
-        print(f"\nExpected path: {home_dir}")
-        print("\nTo fix this:")
-        print("  1. Open Dropbox and sign in")
-        print("  2. Go to Dropbox Preferences → Sync → Selective Sync")
-        print("  3. Make sure 'dotfiles' folder is selected to sync")
-        print("  4. Right-click dotfiles folder → Make Available Offline")
+    print_warning("~/.dotfiles-private is not pointing at a synced cloud directory")
+    print("\nExpected the symlink to resolve to one of:")
+    print(f"  {Path.home()}/Library/CloudStorage/GoogleDrive-*/My Drive/dotfiles-private")
+    print(f"  {Path.home()}/Library/CloudStorage/GoogleDrive-*/My Drive/dotfiles")
+    print(f"  {DROPBOX_DIR}/dotfiles")
+    print("\nTo fix this:")
+    print("  - Google Drive: install Google Drive for Desktop and sign in")
+    print("  - Dropbox: brew install --cask dropbox && open -a Dropbox")
+    print("  Then make sure the dotfiles folder is synced and available offline.")
 
-    # Wait for user to set up Dropbox
     while True:
         try:
             response = input("\nPress Enter to check again, or 's' to skip: ").strip().lower()
             if response == "s":
-                return False
-            if home_dir.is_dir():
-                print_success("Dropbox dotfiles found!")
-                return True
-            print_warning("Still not found. Make sure Dropbox is synced...")
+                return None
+            home_dir = _resolve_home_dir()
+            if home_dir is not None:
+                print_success(f"Cloud dotfiles found via {PRIVATE_DOTFILES} → {home_dir.parent}")
+                return home_dir
+            print_warning("Still not found. Make sure your cloud provider is synced...")
         except (EOFError, KeyboardInterrupt):
             print()
             raise SystemExit(0) from None
 
 
-def check_dropbox_sync(home_dir: Path) -> bool:
-    """Check if Dropbox files are actually synced vs online-only placeholders.
+def _resolve_home_dir() -> Path | None:
+    """Probe for a cloud root, (re)create the local symlink, and return ``home/``."""
+    private = ensure_private_dotfiles_symlink()
+    if private is None:
+        return None
+    home_dir = private / "home"
+    return home_dir if home_dir.is_dir() else None
 
-    Smart Sync can leave 0-byte placeholder files that look present but have no content.
-    This checks critical files to ensure they've been downloaded.
+
+def check_cloud_sync(home_dir: Path) -> bool:
+    """Check if cloud-synced files are actually downloaded vs online-only placeholders.
+
+    Both Dropbox Smart Sync and Google Drive's "Stream files" mode can leave
+    0-byte placeholder files that look present but have no content. This checks
+    critical files to ensure they've been downloaded.
     """
     critical_files = [
         ".gitconfig_local",
@@ -332,15 +319,14 @@ def check_dropbox_sync(home_dir: Path) -> bool:
     if not unsynced:
         return True
 
-    print_warning("Dropbox files appear to be online-only (0 bytes — not synced locally)")
+    print_warning("Cloud files appear to be online-only (0 bytes — not downloaded locally)")
     print("\n  Unsynced files:")
     for path in unsynced:
         print(f"    {path}")
     print("\n  To fix this:")
-    print("    1. Open Finder and navigate to ~/Dropbox/dotfiles")
+    print(f"    1. Open Finder and navigate to {home_dir.parent}")
     print("    2. Select all files (Cmd+A)")
-    print("    3. Right-click → Make Available Offline")
-    print("    Or: right-click the 'dotfiles' folder itself → Make Available Offline")
+    print("    3. Right-click → 'Make Available Offline' (Dropbox) or 'Available offline' (Google Drive)")
 
     while True:
         try:
@@ -350,7 +336,7 @@ def check_dropbox_sync(home_dir: Path) -> bool:
             # Re-check
             still_unsynced = [p for p in unsynced if p.stat().st_size == 0]
             if not still_unsynced:
-                print_success("Dropbox files are now synced!")
+                print_success("Cloud files are now synced!")
                 return True
             print_warning(f"Still {len(still_unsynced)} file(s) unsynced...")
         except (EOFError, KeyboardInterrupt):
@@ -360,18 +346,18 @@ def check_dropbox_sync(home_dir: Path) -> bool:
 
 def main() -> int:
     """Main entry point."""
-    print_header("Setting up Dropbox dotfiles")
+    print_header("Setting up cloud-synced dotfiles")
 
-    # WSL support
+    # WSL support — symlinks ~/Dropbox to the Windows Dropbox folder so
+    # cloud discovery (DROPBOX_DIR fallback) picks it up.
     setup_wsl_dropbox()
 
-    home_dir = DROPBOX_DIR / "dotfiles" / "home"
-
-    if not wait_for_dropbox():
-        print_step("Skipping Dropbox setup")
+    home_dir = wait_for_cloud()
+    if home_dir is None:
+        print_step("Skipping cloud-synced dotfiles setup")
         return 0
 
-    if not check_dropbox_sync(home_dir):
+    if not check_cloud_sync(home_dir):
         print_warning("Continuing with unsynced files — some configs may be empty")
 
     check_stale_symlinks(home_dir)
@@ -379,14 +365,17 @@ def main() -> int:
     create_device_gitconfigs(home_dir)
     symlink_home_dir(home_dir)
     fix_permissions(home_dir)
-    setup_macos_app_configs()
 
-    # Also link scripts from Dropbox root if it exists
-    scripts_dir = DROPBOX_DIR / "scripts"
-    if scripts_dir.exists():
-        create_symlink(scripts_dir, Path.home() / "scripts")
+    # Also link scripts/ from the cloud root (sibling of the private dotfiles
+    # tree) if it exists. Resolves through the symlink so it works for any
+    # cloud provider.
+    private = get_private_dotfiles()
+    if private is not None:
+        scripts_dir = private.resolve().parent / "scripts"
+        if scripts_dir.exists():
+            create_symlink(scripts_dir, Path.home() / "scripts")
 
-    print_success("Dropbox setup complete!")
+    print_success("Cloud-synced dotfiles setup complete!")
     return 0
 
 

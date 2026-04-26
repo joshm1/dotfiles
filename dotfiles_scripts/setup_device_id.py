@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from dotfiles_scripts.setup_utils import (
-    DROPBOX_DIR,
+    get_private_dotfiles,
     print_header,
     print_step,
     print_success,
@@ -19,7 +19,14 @@ DEVICE_ID_FILE = Path.home() / ".device_id"
 # Allows: mac, macbook-pro, mac.personal, macbook-pro.work
 # Each segment must start with letter, can contain lowercase letters, numbers, hyphens
 DEVICE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$")
-MACHINE_CONFIG_DIR = DROPBOX_DIR / "dotfiles" / "home" / ".config" / "dotfiles"
+
+
+def _machine_config_dir() -> Path | None:
+    """Return ``~/.dotfiles-private/home/.config/dotfiles`` if the symlink resolves, else None."""
+    private = get_private_dotfiles()
+    if private is None:
+        return None
+    return private / "home" / ".config" / "dotfiles"
 
 
 def is_valid_device_id(device_id: str) -> bool:
@@ -36,7 +43,10 @@ def get_device_id() -> str | None:
 
 def get_known_device_ids() -> list[str]:
     """Get list of known device IDs from existing history files."""
-    zsh_history_dir = DROPBOX_DIR / "dotfiles" / "zsh_history"
+    private = get_private_dotfiles()
+    if private is None:
+        return []
+    zsh_history_dir = private / "zsh_history"
     if not zsh_history_dir.exists():
         return []
 
@@ -109,20 +119,27 @@ def get_hierarchy_levels(device_id: str) -> list[str]:
 def setup_machine_config(device_id: str) -> bool:
     """Setup machine-specific config files for all hierarchy levels.
 
-    Files are created in ~/Dropbox/dotfiles/home/.config/dotfiles/ and
+    Files are created in <cloud>/dotfiles/home/.config/dotfiles/ and
     automatically symlinked to ~/.config/dotfiles/ by setup_dropbox.
     """
+    config_dir = _machine_config_dir()
+    if config_dir is None:
+        print_warning(
+            "No cloud-synced dotfiles directory found; skipping machine config setup"
+        )
+        return False
+
     # Create config directory if needed
-    if not MACHINE_CONFIG_DIR.exists():
-        MACHINE_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        print_step(f"Created {MACHINE_CONFIG_DIR}")
+    if not config_dir.exists():
+        config_dir.mkdir(parents=True, exist_ok=True)
+        print_step(f"Created {config_dir}")
 
     levels = get_hierarchy_levels(device_id)
 
     for level in levels:
         # Determine file name
         suffix = f".{level}" if level else ""
-        config_file = MACHINE_CONFIG_DIR / f".dotfiles-config{suffix}"
+        config_file = config_dir / f".dotfiles-config{suffix}"
 
         # Create config file with template if it doesn't exist
         if not config_file.exists():
@@ -163,11 +180,8 @@ def main() -> int:
 
     print_success(f"Device ID: {device_id}")
 
-    # Setup machine config if Dropbox is available
-    if DROPBOX_DIR.exists():
-        setup_machine_config(device_id)
-    else:
-        print_warning("Dropbox not found - skipping machine config setup")
+    # Setup machine config in whichever cloud provider is mounted
+    setup_machine_config(device_id)
 
     return 0
 

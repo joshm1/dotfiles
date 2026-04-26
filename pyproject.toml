@@ -3,7 +3,6 @@ name = "dotfiles-scripts"
 version = "0.1.0"
 description = "Utility scripts for managing dotfiles"
 readme = "README.md"
-authors = [{ name = "Josh McDade", email = "josh.ncsu@gmail.com" }]
 requires-python = ">=3.9"
 dependencies = ["pyyaml>=6.0", "rich>=13.0.0", "click>=8.1.0"]
 
@@ -26,10 +25,14 @@ setup-neovim = "dotfiles_scripts.setup_neovim:main"
 setup-zsh = "dotfiles_scripts.setup_zsh:main"
 setup-zsh-history = "dotfiles_scripts.setup_zsh_history:main"
 setup-gpg = "dotfiles_scripts.setup_gpg:main"
+setup-launchd = "dotfiles_scripts.setup_launchd:main"
 
 # Utility scripts (require rich optional dependency)
 symlink-home-files = "dotfiles_scripts.symlink_home:cli"
 check-homebrew-apps = "dotfiles_scripts.check_homebrew:cli"
+migrate-to-gdrive = "dotfiles_scripts.migrate_to_gdrive:main"
+detach-cloud-cache = "dotfiles_scripts.detach_cloud_cache:main"
+dotfiles-doctor = "dotfiles_scripts.dotfiles_doctor:main"
 
 [tool.uv]
 package = true

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Setup shared zsh history via Dropbox."""
+"""Setup shared zsh history under ``~/.dotfiles-private/zsh_history/``.
+
+The cloud-storage indirection lives in ``~/.dotfiles-private``: this script
+just reads/writes through that single canonical path.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +12,8 @@ from pathlib import Path
 
 from dotfiles_scripts.setup_device_id import ensure_device_id
 from dotfiles_scripts.setup_utils import (
-    DROPBOX_DIR,
+    PRIVATE_DOTFILES,
+    get_private_dotfiles,
     print_header,
     print_step,
     print_success,
@@ -17,33 +22,34 @@ from dotfiles_scripts.setup_utils import (
 
 
 def get_device_history_file(device_id: str) -> Path:
-    """Get the path to the device-specific zsh history file."""
-    return DROPBOX_DIR / "dotfiles" / "zsh_history" / f".zsh_history.{device_id}"
+    """Path to this device's zsh history file under ``~/.dotfiles-private``.
+
+    Returns the path even if the underlying symlink is missing — callers are
+    expected to gate on ``get_private_dotfiles()`` first when that matters.
+    """
+    return PRIVATE_DOTFILES / "zsh_history" / f".zsh_history.{device_id}"
 
 
 def main() -> int:
     """Main entry point."""
     print_header("Setting up zsh history")
 
-    # Check Dropbox
-    dropbox_dotfiles = DROPBOX_DIR / "dotfiles"
-    if not dropbox_dotfiles.exists():
-        print_warning("Dropbox dotfiles not found, skipping zsh history setup")
+    private = get_private_dotfiles()
+    if private is None:
+        print_warning(
+            "~/.dotfiles-private is not set up; skipping zsh history setup"
+        )
         return 0
 
-    # Get or create device ID
     device_id = ensure_device_id()
     if not device_id:
         return 0
 
-    # Ensure zsh_history directory exists
-    zsh_history_dir = DROPBOX_DIR / "dotfiles" / "zsh_history"
+    zsh_history_dir = private / "zsh_history"
     zsh_history_dir.mkdir(parents=True, exist_ok=True)
 
-    # Get device-specific history file
-    device_history = get_device_history_file(device_id)
+    device_history = zsh_history_dir / f".zsh_history.{device_id}"
 
-    # Create if doesn't exist
     if not device_history.exists():
         local_history = Path.home() / ".zsh_history"
 

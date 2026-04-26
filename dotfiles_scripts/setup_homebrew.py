@@ -12,8 +12,8 @@ from pathlib import Path
 from dotfiles_scripts.setup_device_id import get_device_id
 from dotfiles_scripts.setup_utils import (
     DOTFILES_REPO,
-    DROPBOX_DIR,
     create_symlink,
+    get_private_dotfiles,
     print_header,
     print_step,
     print_success,
@@ -79,19 +79,20 @@ def get_brewfiles() -> list[Path]:
             continue
         brewfiles.append(brewfile)
 
-    # Check for device-specific Brewfiles in Dropbox
+    # Check for device-specific Brewfiles in ~/.dotfiles-private/homebrew/
     device_id = get_device_id()
-    if device_id:
-        dropbox_homebrew = DROPBOX_DIR / "dotfiles" / "homebrew"
-        if dropbox_homebrew.exists():
+    private = get_private_dotfiles()
+    if device_id and private is not None:
+        private_homebrew = private / "homebrew"
+        if private_homebrew.exists():
             # Look for device-specific Brewfiles (e.g., Brewfile-macbook-pro)
-            device_brewfile = dropbox_homebrew / f"Brewfile-{device_id}"
+            device_brewfile = private_homebrew / f"Brewfile-{device_id}"
             if device_brewfile.exists():
                 print_step(f"Found device-specific Brewfile: {device_brewfile}")
                 brewfiles.append(device_brewfile)
 
             # Also look for any Brewfile-casks-{device_id}
-            device_casks = dropbox_homebrew / f"Brewfile-casks-{device_id}"
+            device_casks = private_homebrew / f"Brewfile-casks-{device_id}"
             if device_casks.exists():
                 print_step(f"Found device-specific casks: {device_casks}")
                 brewfiles.append(device_casks)

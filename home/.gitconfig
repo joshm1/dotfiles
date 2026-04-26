@@ -99,7 +99,7 @@
   # additional useful aliases
   br = branch --sort=-committerdate # show branches sorted by last commit
   ri = rebase -i                    # interactive rebase
-  today = log --since=midnight --author='Josh' --oneline # show what you've done today
+  today = "!git log --since=midnight --author=\"$(git config user.name)\" --oneline" # show what you've done today
 [format]
   pretty = format:%C(blue)%ad%Creset %C(yellow)%h%C(green)%d%Creset %C(blue)%s %C(magenta) [%an]%Creset
 [mergetool]

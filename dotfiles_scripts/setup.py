@@ -21,8 +21,9 @@ if __name__ == "__main__":
 from dotfiles_scripts.setup_utils import (
     DOTFILES,
     DOTFILES_REPO,
-    DROPBOX_DIR,
     create_symlink,
+    ensure_private_dotfiles_symlink,
+    get_private_dotfiles,
     print_error,
     print_header,
     print_success,
@@ -142,16 +143,25 @@ def cli() -> int:
     # Phase 10: fzf
     run_setup_module("setup_fzf")
 
-    # Phase 11: Dropbox-dependent setup (optional)
-    if DROPBOX_DIR.exists():
+    # Phase 11: Cloud-synced setup. Try to (re)point ~/.dotfiles-private at a
+    # mounted cloud provider; once that resolves, run the dependent steps.
+    ensure_private_dotfiles_symlink()
+    if get_private_dotfiles() is not None:
         run_setup_module("setup_dropbox")
         run_setup_module("setup_zsh_history")
     else:
-        print_warning("Dropbox not found - skipping Dropbox-dependent setup")
-        print("  Run setup-dropbox and setup-zsh-history later after setting up Dropbox")
+        print_warning(
+            "~/.dotfiles-private is not set up - skipping cloud-dependent setup"
+        )
+        print(
+            "  Mount Google Drive or Dropbox, then run setup-dropbox and setup-zsh-history"
+        )
 
     # Phase 12: GPG keys (optional, skips if no manifest)
     run_setup_module("setup_gpg")
+
+    # Phase 13: launchd agents (e.g. hourly detach-cloud-cache)
+    run_setup_module("setup_launchd")
 
     print_header("Setup Complete!")
     print("Language runtimes (Python, Node, Ruby) are managed by mise.")
