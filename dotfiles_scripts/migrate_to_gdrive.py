@@ -201,7 +201,9 @@ def _rsync(src: Path, dst: Path, *, delete_extras_in_dest: bool = False) -> None
     are removed.
     """
     dst.parent.mkdir(parents=True, exist_ok=True)
-    cmd = ["rsync", "-a", "--info=stats1"]
+    # `--stats` is the cross-platform progress flag; BSD rsync on macOS
+    # rejects GNU's `--info=stats1`, so we stick to `--stats`.
+    cmd = ["rsync", "-a", "--stats"]
     if delete_extras_in_dest:
         cmd.append("--delete")
     cmd += [f"{src}/", f"{dst}/"]
@@ -220,12 +222,18 @@ def _wait_for_sync(dest: Path, expected_files: int, timeout_s: int = 120) -> boo
 
 
 def _atomic_relink(symlink: Path, target: Path) -> None:
-    """Atomically replace ``symlink`` with one pointing at ``target``."""
-    tmp = symlink.with_name(symlink.name + ".tmp")
-    if tmp.exists() or tmp.is_symlink():
-        tmp.unlink()
-    os.symlink(target, tmp)
-    os.replace(tmp, symlink)
+    """Replace ``symlink`` with one pointing at ``target``.
+
+    Strictly speaking this is a "remove + create" rather than atomic, because
+    ``os.rename`` / ``os.replace`` of a regular-file-symlink onto a
+    symlink-to-directory would *move into* the target directory rather than
+    replace the link itself. Removing the source symlink first avoids that
+    foot-gun; the (very brief) window where the symlink is missing is fine
+    for our offline migration use case.
+    """
+    if symlink.is_symlink() or symlink.exists():
+        symlink.unlink()
+    os.symlink(target, symlink)
 
 
 def _journal_path() -> Path:
@@ -254,13 +262,40 @@ def _rewrite_home_symlinks(
     home = Path.home()
     old_resolved = old_root.resolve()
     count = 0
-    # Walk only what we actually need: top-level $HOME entries plus everything
-    # under ~/.config. A full rglob over $HOME would touch caches and node
-    # modules and would be enormously slower than necessary.
-    candidates: list[Path] = list(home.iterdir())
-    config = home / ".config"
-    if config.is_dir() and not config.is_symlink():
-        candidates.extend(config.rglob("*"))
+
+    # Find every symlink under $HOME that resolves into the old cloud source.
+    # Earlier we restricted to top-level + ~/.config, which missed
+    # ~/.claude/{agents,commands,skills}, ~/projects/*/mise.toml, etc. Now we
+    # actually search — but skip dirs that can't possibly contain
+    # cloud-pointing symlinks (Library/, node_modules, .venv, .git, prior
+    # backup dirs from setup runs).
+    skip_names = {
+        "Library",
+        "node_modules",
+        ".venv",
+        "venv",
+        ".git",
+        "__pycache__",
+        ".cache",
+    }
+
+    def walk(d: Path) -> "list[Path]":
+        out: list[Path] = []
+        try:
+            entries = list(d.iterdir())
+        except (OSError, PermissionError):
+            return out
+        for entry in entries:
+            name = entry.name
+            if name in skip_names or name.endswith(".bck") or ".bck." in name:
+                continue
+            if entry.is_symlink():
+                out.append(entry)
+            elif entry.is_dir():
+                out.extend(walk(entry))
+        return out
+
+    candidates = walk(home)
     for path in candidates:
         if not path.is_symlink():
             continue
@@ -350,18 +385,27 @@ def cli(
     print()
     print_header("Divergence report")
     diff_total = _print_diffs(plan.diffs)
+    # "missing-from-gdrive" entries on a first migration are not real divergence
+    # — they're the copy plan. Only count file states that imply actual drift
+    # (mismatched content or files only present on the gdrive side).
+    drift_total = sum(
+        1
+        for diffs in plan.diffs.values()
+        for d in diffs
+        if d.state in ("modified", "missing-from-source")
+    )
     print()
-    print(f"Total differences: {diff_total}")
+    print(f"Total differences: {diff_total}  (drift: {drift_total})")
 
     if not do_apply:
         print()
         print_step("Plan-only mode. Re-run with --apply to execute.")
         return
 
-    if diff_total > 0 and not (prefer_gdrive or prefer_dropbox or ignore_divergence):
+    if drift_total > 0 and not (prefer_gdrive or prefer_dropbox or ignore_divergence):
         print_error(
-            "Divergence detected. Resolve by re-running with one of: "
-            "--prefer-gdrive, --prefer-dropbox, --ignore-divergence"
+            "Drift detected (modified files or gdrive-only files). Resolve by "
+            "re-running with one of: --prefer-gdrive, --prefer-dropbox, --ignore-divergence"
         )
         sys.exit(2)
 
