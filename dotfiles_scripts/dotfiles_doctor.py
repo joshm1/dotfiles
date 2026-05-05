@@ -300,25 +300,35 @@ def cli(check: bool, yes: bool) -> None:
         print_success("Nothing to clean up. ✓")
         sys.exit(0)
 
+    if check:
+        for cat in categories:
+            if cat.empty:
+                continue
+            print_header(cat.title)
+            for f in cat.findings:
+                print(f"  {f.path}{'  (' + f.note + ')' if f.note else ''}")
+        print()
+        print_warning(
+            f"{total} findings across {sum(1 for c in categories if not c.empty)} categories"
+        )
+        sys.exit(1)
+
+    # Interactive: re-print each category's findings right before its prompt so
+    # the user doesn't have to scroll to remember what's about to be acted on.
     for cat in categories:
         if cat.empty:
             continue
-        print_header(cat.title)
+        print_header(f"{cat.title}  ({len(cat.findings)})")
         for f in cat.findings:
             print(f"  {f.path}{'  (' + f.note + ')' if f.note else ''}")
-
-    if check:
         print()
-        print_warning(f"{total} findings across {sum(1 for c in categories if not c.empty)} categories")
-        sys.exit(1)
 
-    print()
-    for cat in categories:
-        if cat.empty or cat.fixer is None:
-            if cat.severity == "security" and not cat.empty:
-                print_warning(f"[{cat.title}] no auto-fix; please review manually")
+        if cat.fixer is None:
+            if cat.severity == "security":
+                print_warning(f"no auto-fix; please review the {len(cat.findings)} item(s) above manually")
             continue
-        prompt = f"Fix '{cat.title}' — {cat.fix_label}?"
+
+        prompt = f"→ Fix the {len(cat.findings)} path(s) above ({cat.fix_label})?"
         if yes or click.confirm(prompt, default=False):
             ok = cat.fixer(cat.findings)
             if ok:
