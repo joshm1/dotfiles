@@ -25,6 +25,7 @@ cask 'wispr-flow'               # Voice-to-text dictation - https://wisprflow.ai
 cask 'bruno'                    # Opensource API client - https://github.com/usebruno/bruno
 cask 'chatgpt'                  # OpenAI's official ChatGPT desktop app - https://chatgpt.com
 cask 'claude'                   # Anthropic's official Claude AI desktop app - https://claude.ai
+cask 'cmux'                     #
 cask 'cursor'                   # AI-powered code editor - https://www.cursor.com
 cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
 cask 'ghostty'                  # Fast, native terminal emulator - https://github.com/ghostty-org/ghostty
