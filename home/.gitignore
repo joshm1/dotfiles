@@ -15,6 +15,14 @@ Thumbs.db
 # Folder config file
 Desktop.ini
 
+# tmp files
+.history/
+tmp/
+
+# local files
+*.local
+*.local.toml
+
 # Tags      taken from: https://github.com/github/gitignore/blob/master/Global/Tags.gitignore
 # ----------------------------------------------------------------------------------------------
 # Ignore tags created by etags, ctags, gtags (GNU global) and cscope
