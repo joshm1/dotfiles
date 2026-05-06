@@ -269,8 +269,17 @@ def _rewrite_home_symlinks(
     # actually search — but skip dirs that can't possibly contain
     # cloud-pointing symlinks (Library/, node_modules, .venv, .git, prior
     # backup dirs from setup runs).
+    #
+    # ``Dropbox`` is in skip_names because descending into ~/Dropbox finds
+    # symlinks INSIDE the cloud source itself (e.g.
+    # ~/Dropbox/dotfiles/home/.claude/skills/agent-browser), and rewriting
+    # those corrupts the source tree with broken targets pointing at the new
+    # repo. We additionally skip any directory whose resolved path equals
+    # ``old_resolved`` so callers passing a non-Dropbox source root are
+    # protected too.
     skip_names = {
         "Library",
+        "Dropbox",
         "node_modules",
         ".venv",
         "venv",
@@ -289,6 +298,14 @@ def _rewrite_home_symlinks(
             name = entry.name
             if name in skip_names or name.endswith(".bck") or ".bck." in name:
                 continue
+            # Path-equality skip: if an entry resolves to the cloud source
+            # itself, don't descend (otherwise we'd walk into the source we're
+            # migrating away from and rewrite its internal symlinks).
+            try:
+                if entry.is_dir() and not entry.is_symlink() and entry.resolve() == old_resolved:
+                    continue
+            except OSError:
+                pass
             if entry.is_symlink():
                 out.append(entry)
             elif entry.is_dir():

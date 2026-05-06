@@ -41,6 +41,7 @@ from dotfiles_scripts.setup_utils import (
     DOTFILES,
     PRIVATE_DOTFILES,
     PRIVATE_DOTFILES_REPO,
+    ensure_private_dotfiles_symlink,
     gdrive_candidates,
     print_error,
     print_header,
@@ -322,6 +323,12 @@ def _preflight(force: bool) -> bool:
     if not _have("rsync"):
         print_error("rsync not installed.")
         return False
+    # Auto-create the cloud-source symlink if it does not exist yet. On a fresh
+    # machine this lets the bootstrap proceed without the user having to call
+    # the helper by hand. If no cloud target is mounted, falls through to the
+    # existing error below.
+    if not PRIVATE_DOTFILES.is_dir():
+        ensure_private_dotfiles_symlink()
     if not PRIVATE_DOTFILES.is_dir():
         print_error(f"{PRIVATE_DOTFILES} is not a directory; cloud private dotfiles not set up.")
         return False
