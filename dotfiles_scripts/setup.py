@@ -157,10 +157,15 @@ def cli() -> int:
             "  Mount Google Drive or Dropbox, then run setup-dropbox and setup-zsh-history"
         )
 
-    # Phase 12: GPG keys (optional, skips if no manifest)
+    # Phase 12: gstack — clone to ~/gstack, restructure ~/.claude/skills into
+    # per-skill symlinks, register with claude + codex hosts. Idempotent;
+    # gracefully skips gstack/setup if bun isn't installed yet.
+    run_setup_module("setup_gstack")
+
+    # Phase 13: GPG keys (optional, skips if no manifest)
     run_setup_module("setup_gpg")
 
-    # Phase 13: launchd agents (e.g. hourly detach-cloud-cache)
+    # Phase 14: launchd agents (e.g. hourly detach-cloud-cache)
     run_setup_module("setup_launchd")
 
     print_header("Setup Complete!")

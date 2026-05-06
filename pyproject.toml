@@ -33,6 +33,10 @@ check-homebrew-apps = "dotfiles_scripts.check_homebrew:cli"
 migrate-to-gdrive = "dotfiles_scripts.migrate_to_gdrive:main"
 detach-cloud-cache = "dotfiles_scripts.detach_cloud_cache:main"
 dotfiles-doctor = "dotfiles_scripts.dotfiles_doctor:main"
+check-private-repo = "dotfiles_scripts.check_private_repo:main"
+sync-private-runtime = "dotfiles_scripts.sync_private_runtime:main"
+setup-private-repo = "dotfiles_scripts.setup_private_repo:main"
+setup-gstack = "dotfiles_scripts.setup_gstack:cli"
 
 [tool.uv]
 package = true
