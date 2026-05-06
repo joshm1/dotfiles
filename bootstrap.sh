@@ -174,7 +174,7 @@ open -a "1Password"
 prompt_continue "Sign into Google Chrome, 1Password, and your cloud-sync app, then come back here."
 
 # Authenticate Claude Code
-if claude auth status 2>&1 | grep -q 'subscriptionType.*max'; then
+if claude auth status &>/dev/null; then
     success "Claude Code already authenticated"
 else
     info "Authenticating Claude Code..."
@@ -190,20 +190,37 @@ else
     info "Waiting for cloud-synced private dotfiles to appear..."
     echo "    Probing for: <Google Drive>/(dotfiles-private|dotfiles), ~/Dropbox/(dotfiles-private|dotfiles)"
     echo "    (Tip: in your cloud app's preferences, prioritize syncing that folder)"
+    if [[ "$FORCE" != true && -e /dev/tty ]]; then
+        echo "    Type 's' then Enter at any time to skip this wait."
+    fi
+    skipped=false
     while [[ -z "$CLOUD_PRIVATE_DOTFILES" ]]; do
         printf '.'
-        sleep 5
+        if [[ "$FORCE" != true && -e /dev/tty ]]; then
+            reply=""
+            read -r -t 5 reply </dev/tty || true
+            if [[ "$reply" == "s" ]]; then
+                skipped=true
+                break
+            fi
+        else
+            sleep 5
+        fi
         CLOUD_PRIVATE_DOTFILES="$(find_cloud_private_dotfiles || true)"
     done
     echo
-    success "Cloud private dotfiles synced at $CLOUD_PRIVATE_DOTFILES"
+    if [[ "$skipped" == true ]]; then
+        warn "Skipping cloud-sync wait — private configs may be missing"
+    else
+        success "Cloud private dotfiles synced at $CLOUD_PRIVATE_DOTFILES"
+    fi
 fi
 
 # Set up the canonical local symlink so every setup step and the shell read
 # through ~/.dotfiles-private regardless of which cloud provider holds the
 # data. The setup script also re-runs ensure_private_dotfiles_symlink() so a
 # missing or broken symlink is self-healing on every invocation.
-if [[ ! -L "$HOME/.dotfiles-private" || ! -d "$HOME/.dotfiles-private" ]]; then
+if [[ -n "$CLOUD_PRIVATE_DOTFILES" && ( ! -L "$HOME/.dotfiles-private" || ! -d "$HOME/.dotfiles-private" ) ]]; then
     rm -f "$HOME/.dotfiles-private"
     ln -s "$CLOUD_PRIVATE_DOTFILES" "$HOME/.dotfiles-private"
     success "Linked ~/.dotfiles-private → $CLOUD_PRIVATE_DOTFILES"

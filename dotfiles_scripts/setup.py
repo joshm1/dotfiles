@@ -78,8 +78,7 @@ def symlink_home_files() -> bool:
         print_error(f"home/ directory not found at {home_dir}")
         return False
 
-    symlink_home_dir(home_dir)
-    return True
+    return symlink_home_dir(home_dir)
 
 
 def run_setup_module(module_name: str) -> bool:
