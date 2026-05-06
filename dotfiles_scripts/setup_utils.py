@@ -20,6 +20,11 @@ DROPBOX_DIR = Path.home() / "Dropbox"
 # ``~/.dotfiles`` symlink (DOTFILES) for visual grouping.
 PRIVATE_DOTFILES = Path.home() / ".dotfiles-private"
 
+# Local clone of the private GitHub repo, when the user has migrated off the
+# pure-cloud storage model. ``setup-private-repo`` retargets PRIVATE_DOTFILES
+# to point here. Mirrors the DOTFILES_REPO / DOTFILES split.
+PRIVATE_DOTFILES_REPO = Path.home() / "projects" / "joshm1" / "dotfiles-private"
+
 # Names this script will look for inside each cloud root, in order. Newer
 # machines use "dotfiles-private" (matches the local symlink name); older
 # machines on Dropbox keep the legacy "dotfiles" directory.

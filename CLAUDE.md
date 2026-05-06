@@ -43,6 +43,7 @@ Setup scripts are Python modules in `dotfiles_scripts/`. Run individually with `
 - `setup-dropbox` - Links private config files from Dropbox
 - `setup-zsh-history` - Configures shared zsh history (requires Dropbox)
 - `setup-gpg` - Generates GPG keys and device-specific gitconfig
+- `setup-private-repo` - Migrate `~/.dotfiles-private` from cloud-only storage to a private GitHub clone + per-machine GDrive runtime sync (see [Private Configuration](#private-configuration))
 
 ## Key Architecture
 
@@ -50,9 +51,12 @@ Setup scripts are Python modules in `dotfiles_scripts/`. Run individually with `
 Common paths are defined in `dotfiles_scripts/setup_utils.py`:
 - `DOTFILES = $HOME/.dotfiles` — symlink to this repo (public)
 - `DOTFILES_REPO = ~/projects/joshm1/dotfiles` — clone location
-- `PRIVATE_DOTFILES = $HOME/.dotfiles-private` — local symlink that points
-  at whichever cloud provider currently holds the user's private dotfiles
-  tree (Google Drive preferred, Dropbox as fallback)
+- `PRIVATE_DOTFILES = $HOME/.dotfiles-private` — local symlink. By
+  default points at the user's cloud-synced private dotfiles (Google
+  Drive preferred, Dropbox fallback). After `setup-private-repo` runs,
+  it instead points at `PRIVATE_DOTFILES_REPO` (a local git clone)
+- `PRIVATE_DOTFILES_REPO = ~/projects/joshm1/dotfiles-private` — clone of
+  the private GitHub repo created by `setup-private-repo`
 - `DROPBOX_DIR = $HOME/Dropbox` — kept for the Dropbox fallback path
 
 Cloud-storage discovery is glob-based and never hardcodes the user's email:
@@ -91,11 +95,28 @@ Available settings:
 Use `edit-dotfiles-config` to edit the most specific config for this device.
 
 ### Private Configuration
-Private/sensitive configs are stored in cloud storage (not in this repo).
-The local entry point is always `~/.dotfiles-private/`, which is a symlink
-to whichever provider this machine uses (Google Drive preferred, Dropbox
-fallback for un-migrated machines). Files are sourced hierarchically based
-on `device_id` (e.g., `mac.personal`):
+Private/sensitive configs aren't tracked in this public repo. The local
+entry point is always `~/.dotfiles-private/`, which is a symlink. There
+are two backends, picked per machine:
+
+1. **Cloud-only (legacy default)** — `~/.dotfiles-private` symlinks into
+   Google Drive (preferred) or Dropbox (fallback). All edits sync via
+   the cloud provider. Vulnerable to FileProvider stalls on machines
+   where the GDrive folder resolves through a `.shortcut-targets-by-id/`
+   path; observed multi-second `stat()` hangs that wedge shell startup.
+2. **GitHub + GDrive runtime hybrid** (run `setup-private-repo` to
+   migrate to this) — `~/.dotfiles-private` symlinks to a local clone
+   at `~/projects/joshm1/dotfiles-private`. Slow-moving config files
+   (`.zshrc.before/after.*`, `.gitconfig*`, `.config/...`, hand-curated
+   skill source, etc.) are git-tracked. High-churn / per-device runtime
+   state (zsh history, REPL histories, `~/.claude/projects/`,
+   `~/.claude/history.jsonl`, etc.) sync via Google Drive into a
+   per-machine subdir at `<gdrive>/dotfiles-runtime/${device_id}/` —
+   each machine writes only to its own subdir, so there's nothing to
+   merge.
+
+Files are sourced hierarchically based on `device_id` (e.g.,
+`mac.personal`):
 
 ```
 .zshrc.before              # shared
@@ -106,6 +127,46 @@ on `device_id` (e.g., `mac.personal`):
 .zshrc.after.mac           # all mac devices
 .zshrc.after.mac.personal  # this specific device
 ```
+
+#### Switching to the GitHub + GDrive hybrid
+
+```bash
+uv run setup-private-repo               # one-time, per machine
+```
+
+Bootstrap creates the GitHub repo on first run, clones it locally,
+copies the git-tracked subset of files from the existing GDrive copy
+into the clone, retargets the `~/.dotfiles-private` symlink, sets up
+the per-machine GDrive runtime bucket, and registers two LaunchAgents:
+
+- `com.dotfiles-private.check-repo` (hourly) — `git fetch` + check
+  for behind/ahead/uncommitted state, fire one macOS notification when
+  out of sync. Never auto-pulls or auto-pushes.
+- `com.dotfiles-private.sync-runtime` (every 5 min) — rsync the
+  runtime subset between local and `<gdrive>/dotfiles-runtime/${device_id}/`.
+
+Manual on-demand commands:
+
+- `check-private-repo --status` — show local vs origin state.
+- `check-private-repo --force` — fire notification regardless of cooldown.
+- `sync-private-runtime` — pull-then-push immediately.
+- `sync-private-runtime --pull` / `--push` / `--status`.
+
+Rollback: `setup-private-repo --rollback` re-points
+`~/.dotfiles-private` back at the old GDrive target (snapshot saved at
+`~/.cache/dotfiles-private/old-symlink-target.txt`). The local clone,
+runtime bucket, and LaunchAgents are left in place. The original GDrive
+copy of `~/.dotfiles-private/` is never modified by the bootstrap.
+
+**Storage providers**: the runtime bucket prefers Google Drive but falls
+back to Dropbox if GD isn't mounted. So a Dropbox-only machine still
+gets cross-machine sync of zsh history / `~/.claude/projects/` etc., it
+just lives at `<dropbox>/dotfiles-runtime/${device_id}/` instead.
+
+**Non-macOS limitation**: the two LaunchAgents only register on macOS.
+Linux/WSL machines should set up cron or systemd-user units that invoke
+`uv run check-private-repo` hourly and `uv run sync-private-runtime`
+every 5 minutes.
 
 ### Symlink Management
 Dotfiles are organized in the `home/` directory, which mirrors the `$HOME` directory structure. The setup script automatically discovers and symlinks all files from `home/` to `$HOME`.

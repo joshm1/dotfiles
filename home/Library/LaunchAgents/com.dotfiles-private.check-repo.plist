@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dotfiles-private.check-repo</string>
+
+    <!--
+      Once an hour: git fetch + count behind/ahead/dirty in
+      ~/projects/joshm1/dotfiles-private. If any are non-zero, fire one
+      macOS notification. Cooldown is 1h per distinct message; clean state
+      clears the cooldown so the next problem fires immediately.
+
+      Bails silently when the local clone is missing — safe to ship even
+      on machines that haven't been bootstrapped yet.
+    -->
+    <!--
+      Redirect output inside the shell so $HOME expands per-user. Multi-user
+      macs (this one hosts both `claw` and `josh`) get separate per-user log
+      files instead of interleaving in /tmp.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>mkdir -p "$HOME/Library/Logs" &amp;&amp; cd "$HOME/.dotfiles" &amp;&amp; uv run check-private-repo &gt;&gt; "$HOME/Library/Logs/dotfiles-check-repo.log" 2&gt;&amp;1</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>3600</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>
