@@ -33,7 +33,8 @@ def cli(dry_run: bool) -> None:
     if dry_run:
         click.echo("DRY RUN MODE - showing what would be done (not yet supported, running normally)\n")
 
-    symlink_home_dir(home_dir)
+    if not symlink_home_dir(home_dir):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

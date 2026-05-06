@@ -216,15 +216,19 @@ def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -
     return True
 
 
-def symlink_home_dir(home_dir: Path) -> None:
+def symlink_home_dir(home_dir: Path) -> bool:
     """
     Traverse home_dir and symlink everything to $HOME.
 
     If a directory contains .symlink-dir, symlink the directory itself.
     Otherwise, recurse into it and symlink children.
+
+    Returns True if every symlink succeeded, False otherwise.
     """
+    success = True
 
     def process_dir(src_dir: Path, target_dir: Path) -> None:
+        nonlocal success
         for src in sorted(src_dir.iterdir()):
             if src.name in SKIP_FILES:
                 continue
@@ -233,11 +237,14 @@ def symlink_home_dir(home_dir: Path) -> None:
 
             if src.is_dir():
                 if (src / SYMLINK_DIR_TAG).exists():
-                    create_symlink(src, target)
+                    if not create_symlink(src, target):
+                        success = False
                 else:
                     target.mkdir(parents=True, exist_ok=True)
                     process_dir(src, target)
             else:
-                create_symlink(src, target)
+                if not create_symlink(src, target):
+                    success = False
 
     process_dir(home_dir, Path.home())
+    return success
