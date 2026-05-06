@@ -43,8 +43,11 @@ cscope.po.out
 
 # Vim       taken from: https://github.com/github/gitignore/blob/master/Global/vim.gitignore
 # ----------------------------------------------------------------------------------------------
+# Named-buffer swap files (e.g. .foo.swp). The companion anonymous-swap line
+# ([._]s[a-w][a-z]) was removed because it matched any 4-char path component
+# starting with .s — including .ssh — and caused parent-dir ignores that no
+# local negation could rescue.
 [._]*.s[a-w][a-z]
-[._]s[a-w][a-z]
 *.un~
 Session.vim
 .netrwhist

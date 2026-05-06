@@ -188,9 +188,14 @@ GIT_INCLUDE_GLOBS: tuple[str, ...] = (
     "home/.claude/agents/**",
     "home/.claude/commands/**",
     # NOTE: ~/.agents/ is intentionally not synced; revisit if/when needed.
-    # Stable binaries (stay in git rather than being duplicated per-machine in GDrive)
-    "home/bin/jabba",
-    "home/bin/codex-responses-api-proxy",
+    # User scripts and stable binaries. Single-level glob — recurse via ** is
+    # deliberately avoided so accidental Claude Code session dumps (e.g. a
+    # bin/.claude/settings.local.json) don't get pulled in. The .symlink-dir
+    # tag is included so symlink_home_dir treats ~/bin as a wholesale-symlinked
+    # directory after a fresh-machine bootstrap.
+    "home/bin/*",
+    "home/bin/.symlink-dir",
+    "home/bin/.dotfiles.yaml",
     # Repo-root files
     ".gitconfig",
     ".gitconfig.*",
