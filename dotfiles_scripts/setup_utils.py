@@ -182,8 +182,90 @@ def run_cmd(
 # Tag file that indicates a directory should be symlinked as a whole
 SYMLINK_DIR_TAG = ".symlink-dir"
 
+# Per-directory config consumed by the symlink walker. Currently supports a
+# ``symlinks:`` block that overrides the default same-name mapping; see
+# ``_resolve_symlinks_directives``. Also consumed by ``setup_dropbox`` for
+# ``chmod:`` rules.
+DOTFILES_YAML = ".dotfiles.yaml"
+
 # Files to skip when traversing
-SKIP_FILES = {".DS_Store", ".git", SYMLINK_DIR_TAG, ".dotfiles.yaml"}
+SKIP_FILES = {".DS_Store", ".git", SYMLINK_DIR_TAG, DOTFILES_YAML}
+
+
+def _read_dotfiles_yaml(directory: Path) -> dict[str, Any]:
+    """Read ``.dotfiles.yaml`` from ``directory``; return an empty dict on miss."""
+    config_file = directory / DOTFILES_YAML
+    if not config_file.is_file():
+        return {}
+    try:
+        import yaml
+
+        loaded = yaml.safe_load(config_file.read_text())
+    except (yaml.YAMLError, ImportError, OSError) as exc:
+        print_warning(f"Could not read {config_file}: {exc}")
+        return {}
+    return loaded if isinstance(loaded, dict) else {}
+
+
+def _resolve_symlinks_directives(
+    directory: Path, device_id: str
+) -> tuple[dict[str, str], set[str]]:
+    """Parse the ``symlinks:`` block of ``directory/.dotfiles.yaml``.
+
+    Returns a tuple ``(active, variants)``:
+
+    * ``active`` maps the home-side filename to the repo-side filename for
+      the current device. Each entry overrides the default same-name
+      symlinking for that one file.
+    * ``variants`` is the set of filenames in ``directory`` that match any
+      ``use:`` template (treating ``${device_id}`` as a wildcard). The
+      walker should skip these during normal iteration so other devices'
+      copies do not get auto-symlinked into ``$HOME``.
+
+    Schema::
+
+        symlinks:
+          manifest.toml:
+            use: manifest.toml.${device_id}
+    """
+    config = _read_dotfiles_yaml(directory)
+    raw = config.get("symlinks")
+    if not isinstance(raw, dict):
+        return {}, set()
+
+    active: dict[str, str] = {}
+    variants: set[str] = set()
+
+    for home_name, spec in raw.items():
+        if not isinstance(home_name, str) or not isinstance(spec, dict):
+            continue
+        use_template = spec.get("use")
+        if not isinstance(use_template, str):
+            continue
+
+        active[home_name] = use_template.replace("${device_id}", device_id)
+
+        if "${device_id}" in use_template:
+            prefix, _, suffix = use_template.partition("${device_id}")
+            for f in directory.iterdir():
+                if (
+                    f.name.startswith(prefix)
+                    and f.name.endswith(suffix)
+                    and len(f.name) > len(prefix) + len(suffix)
+                ):
+                    variants.add(f.name)
+        else:
+            variants.add(use_template)
+
+    return active, variants
+
+
+def _read_device_id() -> str:
+    """Return the contents of ``~/.device_id``, or empty string if absent."""
+    device_file = Path.home() / ".device_id"
+    if device_file.is_file():
+        return device_file.read_text().strip()
+    return ""
 
 
 def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -> bool:
@@ -196,6 +278,13 @@ def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -
     # Already correct symlink?
     if target.is_symlink() and target.resolve() == source.resolve():
         print(f"  {target.name} already linked")
+        return True
+
+    # Already routed via a wholesale-symlinked ancestor: target itself isn't
+    # a symlink, but its resolved path is the same file as source. Treat as
+    # a no-op so we don't rename the source out from under ourselves and
+    # then create a self-referential symlink in its place.
+    if target.exists() and target.resolve() == source.resolve():
         return True
 
     # Backup existing file/directory
@@ -223,14 +312,26 @@ def symlink_home_dir(home_dir: Path) -> bool:
     If a directory contains .symlink-dir, symlink the directory itself.
     Otherwise, recurse into it and symlink children.
 
+    A directory may also contain a ``.dotfiles.yaml`` with a ``symlinks:``
+    block to remap individual files (e.g., pick a per-device variant); see
+    ``_resolve_symlinks_directives``.
+
     Returns True if every symlink succeeded, False otherwise.
     """
     success = True
+    device_id = _read_device_id()
 
     def process_dir(src_dir: Path, target_dir: Path) -> None:
         nonlocal success
+
+        active, variants = _resolve_symlinks_directives(src_dir, device_id)
+
         for src in sorted(src_dir.iterdir()):
             if src.name in SKIP_FILES:
+                continue
+            # Skip files that are device-keyed variants (other devices' copies,
+            # or the current device's copy which is handled via `active` below).
+            if src.name in variants:
                 continue
 
             target = target_dir / src.name
@@ -239,12 +340,36 @@ def symlink_home_dir(home_dir: Path) -> bool:
                 if (src / SYMLINK_DIR_TAG).exists():
                     if not create_symlink(src, target):
                         success = False
+                elif target.is_symlink() and target.resolve() == src.resolve():
+                    # Some ancestor in $HOME is already wholesale-symlinked to
+                    # this source dir — recursing would loop back through the
+                    # symlink and corrupt the repo. Treat as already linked.
+                    continue
                 else:
                     target.mkdir(parents=True, exist_ok=True)
                     process_dir(src, target)
             else:
                 if not create_symlink(src, target):
                     success = False
+
+        # Apply explicit per-file overrides (e.g., manifest.toml -> manifest.toml.mac.primary).
+        for home_name, repo_filename in active.items():
+            repo_path = src_dir / repo_filename
+            if not repo_path.is_file():
+                if not device_id:
+                    print_warning(
+                        f"~/.device_id missing; cannot resolve symlinks "
+                        f"directive for {src_dir / home_name}"
+                    )
+                else:
+                    print_warning(
+                        f"symlinks override: {repo_path} not found "
+                        f"(device_id={device_id!r}); skipping {home_name}"
+                    )
+                success = False
+                continue
+            if not create_symlink(repo_path, target_dir / home_name):
+                success = False
 
     process_dir(home_dir, Path.home())
     return success
