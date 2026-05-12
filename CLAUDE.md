@@ -363,3 +363,17 @@ my-new-script = "dotfiles_scripts.my_new_script:main"
 - Setup is idempotent - scripts check for existing installations
 - Homebrew bundle only runs once (tracked by `homebrew/.installed`)
 - Language runtimes are managed by mise (see `.mise.toml`)
+
+## Agent skills
+
+### Issue tracker
+
+Local markdown under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles, default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

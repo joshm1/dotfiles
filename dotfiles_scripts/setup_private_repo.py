@@ -187,7 +187,10 @@ GIT_INCLUDE_GLOBS: tuple[str, ...] = (
     "home/.claude/skills/**",
     "home/.claude/agents/**",
     "home/.claude/commands/**",
-    # NOTE: ~/.agents/ is intentionally not synced; revisit if/when needed.
+    # ~/.agents/ is git-tracked here so the relative `../../.agents/skills/X`
+    # symlinks inside home/.claude/skills/ resolve to a real path inside the
+    # repo. Without this, those symlinks dangle.
+    "home/.agents/**",
     # User scripts and stable binaries. Single-level glob — recurse via ** is
     # deliberately avoided so accidental Claude Code session dumps (e.g. a
     # bin/.claude/settings.local.json) don't get pulled in. The .symlink-dir
@@ -248,9 +251,6 @@ home/.claude/skills/*/test/fixtures/
 # ~/.claude/skills/ at runtime. Should never be a real subdir of the repo.
 home/.claude/skills/gstack/
 home/.claude/skills/gstack
-
-# Agent skills tree intentionally not tracked here
-home/.agents/
 
 # SSH directory: whitelist what's allowed in git, ignore everything else.
 # Keeps private keys / credentials out by default — even files with names
