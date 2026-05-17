@@ -15,15 +15,22 @@
       on machines that haven't been bootstrapped yet.
     -->
     <!--
-      Redirect output inside the shell so $HOME expands per-user. Multi-user
-      macs (this one hosts both `claw` and `josh`) get separate per-user log
-      files instead of interleaving in /tmp.
+      Redirect both the bash shell output AND any errors into the same
+      cache file the script itself writes to (~/.cache/dotfiles-private/
+      check-repo.log). One file, one source of truth for "what did this
+      agent do last tick?". Bash output here is normally empty — the
+      script logs its own structured entries — but if the shell pipeline
+      ever breaks (uv missing, $HOME unwritable, etc.) the error lands
+      next to the structured logs rather than disappearing.
+
+      Per-user $HOME expansion keeps multi-user macs (this one hosts both
+      `claw` and `josh`) from interleaving log files.
     -->
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
         <string>-lc</string>
-        <string>mkdir -p "$HOME/Library/Logs" &amp;&amp; cd "$HOME/.dotfiles" &amp;&amp; uv run check-private-repo &gt;&gt; "$HOME/Library/Logs/dotfiles-check-repo.log" 2&gt;&amp;1</string>
+        <string>mkdir -p "$HOME/.cache/dotfiles-private" &amp;&amp; cd "$HOME/.dotfiles" &amp;&amp; uv run check-private-repo &gt;&gt; "$HOME/.cache/dotfiles-private/check-repo.log" 2&gt;&amp;1</string>
     </array>
 
     <key>StartInterval</key>
