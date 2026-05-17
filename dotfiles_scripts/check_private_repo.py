@@ -26,7 +26,7 @@ from typing import cast
 import click
 
 from dotfiles_scripts.setup_utils import (
-    PRIVATE_DOTFILES_REPO,
+    PRIVATE_DOTFILES,
     print_step,
     print_success,
     print_warning,
@@ -94,7 +94,7 @@ def _git(args: list[str], timeout: int | None = None) -> tuple[int, str]:
             check=False,
             capture_output=True,
             text=True,
-            cwd=PRIVATE_DOTFILES_REPO,
+            cwd=PRIVATE_DOTFILES,
             timeout=timeout,
         )
     except subprocess.TimeoutExpired:
@@ -112,7 +112,7 @@ def _has_upstream() -> bool:
 
 def _gather() -> dict[str, object] | None:
     """Run git probes and return a state dict, or None if the repo isn't usable."""
-    if not (PRIVATE_DOTFILES_REPO / ".git").is_dir():
+    if not (PRIVATE_DOTFILES / ".git").is_dir():
         return None
 
     # Fetch — soft-fail (network may be down). Don't notify on fetch failure;
@@ -217,8 +217,8 @@ def _do_check(force: bool) -> int:
 
 def _do_status() -> int:
     """Print a human-readable status summary; do not notify."""
-    print_step(f"repo: {PRIVATE_DOTFILES_REPO}")
-    if not (PRIVATE_DOTFILES_REPO / ".git").is_dir():
+    print_step(f"repo: {PRIVATE_DOTFILES}")
+    if not (PRIVATE_DOTFILES / ".git").is_dir():
         print_warning("repo not bootstrapped on this machine")
         return 0
     probe = _gather()

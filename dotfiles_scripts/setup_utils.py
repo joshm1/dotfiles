@@ -19,12 +19,14 @@ DROPBOX_DIR = Path.home() / "Dropbox"
 # provider discovery only happens when this symlink does not yet exist (or is
 # being repointed by the migration script). Named to match the public
 # ``~/.dotfiles`` symlink (DOTFILES) for visual grouping.
+#
+# Once ``setup-private-repo`` has run, this symlink points at the local
+# GitHub clone (resolved via PRIVATE_DOTFILES_REPO_PATH config). Until then
+# it points at the cloud-synced copy. Code paths that just need a working
+# directory (git ops with cwd=..., file reads, rsync sources) should route
+# through this symlink — the resolved clone path is only required during the
+# bootstrap itself (see get_private_repo_path).
 PRIVATE_DOTFILES = Path.home() / ".dotfiles-private"
-
-# Local clone of the private GitHub repo, when the user has migrated off the
-# pure-cloud storage model. ``setup-private-repo`` retargets PRIVATE_DOTFILES
-# to point here. Mirrors the DOTFILES_REPO / DOTFILES split.
-PRIVATE_DOTFILES_REPO = Path.home() / "projects" / "joshm1" / "dotfiles-private"
 
 # Names this script will look for inside each cloud root, in order. Newer
 # machines use "dotfiles-private" (matches the local symlink name); older
@@ -317,6 +319,55 @@ def read_dotfiles_config(key: str) -> str | None:
             if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ("'", '"'):
                 raw = raw[1:-1]
             value = raw
+    return value
+
+
+def get_private_repo_path() -> Path:
+    """Return the resolved local clone path for the private dotfiles repo.
+
+    Reads ``PRIVATE_DOTFILES_REPO_PATH`` from the hierarchical
+    ``~/.config/dotfiles/.dotfiles-config*`` files. Exits the process with a
+    clear error if unset — this value is required by the ``setup-private-repo``
+    bootstrap and there is intentionally no default. Other code paths should
+    use ``PRIVATE_DOTFILES`` (the symlink) instead.
+    """
+    value = read_dotfiles_config("PRIVATE_DOTFILES_REPO_PATH")
+    if not value:
+        print_error(
+            "PRIVATE_DOTFILES_REPO_PATH is not set in ~/.config/dotfiles/.dotfiles-config*"
+        )
+        print(
+            "  Set it in the most-specific .dotfiles-config file for this machine.\n"
+            "  Example: PRIVATE_DOTFILES_REPO_PATH=$HOME/projects/<you>/<repo>"
+        )
+        sys.exit(1)
+    import os
+
+    return Path(os.path.expandvars(value)).expanduser()
+
+
+def get_private_repo_gh() -> str:
+    """Return the ``owner/name`` identifier of the private dotfiles GitHub repo.
+
+    Reads ``PRIVATE_DOTFILES_REPO_GH`` from ``.dotfiles-config*``. Exits with a
+    clear error if unset or malformed. Required by ``setup-private-repo`` to
+    create / clone / push the remote.
+    """
+    value = read_dotfiles_config("PRIVATE_DOTFILES_REPO_GH")
+    if not value:
+        print_error(
+            "PRIVATE_DOTFILES_REPO_GH is not set in ~/.config/dotfiles/.dotfiles-config*"
+        )
+        print(
+            "  Set it in the most-specific .dotfiles-config file for this machine.\n"
+            "  Example: PRIVATE_DOTFILES_REPO_GH=<github-user>/<repo>"
+        )
+        sys.exit(1)
+    if "/" not in value:
+        print_error(
+            f"PRIVATE_DOTFILES_REPO_GH={value!r} is missing a '/' (expected owner/name)"
+        )
+        sys.exit(1)
     return value
 
 

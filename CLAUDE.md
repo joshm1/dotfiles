@@ -54,9 +54,13 @@ Common paths are defined in `dotfiles_scripts/setup_utils.py`:
 - `PRIVATE_DOTFILES = $HOME/.dotfiles-private` — local symlink. By
   default points at the user's cloud-synced private dotfiles (Google
   Drive preferred, Dropbox fallback). After `setup-private-repo` runs,
-  it instead points at `PRIVATE_DOTFILES_REPO` (a local git clone)
-- `PRIVATE_DOTFILES_REPO = ~/.dotfiles-private` — clone of
-  the private GitHub repo created by `setup-private-repo`
+  it instead points at the local git clone of the private GitHub repo.
+- The local clone path and the GitHub repo identifier are both
+  per-machine config — `PRIVATE_DOTFILES_REPO_PATH` and
+  `PRIVATE_DOTFILES_REPO_GH` in `~/.config/dotfiles/.dotfiles-config*`.
+  No hardcoded defaults; `setup-private-repo` errors if either is
+  missing. Most code (and all docs) route through `~/.dotfiles-private`
+  rather than the resolved clone path.
 - `DROPBOX_DIR = $HOME/Dropbox` — kept for the Dropbox fallback path
 
 Cloud-storage discovery is glob-based and never hardcodes the user's email:
@@ -106,7 +110,7 @@ are two backends, picked per machine:
    path; observed multi-second `stat()` hangs that wedge shell startup.
 2. **GitHub + GDrive runtime hybrid** (run `setup-private-repo` to
    migrate to this) — `~/.dotfiles-private` symlinks to a local clone
-   at `~/.dotfiles-private`. Slow-moving config files
+   at `PRIVATE_DOTFILES_REPO_PATH` (per-machine config). Slow-moving config files
    (`.zshrc.before/after.*`, `.gitconfig*`, `.config/...`, hand-curated
    skill source, etc.) are git-tracked. High-churn / per-device runtime
    state (zsh history, REPL histories, `~/.claude/projects/`,

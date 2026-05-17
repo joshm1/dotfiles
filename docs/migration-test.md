@@ -16,7 +16,8 @@ Run this one-liner block. Every line should pass cleanly.
 ```bash
 echo "=== ~/.dotfiles-private symlink ==="
 readlink ~/.dotfiles-private
-# Expect: /Users/<you>/.dotfiles-private  (the local clone, NOT a Cloud path)
+# Expect: an absolute path under $HOME (the local clone of your private
+# repo — whatever PRIVATE_DOTFILES_REPO_PATH resolves to), NOT a Cloud path
 
 echo
 echo "=== Critical \$HOME symlinks resolve through the repo ==="

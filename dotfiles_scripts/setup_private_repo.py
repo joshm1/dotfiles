@@ -6,9 +6,12 @@ Performs the one-time migration from the cloud-only model
 GDrive-runtime hybrid:
 
 1. Make sure ``gh`` is installed and authenticated.
-2. Create ``<user>/<private-dotfiles>`` on GitHub if it doesn't exist
-   (no-op on the second machine onward).
-3. Clone or pull the repo to ``~/.dotfiles-private``.
+2. Create the private GitHub repo if it doesn't exist (no-op on the
+   second machine onward). Identifier comes from
+   ``PRIVATE_DOTFILES_REPO_GH`` in
+   ``~/.config/dotfiles/.dotfiles-config*``.
+3. Clone or pull the repo to ``PRIVATE_DOTFILES_REPO_PATH`` (also from
+   ``.dotfiles-config``).
 4. **First machine only**: walk the existing GDrive copy of
    ``~/.dotfiles-private/`` and copy the git-tracked subset into the
    fresh clone, write ``.gitignore``, commit, push.
@@ -29,7 +32,6 @@ are left in place so a re-bootstrap is fast.
 from __future__ import annotations
 
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -38,11 +40,11 @@ from pathlib import Path
 import click
 
 from dotfiles_scripts.setup_utils import (
-    DOTFILES,
     PRIVATE_DOTFILES,
-    PRIVATE_DOTFILES_REPO,
     ensure_private_dotfiles_symlink,
     gdrive_candidates,
+    get_private_repo_gh,
+    get_private_repo_path,
     print_error,
     print_header,
     print_step,
@@ -58,84 +60,38 @@ from dotfiles_scripts.sync_private_runtime import (
 CACHE_DIR = Path.home() / ".cache" / "dotfiles-private"
 SYMLINK_SNAPSHOT = CACHE_DIR / "old-symlink-target.txt"
 
-# Resolution order for the private GitHub repo identifier (e.g. "alice/secrets"):
-#
-#   1. ``--repo owner/name`` CLI flag — explicit override.
-#   2. ``DOTFILES_PRIVATE_REPO`` env var — same shape, useful for
-#      non-interactive setups (e.g. baking into a machine's shell config).
-#   3. Inferred owner from the public dotfiles repo's origin remote +
-#      ``dotfiles-private`` as the name. So someone cloning their own fork
-#      at ``user/dotfiles`` automatically targets ``user/dotfiles-private``.
-#   4. Interactive prompt — ask the user.
-#   5. (Non-interactive only) error out with a clear message.
+# The private repo identifier (``owner/name``) and local clone path are both
+# strictly required machine-level config — read from
+# ``~/.config/dotfiles/.dotfiles-config*`` via the setup_utils helpers. There
+# are intentionally no defaults and no inference: the helpers exit with a
+# clear error if either value is missing. CLI flags / env vars override the
+# config value for the GH identifier (useful for one-off testing).
 #
 # Resolution happens at cli() entry, NOT at import; the module-level
 # variables below start empty and are filled in once we know the answer.
-_DEFAULT_GH_REPO_NAME = "dotfiles-private"
-
 GH_FULL: str = ""
 GH_OWNER: str = ""
 GH_REPO: str = ""
-
-
-def _infer_gh_owner() -> str | None:
-    """Return the owner of the public dotfiles repo's origin remote, or None
-    if it can't be determined."""
-    try:
-        result = subprocess.run(
-            ["git", "config", "--get", "remote.origin.url"],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=DOTFILES,
-            timeout=5,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return None
-    if result.returncode != 0:
-        return None
-    # Matches git@github.com:owner/repo(.git) and https://github.com/owner/repo(.git)
-    match = re.search(r"github\.com[:/]([^/]+)/[^/.]+", result.stdout.strip())
-    return match.group(1) if match else None
+PRIVATE_DOTFILES_REPO: Path = Path()
 
 
 def _resolve_gh_full(cli_override: str | None) -> str:
-    """Pick the private repo identifier via CLI > env > infer > prompt.
-
-    Raises click.UsageError when nothing works and stdin isn't a TTY.
-    """
-    candidates: list[tuple[str, str]] = []
+    """Pick the private repo identifier via CLI > env > config; error otherwise."""
     if cli_override:
-        candidates.append(("--repo", cli_override))
+        if "/" not in cli_override:
+            raise click.UsageError(
+                f"--repo={cli_override!r} is missing a '/' (expected owner/name)"
+            )
+        return cli_override
     env = os.environ.get("DOTFILES_PRIVATE_REPO", "").strip()
     if env:
-        candidates.append(("DOTFILES_PRIVATE_REPO", env))
-    for source, value in candidates:
-        if "/" not in value:
+        if "/" not in env:
             raise click.UsageError(
-                f"{source}={value!r} is missing a '/' (expected owner/name)"
+                f"DOTFILES_PRIVATE_REPO={env!r} is missing a '/' (expected owner/name)"
             )
-        return value
-
-    owner = _infer_gh_owner()
-    if owner:
-        return f"{owner}/{_DEFAULT_GH_REPO_NAME}"
-
-    # Couldn't infer; ask the user.
-    if not sys.stdin.isatty():
-        raise click.UsageError(
-            "Could not determine the private dotfiles repo identifier. Set "
-            "the DOTFILES_PRIVATE_REPO env var or pass --repo owner/name."
-        )
-    print_step(
-        "Could not infer the GitHub owner from the public dotfiles repo's origin remote."
-    )
-    answer = click.prompt(
-        "Enter the private repo identifier (owner/name)", type=str
-    ).strip()
-    if "/" not in answer:
-        raise click.UsageError(f"{answer!r} is missing a '/' (expected owner/name)")
-    return answer
+        return env
+    # get_private_repo_gh() exits with a helpful message if unset.
+    return get_private_repo_gh()
 
 
 def _set_gh_identifier(full: str) -> None:
@@ -143,6 +99,12 @@ def _set_gh_identifier(full: str) -> None:
     global GH_FULL, GH_OWNER, GH_REPO
     GH_FULL = full
     GH_OWNER, GH_REPO = full.split("/", 1)
+
+
+def _set_private_repo_path() -> None:
+    """Populate ``PRIVATE_DOTFILES_REPO`` from config; called at cli() entry."""
+    global PRIVATE_DOTFILES_REPO
+    PRIVATE_DOTFILES_REPO = get_private_repo_path()
 
 LAUNCH_AGENTS_DIR = Path.home() / "Library" / "LaunchAgents"
 PLIST_NAMES = (
@@ -819,7 +781,7 @@ def _install_launch_agents() -> bool:
     default=None,
     help=(
         "Private dotfiles GitHub repo identifier (e.g. 'alice/my-secrets'). "
-        "Overrides the inferred owner and the default name 'dotfiles-private'. "
+        "Overrides PRIVATE_DOTFILES_REPO_GH from ~/.config/dotfiles/.dotfiles-config. "
         "Same effect via env var DOTFILES_PRIVATE_REPO."
     ),
 )
@@ -831,7 +793,9 @@ def cli(
 ) -> None:
     """Migrate ~/.dotfiles-private from cloud-only storage to GitHub + cloud runtime."""
     _set_gh_identifier(_resolve_gh_full(repo_override))
+    _set_private_repo_path()
     print_step(f"private repo: {GH_FULL}")
+    print_step(f"local clone:  {PRIVATE_DOTFILES_REPO}")
 
     if rollback:
         sys.exit(_rollback_symlink())

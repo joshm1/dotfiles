@@ -3,8 +3,8 @@
 
 Bridge between two storage layers in the dotfiles design:
 
-- ``~/.dotfiles-private`` — git-tracked private config
-  (handled by ``check_private_repo.py``).
+- ``~/.dotfiles-private`` — git-tracked private config, symlinked to
+  the local clone (handled by ``check_private_repo.py``).
 - ``<gdrive>/dotfiles-runtime/${device_id}/`` — runtime state that
   doesn't belong in git: zsh history, REPL histories, Claude Code
   per-session state, etc.
