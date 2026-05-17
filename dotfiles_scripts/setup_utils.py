@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -266,6 +267,57 @@ def _read_device_id() -> str:
     if device_file.is_file():
         return device_file.read_text().strip()
     return ""
+
+
+# ``KEY=value`` / ``export KEY=value`` lines in the .dotfiles-config files,
+# with optional surrounding quotes. Matches what shell sourcing produces
+# without actually executing the file (so we don't need a subprocess).
+_CONFIG_LINE_RE = re.compile(
+    r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$"
+)
+
+
+def read_dotfiles_config(key: str) -> str | None:
+    """Resolve a setting from the hierarchical ``~/.config/dotfiles/.dotfiles-config*`` files.
+
+    Mirrors the shell ``_source_hierarchy`` in ``home/.zshrc`` (lines 6-14):
+    starts from the base file and walks dotted ``device_id`` segments
+    (e.g. ``mac`` then ``mac.primary``), with later files overriding
+    earlier ones. Returns the last value seen for ``key`` across the chain,
+    or ``None`` if absent.
+    """
+    base = Path.home() / ".config" / "dotfiles" / ".dotfiles-config"
+    device_id = _read_device_id()
+
+    candidates: list[Path] = [base]
+    if device_id:
+        prefix = ""
+        for segment in device_id.split("."):
+            prefix = f"{prefix}.{segment}" if prefix else segment
+            candidates.append(base.with_name(f"{base.name}.{prefix}"))
+
+    value: str | None = None
+    for path in candidates:
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            stripped = line.lstrip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            match = _CONFIG_LINE_RE.match(line)
+            if match is None or match.group(1) != key:
+                continue
+            raw = match.group(2)
+            # Strip a matching pair of surrounding quotes; leave mismatched
+            # quotes alone (shell would error on those anyway).
+            if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ("'", '"'):
+                raw = raw[1:-1]
+            value = raw
+    return value
 
 
 def create_symlink(source: Path, target: Path, backup_dir: Path | None = None) -> bool:

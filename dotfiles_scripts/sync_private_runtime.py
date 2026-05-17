@@ -53,6 +53,7 @@ from dotfiles_scripts.setup_utils import (
     print_header,
     print_step,
     print_success,
+    read_dotfiles_config,
 )
 
 # ---------------------------------------------------------------------------
@@ -69,6 +70,19 @@ RUNTIME_DIR_NAME = "dotfiles-runtime"
 # Backwards-compat alias — older callers (e.g. setup_private_repo) imported the
 # previous name. Keep both pointing at the same string.
 GDRIVE_RUNTIME_DIR_NAME = RUNTIME_DIR_NAME
+
+# Sibling of dotfiles-runtime/ — same cloud provider, but a single shared
+# directory (no device_id segment) used for identity that's the same across
+# all of the user's machines. Currently: SSH private keys on opt-out devices.
+SHARED_DIR_NAME = "dotfiles-shared"
+
+# Glob patterns under the dotfiles-private repo root that participate in the
+# shared bucket when SSH_IDENTITY_BACKEND=disk-keys. ``id_*`` covers both
+# private keys and their .pub fallbacks; .pem covers AWS-style keypairs.
+SSH_DISK_KEY_PATTERNS: tuple[str, ...] = (
+    "home/.ssh/id_*",
+    "home/.ssh/*.pem",
+)
 
 # Each direction has its own timeout. Pulls can be slow on big trees
 # (Claude projects 248 MB on first run); push is normally tiny deltas.
@@ -286,6 +300,33 @@ def _resolve_runtime_root() -> Path | None:
     return storages[0] / RUNTIME_DIR_NAME / dev
 
 
+def resolve_shared_root() -> Path | None:
+    """Return ``<storage>/dotfiles-shared/`` or None if no cloud storage is mounted.
+
+    Public counterpart to ``_resolve_runtime_root`` — same cloud-provider
+    selection logic, but no device segment: every machine writes to/reads
+    from the same place. The exporter on a 1Password-enabled machine
+    pushes here; opted-out machines pull from here.
+    """
+    storages = _runtime_storage_candidates()
+    if not storages:
+        return None
+    for storage in storages:
+        bucket = storage / SHARED_DIR_NAME
+        if bucket.is_dir():
+            return bucket
+    return storages[0] / SHARED_DIR_NAME
+
+
+def _ssh_backend() -> str:
+    """Return the SSH identity backend for this machine.
+
+    Reads ``SSH_IDENTITY_BACKEND`` from the hierarchical
+    ``~/.config/dotfiles/.dotfiles-config*`` files. Defaults to ``1password``.
+    """
+    return read_dotfiles_config("SSH_IDENTITY_BACKEND") or "1password"
+
+
 def _repo_root() -> Path | None:
     """Return the dotfiles-private repo root (resolves the symlink)."""
     if not PRIVATE_DOTFILES.is_dir():
@@ -366,6 +407,82 @@ def sync_path(
     return False, f"FAIL ({code}): {source} → {dest}: {out[-300:]}"
 
 
+def _ssh_filename_matches_patterns(name: str) -> bool:
+    """True if ``name`` matches any of ``SSH_DISK_KEY_PATTERNS`` (bare-filename match)."""
+    from fnmatch import fnmatch
+
+    bare_patterns = [Path(p).name for p in SSH_DISK_KEY_PATTERNS]
+    return any(fnmatch(name, pat) for pat in bare_patterns)
+
+
+def _sync_ssh_keys_pull(repo: Path) -> tuple[int, list[str]]:
+    """Pull SSH disk-keys from the shared bucket into the private repo's ~/.ssh/.
+
+    Returns ``(successes, failures)``. Skips silently if the shared bucket
+    or its ``ssh/`` subdir is missing.
+    """
+    shared = resolve_shared_root()
+    if shared is None or not (shared / "ssh").is_dir():
+        return 0, []
+    failures: list[str] = []
+    successes = 0
+    ssh_local = repo / "home" / ".ssh"
+    ssh_local.mkdir(parents=True, exist_ok=True)
+    for entry in (shared / "ssh").iterdir():
+        if not entry.is_file() or not _ssh_filename_matches_patterns(entry.name):
+            continue
+        dst = ssh_local / entry.name
+        ok, msg = sync_path(entry, dst, timeout=PULL_TIMEOUT_SECONDS)
+        _log(msg)
+        if not ok:
+            failures.append(msg)
+            continue
+        successes += 1
+        # Defense-in-depth: cloud storage may flatten perms. Re-tighten private
+        # keys after pull; .pub stays world-readable.
+        if not entry.name.endswith(".pub"):
+            try:
+                dst.chmod(0o600)
+            except OSError as exc:
+                _log(f"chmod 0600 failed for {dst}: {exc}")
+    return successes, failures
+
+
+def _sync_ssh_keys_push(repo: Path) -> tuple[int, list[str]]:
+    """Push SSH disk-keys from the private repo's ~/.ssh/ to the shared bucket.
+
+    Returns ``(successes, failures)``. Skips silently if no matching files
+    exist locally.
+    """
+    shared = resolve_shared_root()
+    if shared is None:
+        return 0, []
+    ssh_local = repo / "home" / ".ssh"
+    if not ssh_local.is_dir():
+        return 0, []
+
+    matches: list[Path] = []
+    for pattern in SSH_DISK_KEY_PATTERNS:
+        matches.extend(ssh_local.glob(Path(pattern).name))
+    if not matches:
+        return 0, []
+
+    failures: list[str] = []
+    successes = 0
+    (shared / "ssh").mkdir(parents=True, exist_ok=True)
+    for src in matches:
+        if not src.is_file():
+            continue
+        dst = shared / "ssh" / src.name
+        ok, msg = sync_path(src, dst, timeout=PUSH_TIMEOUT_SECONDS)
+        _log(msg)
+        if ok:
+            successes += 1
+        else:
+            failures.append(msg)
+    return successes, failures
+
+
 def _do_pull() -> tuple[bool, str]:
     """GDrive runtime → local. Returns (ok, summary_line)."""
     runtime = _resolve_runtime_root()
@@ -398,6 +515,11 @@ def _do_pull() -> tuple[bool, str]:
             successes += 1
         else:
             failures.append(msg)
+
+    if _ssh_backend() == "disk-keys":
+        ssh_ok, ssh_failures = _sync_ssh_keys_pull(repo)
+        successes += ssh_ok
+        failures.extend(ssh_failures)
 
     if failures:
         return False, (
@@ -437,6 +559,11 @@ def _do_push() -> tuple[bool, str]:
             successes += 1
         else:
             failures.append(msg)
+
+    if _ssh_backend() == "disk-keys":
+        ssh_ok, ssh_failures = _sync_ssh_keys_push(repo)
+        successes += ssh_ok
+        failures.extend(ssh_failures)
 
     if failures:
         return False, (

@@ -175,6 +175,10 @@ GIT_INCLUDE_GLOBS: tuple[str, ...] = (
     "home/.npmrc",
     "home/.dotfiles.yaml",
     "home/.ssh/config",
+    # SSH identity-backend variants — selected per-machine via the
+    # config.identity symlink (not tracked); see setup_ssh_identity.py.
+    "home/.ssh/config.identity.1password",
+    "home/.ssh/config.identity.disk-keys",
     # SSH public keys — safe to track (they're public by definition).
     "home/.ssh/*.pub",
     # Preserve wholesale-symlink behavior for ~/.ssh on new bootstraps.
@@ -241,6 +245,15 @@ home/.psql_history
 # Ephemeral
 home/.clipboard
 
+# gcloud: track only the named configurations under configurations/, never
+# runtime state (credentials, tokens, DBs, logs, sentinels, ADC). Whitelist
+# pattern so new gcloud artifacts auto-ignore. config_default is rewritten
+# by `gcloud config set`, so it's per-machine and excluded explicitly below.
+home/.config/gcloud/*
+home/.config/gcloud/.*
+!home/.config/gcloud/configurations/
+home/.config/gcloud/configurations/config_default
+
 # Skill / agent log directories
 home/.claude/skills/*/logs/
 
@@ -256,13 +269,18 @@ home/.claude/skills/gstack
 # Keeps private keys / credentials out by default — even files with names
 # that wouldn't match the conventional id_* / *.pem / *.key patterns.
 # Sensitive files (known_hosts, authorized_keys, *.pem, id_*, etc.) sync
-# via the GDrive runtime bucket instead.
+# via the private-dotfiles runtime/shared buckets instead.
 home/.ssh/*
 home/.ssh/.*
 !home/.ssh/config
+!home/.ssh/config.identity.1password
+!home/.ssh/config.identity.disk-keys
 !home/.ssh/*.pub
 !home/.ssh/.symlink-dir
 !home/.ssh/.gitkeep
+# config.identity is a per-machine symlink chosen by setup_ssh_identity.py;
+# never commit it.
+home/.ssh/config.identity
 
 # Cache directories
 **/node_modules/

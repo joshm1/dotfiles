@@ -148,12 +148,17 @@ def cli() -> int:
     if get_private_dotfiles() is not None:
         run_setup_module("setup_dropbox")
         run_setup_module("setup_zsh_history")
+        # Needs .dotfiles-private mounted (reads .dotfiles-config and writes
+        # to home/.ssh/). Runs before launchd so the runtime LaunchAgent's
+        # first tick sees the correct SSH identity backend.
+        run_setup_module("setup_ssh_identity")
     else:
         print_warning(
             "~/.dotfiles-private is not set up - skipping cloud-dependent setup"
         )
         print(
-            "  Mount Google Drive or Dropbox, then run setup-dropbox and setup-zsh-history"
+            "  Mount Google Drive or Dropbox, then run setup-dropbox, "
+            "setup-zsh-history, and setup-ssh-identity"
         )
 
     # Phase 12: gstack — clone to ~/gstack, restructure ~/.claude/skills into
