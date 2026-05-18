@@ -90,6 +90,7 @@ brew 'diff-so-fancy'            # Better diff output - https://github.com/so-fan
 brew 'dos2unix'                 # Convert line endings
 brew 'gettext'                  # Internationalization library
 brew 'mas'                      # Mac App Store CLI - https://github.com/mas-cli/mas
+brew 'terminal-notifier'        # Send macOS notifications with click actions - https://github.com/julienXX/terminal-notifier
 
 # AI & Automation
 brew 'agent-browser'            # Browser automation CLI for AI agents - https://github.com/anthropics/agent-browser
