@@ -34,6 +34,7 @@ from __future__ import annotations
 import fcntl
 import json
 import platform
+import shlex
 import subprocess
 import sys
 import time
@@ -92,6 +93,23 @@ PUSH_TIMEOUT_SECONDS = 600  # 10 min
 INTERVAL_SECONDS = 300  # matches the launchd schedule
 FAILURE_THRESHOLD_SECONDS = 3600  # 1 h
 NOTIFY_COOLDOWN_SECONDS = 3600
+
+# macOS ships Apple's openrsync at /usr/bin/rsync, which reads source files
+# via mmap(). Google Drive FileProvider stub files intermittently return
+# EDEADLK on those mmaps ("Resource deadlock avoided"), corrupting pulls.
+# Homebrew's GNU rsync 3.x reads with sliding-window read() and works
+# reliably against FileProvider. Prefer it when present.
+_BREW_RSYNC = Path("/opt/homebrew/bin/rsync")
+RSYNC_BIN = str(_BREW_RSYNC) if _BREW_RSYNC.is_file() else "rsync"
+
+# Prefer terminal-notifier over osascript for failure notifications. osascript
+# notifications are stuck under the "Script Editor" sender with no click action;
+# terminal-notifier surfaces its own sender and supports -group (collapse repeats)
+# and -execute (open the log on click).
+_BREW_TERMINAL_NOTIFIER = Path("/opt/homebrew/bin/terminal-notifier")
+TERMINAL_NOTIFIER_BIN: str | None = (
+    str(_BREW_TERMINAL_NOTIFIER) if _BREW_TERMINAL_NOTIFIER.is_file() else None
+)
 
 # Paths to sync, split by source root. Each entry is a *relative* path
 # from the source root; the destination preserves the same shape under
@@ -213,6 +231,20 @@ def _notify(title: str, message: str) -> None:
     if not _is_mac():
         return
     try:
+        if TERMINAL_NOTIFIER_BIN is not None:
+            subprocess.run(
+                [
+                    TERMINAL_NOTIFIER_BIN,
+                    "-title", title,
+                    "-message", message,
+                    "-group", "dotfiles-runtime",
+                    "-execute", f"open {shlex.quote(str(LOG_FILE))}",
+                ],
+                check=False,
+                capture_output=True,
+                timeout=10,
+            )
+            return
         t = title.replace('"', '\\"')
         m = message.replace('"', '\\"')
         subprocess.run(
@@ -385,7 +417,7 @@ def sync_path(
     dest.parent.mkdir(parents=True, exist_ok=True)
     if source.is_dir():
         args = [
-            "rsync",
+            RSYNC_BIN,
             "-a",
             "--update",
             *_rsync_excludes(),
@@ -394,7 +426,7 @@ def sync_path(
         ]
     else:
         args = [
-            "rsync",
+            RSYNC_BIN,
             "-a",
             "--update",
             *_rsync_excludes(),
