@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import platform
+import shlex
 import subprocess
 import sys
 import time
@@ -39,6 +40,15 @@ LOG_MAX_BYTES = 1_000_000
 
 NOTIFY_COOLDOWN_SECONDS = 3600  # don't repeat the same notification within 1h
 FETCH_TIMEOUT_SECONDS = 30
+
+# Prefer terminal-notifier over osascript. osascript notifications are stuck
+# under the "Script Editor" sender with no click action; terminal-notifier
+# surfaces its own sender and supports -group (collapse repeats) and
+# -execute (open the log on click).
+_BREW_TERMINAL_NOTIFIER = Path("/opt/homebrew/bin/terminal-notifier")
+TERMINAL_NOTIFIER_BIN: str | None = (
+    str(_BREW_TERMINAL_NOTIFIER) if _BREW_TERMINAL_NOTIFIER.is_file() else None
+)
 
 
 def _is_mac() -> bool:
@@ -136,15 +146,50 @@ def _gather() -> dict[str, object] | None:
     return {"behind": behind, "ahead": ahead, "dirty": dirty, "no_upstream": False}
 
 
+def _notify_via_terminal_notifier(title: str, message: str) -> bool:
+    """Try terminal-notifier. Return True only if it actually ran cleanly.
+
+    A file-exists check isn't enough: a broken code signature can get the
+    binary SIGKILL'd by the kernel (returncode -9), so we check the exit
+    status and let the caller fall back to osascript on any failure.
+    """
+    if TERMINAL_NOTIFIER_BIN is None:
+        return False
+    try:
+        result = subprocess.run(
+            [
+                TERMINAL_NOTIFIER_BIN,
+                "-title", title,
+                "-message", message,
+                "-group", "dotfiles-private",
+                "-execute", f"open {shlex.quote(str(LOG_FILE))}",
+            ],
+            check=False,
+            capture_output=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        _log(f"terminal-notifier failed ({e}) — falling back to osascript")
+        return False
+    if result.returncode != 0:
+        _log(
+            f"terminal-notifier exited {result.returncode} — "
+            "falling back to osascript"
+        )
+        return False
+    return True
+
+
 def _notify(title: str, message: str) -> None:
     if not _is_mac():
+        return
+    if _notify_via_terminal_notifier(title, message):
         return
     try:
         t = title.replace('"', '\\"')
         m = message.replace('"', '\\"')
-        script = f'display notification "{m}" with title "{t}"'
         subprocess.run(
-            ["osascript", "-e", script],
+            ["osascript", "-e", f'display notification "{m}" with title "{t}"'],
             check=False,
             capture_output=True,
             timeout=10,

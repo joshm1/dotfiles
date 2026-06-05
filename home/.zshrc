@@ -111,6 +111,7 @@ setopt no_beep
 
 alias vim="nvim"
 alias vi="nvim"
+alias cld="claude --dangerously-skip-permissions"
 [ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
 [ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
 

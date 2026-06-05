@@ -171,3 +171,8 @@
 [credential "https://gist.github.com"]
 	helper = 
 	helper = !/opt/homebrew/bin/gh auth git-credential
+[safe]
+	directory = /Users/josh/projects/josh.worktrees/greenlight-clone-main/.git
+	directory = /Users/josh/projects/josh.worktrees/greenlight-clone-main
+	directory = /Users/josh/projects/joshm1/greenlight-clone
+	directory = *
