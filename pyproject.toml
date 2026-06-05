@@ -30,6 +30,7 @@ setup-ssh-identity = "dotfiles_scripts.setup_ssh_identity:main"
 
 # Utility scripts (require rich optional dependency)
 symlink-home-files = "dotfiles_scripts.symlink_home:cli"
+check-home-symlinks = "dotfiles_scripts.check_home_symlinks:main"
 check-homebrew-apps = "dotfiles_scripts.check_homebrew:cli"
 migrate-to-gdrive = "dotfiles_scripts.migrate_to_gdrive:main"
 detach-cloud-cache = "dotfiles_scripts.detach_cloud_cache:main"

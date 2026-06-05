@@ -227,24 +227,46 @@ def _is_mac() -> bool:
     return platform.system() == "Darwin"
 
 
+def _notify_via_terminal_notifier(title: str, message: str) -> bool:
+    """Try terminal-notifier. Return True only if it actually ran cleanly.
+
+    A file-exists check isn't enough: a broken code signature can get the
+    binary SIGKILL'd by the kernel (returncode -9), so we check the exit
+    status and let the caller fall back to osascript on any failure.
+    """
+    if TERMINAL_NOTIFIER_BIN is None:
+        return False
+    try:
+        result = subprocess.run(
+            [
+                TERMINAL_NOTIFIER_BIN,
+                "-title", title,
+                "-message", message,
+                "-group", "dotfiles-runtime",
+                "-execute", f"open {shlex.quote(str(LOG_FILE))}",
+            ],
+            check=False,
+            capture_output=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        _log(f"terminal-notifier failed ({e}) — falling back to osascript")
+        return False
+    if result.returncode != 0:
+        _log(
+            f"terminal-notifier exited {result.returncode} — "
+            "falling back to osascript"
+        )
+        return False
+    return True
+
+
 def _notify(title: str, message: str) -> None:
     if not _is_mac():
         return
+    if _notify_via_terminal_notifier(title, message):
+        return
     try:
-        if TERMINAL_NOTIFIER_BIN is not None:
-            subprocess.run(
-                [
-                    TERMINAL_NOTIFIER_BIN,
-                    "-title", title,
-                    "-message", message,
-                    "-group", "dotfiles-runtime",
-                    "-execute", f"open {shlex.quote(str(LOG_FILE))}",
-                ],
-                check=False,
-                capture_output=True,
-                timeout=10,
-            )
-            return
         t = title.replace('"', '\\"')
         m = message.replace('"', '\\"')
         subprocess.run(
