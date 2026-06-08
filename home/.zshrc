@@ -117,8 +117,6 @@ setopt no_beep
 alias vim="nvim"
 alias vi="nvim"
 alias cld="claude --dangerously-skip-permissions"
-# pick a Coder workspace (questionary) and ssh in; `coder-ssh <name>` skips picker
-alias coder-ssh='uv run --project ~/projects/mutiny/scripts cssh'
 [ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
 [ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
 
