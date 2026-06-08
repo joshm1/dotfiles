@@ -54,15 +54,20 @@ export FZF_DEFAULT_COMMAND='ag -g ""'
 # Helper for conditional node.js plugin loading
 is_node_enabled() { [[ "$ANTIGEN_BUNDLE_NODE" = y* ]] }
 
-# Antidote plugin manager (installed via Homebrew)
-source "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/antidote/share/antidote/antidote.zsh"
-antidote load
+# Antidote plugin manager (Homebrew on macOS / linuxbrew on Linux). Guarded so a
+# box without antidote doesn't abort the whole shell on `source`.
+_antidote="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/antidote/share/antidote/antidote.zsh"
+if [[ -f "$_antidote" ]]; then
+  source "$_antidote"
+  antidote load
 
-# Conditional node.js plugins (set ANTIGEN_BUNDLE_NODE=y in dotfiles-config)
-if is_node_enabled; then
-  antidote bundle lukechilds/zsh-better-npm-completion
-  antidote bundle g-plane/zsh-yarn-autocompletions
+  # Conditional node.js plugins (set ANTIGEN_BUNDLE_NODE=y in dotfiles-config)
+  if is_node_enabled; then
+    antidote bundle lukechilds/zsh-better-npm-completion
+    antidote bundle g-plane/zsh-yarn-autocompletions
+  fi
 fi
+unset _antidote
 
 # Autoload custom functions from ~/.zsh/functions
 fpath=(~/.zsh/functions $fpath)
@@ -299,3 +304,5 @@ if command -v dcg &>/dev/null && command -v jq &>/dev/null; then
     printf '\033[1;33m[dcg] Hook missing from ~/.claude/settings.json — run: dcg install\033[0m\n'
   fi
 fi
+
+export PATH="$HOME/.bun/bin:$PATH"  # coder-devbox-bootstrap:bun-path
