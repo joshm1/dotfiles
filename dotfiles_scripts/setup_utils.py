@@ -192,7 +192,16 @@ SYMLINK_DIR_TAG = ".symlink-dir"
 DOTFILES_YAML = ".dotfiles.yaml"
 
 # Files to skip when traversing
-SKIP_FILES = {".DS_Store", ".git", SYMLINK_DIR_TAG, DOTFILES_YAML}
+SKIP_FILES = {
+    ".DS_Store", ".git", SYMLINK_DIR_TAG, DOTFILES_YAML,
+    # build / dependency / cache artifacts that must never be symlinked into $HOME
+    # (e.g. a Python project living inside the dotfiles tree produces these).
+    ".venv", "__pycache__", "node_modules", "build", "dist",
+    ".pytest_cache", ".ruff_cache", ".mypy_cache", ".turbo", ".coverage",
+}
+
+# Name suffixes that are likewise never symlinked (globs SKIP_FILES can't express).
+SKIP_SUFFIXES = (".pyc", ".pyo", ".egg-info")
 
 
 def _read_dotfiles_yaml(directory: Path) -> dict[str, Any]:
@@ -430,7 +439,7 @@ def symlink_home_dir(home_dir: Path) -> bool:
         active, variants = _resolve_symlinks_directives(src_dir, device_id)
 
         for src in sorted(src_dir.iterdir()):
-            if src.name in SKIP_FILES:
+            if src.name in SKIP_FILES or src.name.endswith(SKIP_SUFFIXES):
                 continue
             # Skip files that are device-keyed variants (other devices' copies,
             # or the current device's copy which is handled via `active` below).
