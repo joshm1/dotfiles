@@ -155,19 +155,7 @@ fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-if [[ -f ~/.docker/init-zsh.sh ]]; then
-  source ~/.docker/init-zsh.sh || true # Added by Docker Desktop
-fi
-
-# aws completion: lazy-loaded on first aws<tab> to avoid startup cost
-_lazy_aws_completer() {
-  unfunction _lazy_aws_completer
-  autoload -Uz bashcompinit && bashcompinit
-  complete -C "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/aws_completer" aws
-  # Re-trigger completion for the current command line
-  _bash_complete
-}
-type aws_completer &>/dev/null && compdef _lazy_aws_completer aws
+# (Docker Desktop init + Homebrew aws_completer moved to ~/.zshrc.after.mac)
 
 [ -f $HOME/.cargo/env ] && . "$HOME/.cargo/env"
 
@@ -251,8 +239,7 @@ fi
 [ -d "$HOME/.lmstudio/bin" ] && path=($path "$HOME/.lmstudio/bin")
 # End of LM Studio CLI section
 
-# Neovim nightly
-[ -d "$HOME/nvim-macos-x86_64/bin" ] && path=("$HOME/nvim-macos-x86_64/bin" $path)
+# (Neovim macOS-nightly path moved to ~/.zshrc.after.mac)
 
 # Function to get tmux session names
 function _tmux_sessions_complete() {
@@ -293,10 +280,7 @@ export OMNARA_INSTALL="$HOME/.omnara"
 
 unset _brew_prefix
 
-# GNU coreutils aliases (macOS compatibility)
-if ! command -v timeout &> /dev/null && command -v gtimeout &> /dev/null; then
-  alias timeout='gtimeout'
-fi
+# (GNU coreutils gtimeout alias moved to ~/.zshrc.after.mac)
 
 # dcg: warn if hook was silently removed from Claude Code settings
 if command -v dcg &>/dev/null && command -v jq &>/dev/null; then
