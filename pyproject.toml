@@ -27,6 +27,7 @@ setup-zsh-history = "dotfiles_scripts.setup_zsh_history:main"
 setup-gpg = "dotfiles_scripts.setup_gpg:main"
 setup-launchd = "dotfiles_scripts.setup_launchd:main"
 setup-ssh-identity = "dotfiles_scripts.setup_ssh_identity:main"
+setup-private-hook = "dotfiles_scripts.setup_private_hook:main"
 
 # Utility scripts (require rich optional dependency)
 symlink-home-files = "dotfiles_scripts.symlink_home:cli"
