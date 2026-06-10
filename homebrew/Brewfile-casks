@@ -45,6 +45,7 @@ cask 'gcloud-cli'               # Google Cloud SDK - https://cloud.google.com/sd
 cask 'ngrok'                    # Secure tunneling - https://ngrok.com
 
 # Communication
+cask 'signal'                   # Private messenger - https://signal.org
 cask 'slack'                    # Team chat - https://slack.com
 cask 'superhuman'               # Email client - https://superhuman.com
 cask 'telegram'                 # Messaging - https://telegram.org

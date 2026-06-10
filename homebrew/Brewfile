@@ -35,6 +35,7 @@ brew 'lua-language-server'      # LSP for Lua/Neovim config - https://github.com
 
 # Media
 brew 'ffmpeg'                   # Audio/video converter - https://ffmpeg.org
+brew 'mpv'                      # Media player - https://github.com/mpv-player/mpv
 
 # Search & File Tools
 brew 'fd'                       # Fast find alternative - https://github.com/sharkdp/fd
@@ -47,27 +48,35 @@ brew 'jq'                       # JSON processor - https://github.com/jqlang/jq
 brew 'miller'                   # CSV/JSON/etc processor - https://github.com/johnkerl/miller
 brew 'xsv'                      # CSV toolkit - https://github.com/BurntSushi/xsv
 brew 'yq'                       # YAML processor - https://github.com/mikefarah/yq
+brew 'duckdb'                    # Embeddable SQL OLAP database - https://github.com/duckdb/duckdb
 
 # Cloud & Infrastructure
 brew 'awscli'                   # AWS command line interface
 brew 'cloudflared'              # Cloudflare Tunnel client - https://github.com/cloudflare/cloudflared
 brew 'gcalcli'                  # Google Calendar CLI - https://github.com/insanum/gcalcli
+brew 'googleworkspace-cli'      # gws: Drive/Gmail/Calendar/Sheets CLI - https://github.com/googleworkspace/cli
 brew 'helm'                     # Kubernetes package manager - https://github.com/helm/helm
 brew 'pulumi'                   # Infrastructure as code - https://github.com/pulumi/pulumi
+brew 'temporal'                 # Temporal Server/UI CLI - https://github.com/temporalio/cli
+tap 'coder/coder'               # Tap for the coder CLI (not in homebrew/core)
+brew 'coder'                    # Self-hosted remote dev environments - https://github.com/coder/coder
 
 # Containers & VMs
 brew 'docker-compose'           # Multi-container Docker apps - https://github.com/docker/compose
+brew 'lima'                     # Linux virtual machines - https://github.com/lima-vm/lima
 
 
 # Databases
 brew 'postgresql@18'            # PostgreSQL database
 brew 'redis', restart_service: :changed  # In-memory data store
+brew 'supabase'                 # Supabase (Postgres) dev platform CLI - https://github.com/supabase/cli
 
 # Build & Task Tools
 brew 'just'                     # Command runner - https://github.com/casey/just
 
 # Testing & Performance
 brew 'k6'                       # Load testing tool - https://github.com/grafana/k6
+brew 'py-spy'                   # Sampling profiler for Python - https://github.com/benfred/py-spy
 
 # Network Tools
 brew 'socat'                    # Socket relay utility
@@ -95,6 +104,7 @@ brew 'terminal-notifier'        # Send macOS notifications with click actions - 
 # AI & Automation
 brew 'agent-browser'            # Browser automation CLI for AI agents - https://github.com/anthropics/agent-browser
 brew 'ralph-orchestrator'       # Multi-agent orchestration framework - https://github.com/ralph-group/ralph-orchestrator
+brew 'rtk'                      # Rust Token Killer: token-optimized CLI proxy (see ~/.claude/CLAUDE.md)
 
 # Linting & Formatting
 brew 'ktlint'                   # Kotlin linter with built-in formatter - https://github.com/pinterest/ktlint
