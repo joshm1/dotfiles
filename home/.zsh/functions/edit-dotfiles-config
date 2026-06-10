@@ -1,3 +1,10 @@
+# Pick a ~/.config/dotfiles/.dotfiles-config* file and open it in $EDITOR.
+#
+# Use a zsh glob + `print -l` rather than `ls`: `ls` is aliased to
+# `eza --color=always --icons=always`, whose ANSI colors, icon glyphs, and
+# `→ target` symlink decorations leak into fzf (shown as raw escape codes
+# without --ansi) AND pollute the selected value so it isn't a usable path.
 local dir="$HOME/.config/dotfiles"
-local file=$(ls -1 "$dir"/.dotfiles-config* 2>/dev/null | fzf --tac)
+local file
+file=$(print -l -- "$dir"/.dotfiles-config*(N) | fzf --tac --prompt='dotfiles-config> ') || return
 [[ -n "$file" ]] && ${EDITOR:-vim} "$file"
