@@ -166,10 +166,17 @@ def cli() -> int:
     # gracefully skips gstack/setup if bun isn't installed yet.
     run_setup_module("setup_gstack")
 
-    # Phase 13: GPG keys (optional, skips if no manifest)
+    # Phase 13: Private per-device setup hooks. Generic extension point —
+    # runs every executable in ~/.dotfiles-private/setup-hooks/ (e.g. the
+    # cubic CLI installer, gated to mutiny machines). No-op if the private
+    # tree or the hooks dir is absent. Runs after symlinks + homebrew so
+    # hooks can rely on ~/.config/dotfiles/* and system tools being present.
+    run_setup_module("setup_private_hook")
+
+    # Phase 14: GPG keys (optional, skips if no manifest)
     run_setup_module("setup_gpg")
 
-    # Phase 14: launchd agents (e.g. hourly detach-cloud-cache)
+    # Phase 15: launchd agents (e.g. hourly detach-cloud-cache)
     run_setup_module("setup_launchd")
 
     print_header("Setup Complete!")
