@@ -13,7 +13,7 @@ cask 'alt-tab'                  # Windows-style alt-tab window switcher - https:
 # cask 'alfred'                   # Spotlight replacement & automation - https://www.alfredapp.com
 # cask 'bettertouchtool'        # Advanced input customization - https://folivora.ai - replaced with Raycast Window Management
 cask 'cleanshot'                # Screen capturing tool - https://getcleanshot.com
-cask 'linear-linear'            # Project management & issue tracking - https://linear.app
+cask 'linear'                   # Project management & issue tracking - https://linear.app
 cask 'loom'                     # Screen recording & sharing - https://www.loom.com
 cask 'notion'                   # Notes & collaboration - https://www.notion.so
 cask 'notion-calendar'          # Calendar for professionals - https://www.notion.com/product/calendar
@@ -27,6 +27,7 @@ cask 'chatgpt'                  # OpenAI's official ChatGPT desktop app - https:
 cask 'claude'                   # Anthropic's official Claude AI desktop app - https://claude.ai
 cask 'cmux'                     #
 cask 'cursor'                   # AI-powered code editor - https://www.cursor.com
+cask 'cursor-cli'               # Cursor command-line agent (cursor-agent) - https://cursor.com
 cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
 cask 'ghostty'                  # Fast, native terminal emulator - https://github.com/ghostty-org/ghostty
 cask 'lm-studio'                # Run local LLMs - https://lmstudio.ai
