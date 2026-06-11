@@ -55,7 +55,8 @@ def setup_git_ai() -> bool:
 
     print_step("Installing git-ai...")
     try:
-        script = urllib.request.urlopen(_GIT_AI_INSTALL).read()
+        req = urllib.request.Request(_GIT_AI_INSTALL, headers={"User-Agent": "curl/8.0"})
+        script = urllib.request.urlopen(req).read()
         subprocess.run(["bash"], input=script, check=True)
         print_success("git-ai installed")
         return True
