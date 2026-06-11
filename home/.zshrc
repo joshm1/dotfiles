@@ -290,3 +290,7 @@ if command -v dcg &>/dev/null && command -v jq &>/dev/null; then
 fi
 
 export PATH="$HOME/.bun/bin:$PATH"  # coder-devbox-bootstrap:bun-path
+
+# Added by LM Studio CLI (lms)
+[ -d $HOME/.lmstudio ] && export PATH="$PATH:$HOME/.lmstudio/bin"
+# End of LM Studio CLI section
