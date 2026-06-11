@@ -4,11 +4,11 @@
 Reads ``SSH_IDENTITY_BACKEND`` from the hierarchical
 ``~/.config/dotfiles/.dotfiles-config*`` files. Two valid values:
 
-- ``1password`` (default) — links to ``config.identity.1password``, which
-  sets ``IdentityAgent`` for each host.
-- ``disk-keys`` — links to ``config.identity.disk-keys``, which uses
-  ``IdentityFile`` referencing ``~/.ssh/id_*``. Keys are synced from the
+- ``disk-keys`` (default) — links to ``config.identity.disk-keys``, which
+  uses ``IdentityFile`` referencing ``~/.ssh/id_*``. Keys are synced from the
   private-dotfiles shared bucket via ``sync-private-runtime``.
+- ``1password`` — links to ``config.identity.1password``, which sets
+  ``IdentityAgent`` for each host (1Password SSH agent serves the keys).
 
 On first switch to ``disk-keys``, kicks ``sync-private-runtime --pull`` so
 keys are in place before SSH is first used. On switch back to ``1password``,
@@ -25,7 +25,9 @@ import sys
 from pathlib import Path
 
 from dotfiles_scripts.setup_utils import (
+    DEFAULT_SSH_IDENTITY_BACKEND,
     PRIVATE_DOTFILES,
+    SSH_IDENTITY_BACKENDS,
     print_header,
     print_step,
     print_success,
@@ -33,8 +35,8 @@ from dotfiles_scripts.setup_utils import (
     read_dotfiles_config,
 )
 
-VALID_BACKENDS = ("1password", "disk-keys")
-DEFAULT_BACKEND = "1password"
+VALID_BACKENDS = SSH_IDENTITY_BACKENDS
+DEFAULT_BACKEND = DEFAULT_SSH_IDENTITY_BACKEND
 
 
 def _ssh_dir() -> Path:
@@ -93,6 +95,57 @@ def _pull_keys_now() -> bool:
         print_warning(
             f"sync-private-runtime --pull exited {result.returncode}; "
             "keys may not be in place yet"
+        )
+        return False
+    return True
+
+
+def _pull_keys_from_op() -> bool:
+    """Best-effort ``pull-ssh-keys-from-op`` — fetch disk keys from 1Password.
+
+    Preferred over the shared bucket: private keys come straight from the
+    source of truth and never touch cloud storage. Requires the 1Password CLI
+    to be installed *and* signed in — both checked up front so an unconfigured
+    machine degrades quietly to the shared-bucket fallback (``_pull_keys_now``)
+    instead of erroring. ``op`` needs an interactive unlock, so on a fresh
+    bootstrap (before the user has signed into 1Password) this returns False;
+    re-run ``setup-ssh-identity`` once signed in to pull from op.
+    """
+    if shutil.which("op") is None:
+        print_step("1Password CLI (op) not installed yet; skipping op key pull")
+        return False
+    # ``op read`` triggers an interactive Touch ID unlock — ``op account list``
+    # succeeds even when the vault is *locked*, so it can't tell us whether a
+    # read would hang. Gate on a TTY instead: unattended runs skip op (falling
+    # back to the shared bucket) rather than blocking on a prompt nobody answers.
+    if not sys.stdin.isatty():
+        print_step(
+            "non-interactive shell; skipping the 1Password pull (needs Touch ID). "
+            "Run `uv run setup-ssh-identity` in a terminal to pull from op."
+        )
+        return False
+    # Lazy import: only needed on the disk-keys path.
+    from dotfiles_scripts.op_ssh import ensure_op_signed_in
+
+    if not ensure_op_signed_in():
+        print_step(
+            "After `op signin`, run `uv run setup-ssh-identity` to pull keys from 1Password."
+        )
+        return False
+    print_step("Pulling SSH keys from 1Password (op)")
+    try:
+        result = subprocess.run(
+            ["uv", "run", "pull-ssh-keys-from-op"],
+            check=False,
+            timeout=180,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print_warning(f"pull-ssh-keys-from-op invocation failed: {exc}")
+        return False
+    if result.returncode != 0:
+        print_warning(
+            f"pull-ssh-keys-from-op exited {result.returncode}; "
+            "falling back to the shared bucket"
         )
         return False
     return True
@@ -165,7 +218,9 @@ def main() -> int:
             for f in ssh_dir.iterdir()
             if f.name.startswith("id_") and not f.name.endswith(".pub")
         )
-        if not has_local_private_key:
+        # No on-disk key yet → fetch one. 1Password first (source of truth),
+        # shared bucket as fallback.
+        if not has_local_private_key and not _pull_keys_from_op():
             _pull_keys_now()
         _tighten_private_key_perms(ssh_dir)
     else:  # 1password

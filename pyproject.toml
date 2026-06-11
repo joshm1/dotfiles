@@ -41,6 +41,7 @@ sync-private-runtime = "dotfiles_scripts.sync_private_runtime:main"
 setup-private-repo = "dotfiles_scripts.setup_private_repo:main"
 setup-gstack = "dotfiles_scripts.setup_gstack:cli"
 export-ssh-to-private-dotfiles = "dotfiles_scripts.export_ssh_to_private_dotfiles:main"
+pull-ssh-keys-from-op = "dotfiles_scripts.pull_ssh_keys_from_op:main"
 
 [tool.uv]
 package = true

@@ -48,6 +48,7 @@ import click
 
 from dotfiles_scripts.detach_cloud_cache import DEFAULT_PATTERNS as CACHE_DIR_PATTERNS
 from dotfiles_scripts.setup_utils import (
+    DEFAULT_SSH_IDENTITY_BACKEND,
     DROPBOX_DIR,
     PRIVATE_DOTFILES,
     gdrive_candidates,
@@ -376,9 +377,10 @@ def _ssh_backend() -> str:
     """Return the SSH identity backend for this machine.
 
     Reads ``SSH_IDENTITY_BACKEND`` from the hierarchical
-    ``~/.config/dotfiles/.dotfiles-config*`` files. Defaults to ``1password``.
+    ``~/.config/dotfiles/.dotfiles-config*`` files. Defaults to
+    ``DEFAULT_SSH_IDENTITY_BACKEND`` (shared with setup_ssh_identity).
     """
-    return read_dotfiles_config("SSH_IDENTITY_BACKEND") or "1password"
+    return read_dotfiles_config("SSH_IDENTITY_BACKEND") or DEFAULT_SSH_IDENTITY_BACKEND
 
 
 def _repo_root() -> Path | None:
