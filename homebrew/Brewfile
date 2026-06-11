@@ -114,6 +114,7 @@ brew 'librsvg'                  # SVG rendering library - https://gitlab.gnome.o
 brew 'bzip2'
 brew 'grep'
 brew 'ncurses'
+brew 'libyaml'
 brew 'readline'
 brew 'rsync'
 brew 'p7zip'                    # 7-Zip file archiver - https://github.com/p7zip-project/p7zip
