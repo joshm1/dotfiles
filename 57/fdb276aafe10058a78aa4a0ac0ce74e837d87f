@@ -1,0 +1,19 @@
+"home/Library/Application Support/com.mitchellh.ghostty/config"
+  s_dfb9d53fefc1fc::t_be9aa626d106b2 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "57fdb276aafe10058a78aa4a0ac0ce74e837d87f",
+  "prompts": {},
+  "sessions": {
+    "s_dfb9d53fefc1fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "54e66770-cb47-42de-bac5-011de0b45c1e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
