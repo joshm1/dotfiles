@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "/Users/josh/.local/bin/dcg",
+        "powershell": "/Users/josh/.local/bin/dcg",
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}
