@@ -1,0 +1,19 @@
+dotfiles_scripts/symlink_home.py
+  s_795cff401be060::t_6ce60403f4abd4 3,14,25-27,38-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "49d513b0bbd23eac7ad0732b1b3b5d039448ad5e",
+  "prompts": {},
+  "sessions": {
+    "s_795cff401be060": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30b755c4-1f0e-4e14-86a1-541acf34f4b0",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
