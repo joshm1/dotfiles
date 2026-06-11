@@ -280,6 +280,14 @@ def _read_device_id() -> str:
     return ""
 
 
+# SSH identity backend selection (see setup_ssh_identity.py). Single source of
+# truth shared by setup_ssh_identity (which symlink to link) and
+# sync_private_runtime (whether to sync on-disk id_* keys). Keep these in sync
+# with the ``config.identity.<backend>`` variant files in ~/.ssh.
+SSH_IDENTITY_BACKENDS = ("1password", "disk-keys")
+DEFAULT_SSH_IDENTITY_BACKEND = "disk-keys"
+
+
 # ``KEY=value`` / ``export KEY=value`` lines in the .dotfiles-config files,
 # with optional surrounding quotes. Matches what shell sourcing produces
 # without actually executing the file (so we don't need a subprocess).
@@ -329,6 +337,37 @@ def read_dotfiles_config(key: str) -> str | None:
                 raw = raw[1:-1]
             value = raw
     return value
+
+
+def write_dotfiles_config(key: str, value: str) -> Path:
+    """Persist ``export KEY=value`` into the shared base ``.dotfiles-config``.
+
+    Updates an existing *active* assignment for ``key`` in place; otherwise
+    appends it (commented example lines are left untouched, matching
+    ``read_dotfiles_config``'s parsing). Writes through the
+    ``~/.config/dotfiles/.dotfiles-config`` symlink to whatever backs it (the
+    cloud copy today, the git clone after ``setup-private-repo``). Returns the
+    file path written.
+    """
+    base = Path.home() / ".config" / "dotfiles" / ".dotfiles-config"
+    base.parent.mkdir(parents=True, exist_ok=True)
+    new_line = f"export {key}={value}"
+    existing = base.read_text(encoding="utf-8") if base.is_file() else ""
+    lines = existing.splitlines()
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = _CONFIG_LINE_RE.match(line)
+        if match is not None and match.group(1) == key:
+            lines[i] = new_line
+            break
+    else:
+        if lines and lines[-1].strip():
+            lines.append("")
+        lines.append(new_line)
+    base.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return base
 
 
 def get_private_repo_path() -> Path:

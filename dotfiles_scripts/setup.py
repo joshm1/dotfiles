@@ -173,8 +173,17 @@ def cli() -> int:
     # hooks can rely on ~/.config/dotfiles/* and system tools being present.
     run_setup_module("setup_private_hook")
 
-    # Phase 14: GPG keys (optional, skips if no manifest)
-    run_setup_module("setup_gpg")
+    # Phase 14: Private dotfiles repo (GitHub + GDrive-runtime hybrid). Prompts
+    # for the one-time per-machine config when interactive; skips gracefully
+    # when unconfigured, non-interactive, or gh isn't authenticated. Called
+    # directly rather than via run_setup_module because its main() is a click
+    # command (which would otherwise parse the orchestrator's argv).
+    try:
+        from dotfiles_scripts import setup_private_repo
+
+        setup_private_repo.run_as_phase()
+    except Exception as e:
+        print_error(f"Failed to run setup_private_repo: {e}")
 
     # Phase 15: launchd agents (e.g. hourly detach-cloud-cache)
     run_setup_module("setup_launchd")

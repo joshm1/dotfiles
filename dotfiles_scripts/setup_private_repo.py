@@ -32,6 +32,7 @@ are left in place so a re-bootstrap is fast.
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -40,6 +41,7 @@ from pathlib import Path
 import click
 
 from dotfiles_scripts.setup_utils import (
+    DOTFILES_REPO,
     PRIVATE_DOTFILES,
     ensure_private_dotfiles_symlink,
     gdrive_candidates,
@@ -50,6 +52,8 @@ from dotfiles_scripts.setup_utils import (
     print_step,
     print_success,
     print_warning,
+    read_dotfiles_config,
+    write_dotfiles_config,
 )
 from dotfiles_scripts.sync_private_runtime import (
     GDRIVE_RUNTIME_DIR_NAME,
@@ -754,6 +758,217 @@ def _install_launch_agents() -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Orchestrator phase + shared bootstrap core
+# ---------------------------------------------------------------------------
+
+
+def _bootstrap(force: bool, skip_confirm: bool) -> int:
+    """Run the migration once identifiers are resolved. Returns an exit code.
+
+    Shared by the standalone ``cli()`` and the ``./setup`` orchestrator phase.
+    """
+    print_header("Bootstrap private dotfiles repo")
+
+    if not _preflight(force):
+        return 1
+
+    if not skip_confirm:
+        click.confirm(
+            f"Migrate {PRIVATE_DOTFILES} from GDrive-only to a GitHub clone "
+            f"at {PRIVATE_DOTFILES_REPO}? Old GDrive copy stays intact as backup.",
+            abort=True,
+            default=True,
+        )
+
+    # Step 1–2: ensure the repo exists on GitHub. Skip if we already have a
+    # valid local clone of it (the user pre-cloned and gh may not be authed).
+    if _existing_clone_is_ours():
+        print_step(f"existing local clone of {GH_FULL} found; skipping gh repo probe")
+    elif _gh_repo_exists():
+        print_step(f"{GH_FULL} already exists on GitHub")
+    elif not _gh_repo_create():
+        return 1
+
+    # Step 3: clone (or accept existing clone if it points at the right remote).
+    if PRIVATE_DOTFILES_REPO.exists():
+        if _existing_clone_is_ours():
+            print_step(f"using existing clone at {PRIVATE_DOTFILES_REPO}")
+        elif force:
+            print_warning(f"--force given; clearing {PRIVATE_DOTFILES_REPO}")
+            shutil.rmtree(PRIVATE_DOTFILES_REPO)
+            if not _git_clone():
+                return 1
+        else:
+            print_error(f"{PRIVATE_DOTFILES_REPO} unexpectedly present; use --force.")
+            return 1
+    elif not _git_clone():
+        return 1
+
+    # Step 4: first-machine migration vs subsequent pull. The clone tells us
+    # everything: an empty local checkout means this machine is the first one
+    # to populate the repo (subsequent clones would arrive with content).
+    home_dir_in_repo = PRIVATE_DOTFILES_REPO / "home"
+    is_first_machine = not home_dir_in_repo.is_dir() or not any(home_dir_in_repo.iterdir())
+    if is_first_machine:
+        # Source = the existing GDrive symlink target.
+        source_root = PRIVATE_DOTFILES.resolve()
+        copied = _copy_into_repo(source_root)
+        _write_gitignore()
+        if copied == 0:
+            print_warning("no files matched include globs; nothing to migrate")
+        if not _initial_commit_and_push():
+            return 1
+    else:
+        print_step("repo already has content on origin; nothing to migrate from GDrive")
+
+    # Step 5: snapshot + retarget the symlink
+    _save_symlink_snapshot()
+    _retarget_symlink()
+
+    # Step 6: GDrive runtime root + initial seed
+    _seed_runtime_root()
+
+    # Step 7: install + load LaunchAgents
+    if sys.platform == "darwin":
+        _install_launch_agents()
+    else:
+        print_warning("non-macOS; skipping launchd setup")
+
+    print()
+    print_success("bootstrap complete")
+    print_step("verify: readlink ~/.dotfiles-private")
+    print_step("verify: cd ~/.dotfiles-private && git status")
+    print_step("verify: check-private-repo --status")
+    print_step("verify: sync-private-runtime --status")
+    return 0
+
+
+def _derive_default_owner() -> str | None:
+    """Best-effort GitHub owner parsed from the *public* dotfiles remote.
+
+    Used only to suggest prompt defaults — never hardcodes a username. Returns
+    None if the remote can't be read or parsed.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(DOTFILES_REPO), "remote", "get-url", "origin"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+    # git@github.com:owner/repo.git  |  https://github.com/owner/repo.git
+    match = re.search(r"[:/]([^/:]+)/[^/]+?(?:\.git)?/?$", result.stdout.strip())
+    return match.group(1) if match else None
+
+
+def ensure_private_repo_config(interactive: bool) -> bool:
+    """Ensure the two required config values exist; prompt + persist if missing.
+
+    Returns True when both ``PRIVATE_DOTFILES_REPO_GH`` and
+    ``PRIVATE_DOTFILES_REPO_PATH`` are set (already, or after prompting).
+    Returns False when a value is missing and we can't prompt (non-interactive),
+    so the orchestrator can skip the migration without failing the whole run.
+    """
+    gh = read_dotfiles_config("PRIVATE_DOTFILES_REPO_GH")
+    path = read_dotfiles_config("PRIVATE_DOTFILES_REPO_PATH")
+    if gh and path:
+        return True
+    if not interactive:
+        print_warning(
+            "private dotfiles repo not configured "
+            "(PRIVATE_DOTFILES_REPO_GH / PRIVATE_DOTFILES_REPO_PATH unset); skipping. "
+            "Run `uv run setup-private-repo` in a terminal to configure it."
+        )
+        return False
+
+    owner = _derive_default_owner()
+    print_step("Configure the GitHub-backed private dotfiles repo (one-time).")
+    if not gh:
+        default_gh = f"{owner}/dotfiles-private" if owner else None
+        gh = click.prompt(
+            "  GitHub repo for private dotfiles (owner/name)",
+            default=default_gh,
+            show_default=default_gh is not None,
+        ).strip()
+        while "/" not in gh:
+            gh = click.prompt("  Expected 'owner/name', e.g. you/dotfiles-private").strip()
+        write_dotfiles_config("PRIVATE_DOTFILES_REPO_GH", gh)
+        print_success("saved PRIVATE_DOTFILES_REPO_GH to .dotfiles-config")
+    if not path:
+        default_path = f"$HOME/projects/{owner}/dotfiles-private" if owner else None
+        path = click.prompt(
+            "  Local clone path",
+            default=default_path,
+            show_default=default_path is not None,
+        ).strip()
+        write_dotfiles_config("PRIVATE_DOTFILES_REPO_PATH", path)
+        print_success("saved PRIVATE_DOTFILES_REPO_PATH to .dotfiles-config")
+    return True
+
+
+def _apply_ssh_identity() -> None:
+    """Run setup_ssh_identity after migration (best-effort; never aborts setup)."""
+    try:
+        from dotfiles_scripts import setup_ssh_identity
+
+        setup_ssh_identity.main()
+    except Exception as exc:  # noqa: BLE001 — provisioning must never kill setup
+        print_warning(f"setup_ssh_identity after migration failed: {exc}")
+
+
+def _symlink_points_at_clone() -> bool:
+    """True if ~/.dotfiles-private already resolves to the local clone."""
+    if not PRIVATE_DOTFILES.is_symlink():
+        return False
+    try:
+        return PRIVATE_DOTFILES.resolve() == PRIVATE_DOTFILES_REPO.resolve()
+    except OSError:
+        return False
+
+
+def run_as_phase() -> bool:
+    """``./setup`` orchestrator entry point.
+
+    Prompts for the required config when run interactively, skips gracefully
+    when it can't (non-interactive, missing config, malformed config, or the
+    user declining the confirmation), and never aborts the overall setup run.
+    """
+    interactive = sys.stdin.isatty() and sys.stdout.isatty()
+    if not ensure_private_repo_config(interactive):
+        return True  # not configured + can't prompt → skip, not a failure
+
+    try:
+        _set_gh_identifier(_resolve_gh_full(None))
+        _set_private_repo_path()
+    except SystemExit:
+        # get_private_repo_* exits on malformed config; don't take setup down.
+        return True
+
+    if _existing_clone_is_ours() and _symlink_points_at_clone():
+        print_step("private dotfiles already migrated to the GitHub clone; skipping")
+        return True
+
+    print_step(f"private repo: {GH_FULL}")
+    print_step(f"local clone:  {PRIVATE_DOTFILES_REPO}")
+    try:
+        migrated = _bootstrap(force=False, skip_confirm=False) == 0
+    except click.Abort:
+        print_warning("private dotfiles migration skipped")
+        return True
+
+    if migrated:
+        # The migration just placed the config.identity variants on disk
+        # (~/.ssh now points at the clone). Re-apply the SSH identity backend
+        # now so disk-keys provisioning — including the 1Password op pull —
+        # runs in this same bootstrap pass instead of needing a second ./setup.
+        # Safe to run after the orchestrator's earlier setup_ssh_identity call,
+        # which on a fresh machine ran before the variants existed.
+        _apply_ssh_identity()
+    return migrated
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -800,79 +1015,7 @@ def cli(
     if rollback:
         sys.exit(_rollback_symlink())
 
-    print_header("Bootstrap private dotfiles repo")
-
-    if not _preflight(force):
-        sys.exit(1)
-
-    if not skip_confirm:
-        click.confirm(
-            f"Migrate {PRIVATE_DOTFILES} from GDrive-only to a GitHub clone "
-            f"at {PRIVATE_DOTFILES_REPO}? Old GDrive copy stays intact as backup.",
-            abort=True,
-            default=True,
-        )
-
-    # Step 1–2: ensure the repo exists on GitHub. Skip if we already have a
-    # valid local clone of it (the user pre-cloned and gh may not be authed).
-    if _existing_clone_is_ours():
-        print_step(f"existing local clone of {GH_FULL} found; skipping gh repo probe")
-    elif _gh_repo_exists():
-        print_step(f"{GH_FULL} already exists on GitHub")
-    elif not _gh_repo_create():
-        sys.exit(1)
-
-    # Step 3: clone (or accept existing clone if it points at the right remote).
-    if PRIVATE_DOTFILES_REPO.exists():
-        if _existing_clone_is_ours():
-            print_step(f"using existing clone at {PRIVATE_DOTFILES_REPO}")
-        elif force:
-            print_warning(f"--force given; clearing {PRIVATE_DOTFILES_REPO}")
-            shutil.rmtree(PRIVATE_DOTFILES_REPO)
-            if not _git_clone():
-                sys.exit(1)
-        else:
-            print_error(f"{PRIVATE_DOTFILES_REPO} unexpectedly present; use --force.")
-            sys.exit(1)
-    elif not _git_clone():
-        sys.exit(1)
-
-    # Step 4: first-machine migration vs subsequent pull. The clone tells us
-    # everything: an empty local checkout means this machine is the first one
-    # to populate the repo (subsequent clones would arrive with content).
-    home_dir_in_repo = PRIVATE_DOTFILES_REPO / "home"
-    is_first_machine = not home_dir_in_repo.is_dir() or not any(home_dir_in_repo.iterdir())
-    if is_first_machine:
-        # Source = the existing GDrive symlink target.
-        source_root = PRIVATE_DOTFILES.resolve()
-        copied = _copy_into_repo(source_root)
-        _write_gitignore()
-        if copied == 0:
-            print_warning("no files matched include globs; nothing to migrate")
-        if not _initial_commit_and_push():
-            sys.exit(1)
-    else:
-        print_step("repo already has content on origin; nothing to migrate from GDrive")
-
-    # Step 5: snapshot + retarget the symlink
-    _save_symlink_snapshot()
-    _retarget_symlink()
-
-    # Step 6: GDrive runtime root + initial seed
-    _seed_runtime_root()
-
-    # Step 7: install + load LaunchAgents
-    if sys.platform == "darwin":
-        _install_launch_agents()
-    else:
-        print_warning("non-macOS; skipping launchd setup")
-
-    print()
-    print_success("bootstrap complete")
-    print_step("verify: readlink ~/.dotfiles-private")
-    print_step("verify: cd ~/.dotfiles-private && git status")
-    print_step("verify: check-private-repo --status")
-    print_step("verify: sync-private-runtime --status")
+    sys.exit(_bootstrap(force, skip_confirm))
 
 
 def main() -> None:
