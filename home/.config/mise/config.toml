@@ -2,3 +2,6 @@
 bun = "latest"
 node = "22"
 python = "3.13"
+
+# npm-global CLIs (no Homebrew formula)
+"npm:@cubic-dev-ai/cli" = "latest"  # cubic: AI code review CLI for Mutiny - https://cubic.dev
