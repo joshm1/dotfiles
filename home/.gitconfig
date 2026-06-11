@@ -173,3 +173,6 @@
 	helper = !/opt/homebrew/bin/gh auth git-credential
 [safe]
 	directory = *
+[trace2]
+	eventTarget = af_unix:stream:/Users/josh/.git-ai/internal/daemon/trace2.sock
+	eventNesting = 10

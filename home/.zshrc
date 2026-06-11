@@ -294,3 +294,6 @@ export PATH="$HOME/.bun/bin:$PATH"  # coder-devbox-bootstrap:bun-path
 # Added by LM Studio CLI (lms)
 [ -d $HOME/.lmstudio ] && export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
+
+# Added by git-ai installer on Thu Jun 11 15:21:34 EDT 2026
+export PATH="/Users/josh/.git-ai/bin:$PATH"
