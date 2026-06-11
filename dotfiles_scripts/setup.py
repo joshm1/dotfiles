@@ -188,6 +188,9 @@ def cli() -> int:
     # Phase 15: launchd agents (e.g. hourly detach-cloud-cache)
     run_setup_module("setup_launchd")
 
+    # Runs after setup_homebrew so codex is available for the security audit
+    run_setup_module("setup_coding_tools")
+
     print_header("Setup Complete!")
     print("Language runtimes (Python, Node, Ruby) are managed by mise.")
     print("Run 'mise doctor' to verify your setup.")
