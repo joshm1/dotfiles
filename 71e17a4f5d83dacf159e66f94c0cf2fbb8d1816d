@@ -1,0 +1,26 @@
+dotfiles_scripts/setup.py
+  s_795cff401be060::t_a99a2aa2e2a2f3 191,193
+  s_795cff401be060::t_9956e5fc5da258 192
+dotfiles_scripts/setup_coding_tools.py
+  s_795cff401be060::t_ed2732dd63eac1 1-107
+.github/hooks/dcg.json
+  s_795cff401be060::t_004cc49c052101 1-14
+pyproject.toml
+  s_795cff401be060::t_94c438aa902255 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "71e17a4f5d83dacf159e66f94c0cf2fbb8d1816d",
+  "prompts": {},
+  "sessions": {
+    "s_795cff401be060": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "30b755c4-1f0e-4e14-86a1-541acf34f4b0",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
