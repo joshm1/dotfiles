@@ -1,0 +1,43 @@
+dotfiles_scripts/setup_utils.py
+  s_f2b210f5174a27::t_73b52060852064 5,13-22
+  s_f2b210f5174a27::t_6f9dee24cb1864 23
+dotfiles_scripts/setup_homebrew.py
+  s_f2b210f5174a27::t_b512fb5fcdcca2 140-143
+  s_f2b210f5174a27::t_d9f054779d2ccb 17
+dotfiles_scripts/setup_neovim.py
+  s_f2b210f5174a27::t_d383d80539083e 68
+  s_f2b210f5174a27::t_f164786c5b0eb3 25-35,41
+setup
+  s_f2b210f5174a27::t_0c35a087b6b5e9 11-23,27,29-37
+dotfiles_scripts/setup_device_id.py
+  s_f2b210f5174a27::t_0f423aca813aa0 197-204
+  s_f2b210f5174a27::t_ff24275dea9de6 39-56
+  s_f2b210f5174a27::t_4034f497ecd9d9 6,8
+dotfiles_scripts/setup_zsh.py
+  s_f2b210f5174a27::t_e7a435b7cd6ee2 6,14,28-29,31-45,47-48,61,66-68,70-77,89-93,97
+dotfiles_scripts/setup_mise.py
+  s_f2b210f5174a27::t_b3fc83844e9470 117-122
+  s_f2b210f5174a27::t_812f26eab1b993 77-92
+dotfiles_scripts/setup_vim.py
+  s_f2b210f5174a27::t_fb821b396c7b59 33-37
+dotfiles_scripts/setup_fzf.py
+  s_f2b210f5174a27::t_89310dd8e2c806 73-75,78
+  s_f2b210f5174a27::t_53c97e5efbdb1a 7,13,25-48
+  s_f2b210f5174a27::t_25a5df534e2028 49-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a09f15c1ca8036cadf2d35a1522195dd102b9cd5",
+  "prompts": {},
+  "sessions": {
+    "s_f2b210f5174a27": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d454ef3-dd80-4f56-97c8-7355e4ab58c1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
