@@ -1,0 +1,21 @@
+dotfiles_scripts/setup_coding_tools.py
+  s_1e0b85691fc33c::t_daae8a3bdd22f7 2,6,25-44
+  s_1e0b85691fc33c::t_ba9103a9e6c1b9 121-201,207
+  s_1e0b85691fc33c::t_275b9c86de3490 45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d42956a4a254b72d985c9096ed46f887eeb4c82e",
+  "prompts": {},
+  "sessions": {
+    "s_1e0b85691fc33c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ba6033a-4025-4452-ae49-fe43fcf6cbdd",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
