@@ -263,6 +263,18 @@ def wait_for_cloud() -> Path | None:
     if home_dir is not None:
         return home_dir
 
+    # Headless (server / CI / container): nobody can answer the prompt and no
+    # cloud provider is mounted. Skip gracefully rather than looping on input()
+    # (which EOFs → SystemExit and would take the whole setup run down). The
+    # private tree, when present, is wired by pointing ~/.dotfiles-private at a
+    # local git clone instead of a cloud mount.
+    if not sys.stdin.isatty():
+        print_warning(
+            "~/.dotfiles-private does not resolve and no cloud provider is mounted; "
+            "skipping cloud-synced dotfiles (non-interactive)"
+        )
+        return None
+
     print_warning("~/.dotfiles-private is not pointing at a synced cloud directory")
     print("\nExpected the symlink to resolve to one of:")
     print(f"  {Path.home()}/Library/CloudStorage/GoogleDrive-*/My Drive/dotfiles-private")
@@ -327,6 +339,12 @@ def check_cloud_sync(home_dir: Path) -> bool:
     print(f"    1. Open Finder and navigate to {home_dir.parent}")
     print("    2. Select all files (Cmd+A)")
     print("    3. Right-click → 'Make Available Offline' (Dropbox) or 'Available offline' (Google Drive)")
+
+    # Nothing to prompt for on a headless box — the 0-byte-placeholder problem
+    # only exists behind a streaming cloud provider, not a git clone.
+    if not sys.stdin.isatty():
+        print_warning("non-interactive; continuing without waiting for cloud sync")
+        return False
 
     while True:
         try:
