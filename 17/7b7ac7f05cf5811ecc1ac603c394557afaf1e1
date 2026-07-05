@@ -1,0 +1,19 @@
+home/.gitconfig
+  s_f2b210f5174a27::t_4afc39fd530e13 170,173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "177b7ac7f05cf5811ecc1ac603c394557afaf1e1",
+  "prompts": {},
+  "sessions": {
+    "s_f2b210f5174a27": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d454ef3-dd80-4f56-97c8-7355e4ab58c1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
