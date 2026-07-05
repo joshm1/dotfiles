@@ -1,0 +1,20 @@
+dotfiles_scripts/setup_dropbox.py
+  s_f2b210f5174a27::t_67af539de7c8e8 343-348
+  s_f2b210f5174a27::t_aca1fe0bfc842f 266-277
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ce39dd23b40abc23fedc51a866a6c3dfe76480dc",
+  "prompts": {},
+  "sessions": {
+    "s_f2b210f5174a27": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d454ef3-dd80-4f56-97c8-7355e4ab58c1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
