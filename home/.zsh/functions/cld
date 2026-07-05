@@ -1,0 +1,8 @@
+# Launch Claude Code with permission prompts skipped. Inside a cmux workspace,
+# use the cmux-integrated team launcher so the session is tracked as a cmux
+# agent; otherwise run plain `claude`. Extra args pass through either way.
+if [[ -n "$CMUX_WORKSPACE_ID" ]] && command -v cmux &>/dev/null; then
+  cmux claude-teams --dangerously-skip-permissions "$@"
+else
+  claude --dangerously-skip-permissions "$@"
+fi

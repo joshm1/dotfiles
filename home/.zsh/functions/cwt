@@ -3,6 +3,45 @@ if ! git rev-parse --git-dir &>/dev/null; then
   return 1
 fi
 
+if [[ $# -eq 1 ]]; then
+  local value="$1"
+  local name="${value//\//-}"
+
+  # Resolve the main worktree (parent of the common .git dir) so new
+  # worktrees nest under it even when run from another worktree.
+  local common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+  local main_worktree="${common_dir%/.git}"
+
+  local wt_root="$main_worktree/.worktrees"
+  mkdir -p "$wt_root"
+
+  local dir="$wt_root/$name"
+  if [[ -d "$dir" ]]; then
+    # Worktree already exists — switch to it instead of re-creating.
+    cd "$dir"
+    _cwt_cmux_rename "$value" &!
+    return 0
+  fi
+  if git -C "$main_worktree" rev-parse --verify --quiet "$value" &>/dev/null; then
+    # Existing local ref (branch, tag, or SHA): check it out as-is.
+    git -C "$main_worktree" worktree add "$dir" "$value" || return 1
+  elif git -C "$main_worktree" show-ref --verify --quiet "refs/remotes/origin/$value"; then
+    # Branch lives only on origin — e.g. pushed from another worktree, which
+    # updates the shared remote-tracking ref even before we have a local branch.
+    # Reuse it with a local tracking branch instead of forking a new one.
+    git -C "$main_worktree" worktree add -b "$value" "$dir" "origin/$value" || return 1
+  else
+    # New branch: fork it from the repo's trunk (default) branch.
+    local trunk=$(_cwt_trunk "$main_worktree")
+    local base="origin/$trunk"
+    git -C "$main_worktree" rev-parse --verify --quiet "$base" &>/dev/null || base="$trunk"
+    git -C "$main_worktree" worktree add -b "$value" "$dir" "$base" || return 1
+  fi
+  cd "$dir"
+  _cwt_cmux_rename "$value" &!   # detached: never block cwt on the cmux/Linear lookup
+  return 0
+fi
+
 local worktrees=$(git worktree list)
 local count=$(echo "$worktrees" | wc -l | tr -d ' ')
 
@@ -66,4 +105,5 @@ if [[ -n "$TMUX" ]] && command -v sesh &>/dev/null; then
   sesh connect "$dir"
 else
   cd "$dir"
+  { _cwt_cmux_rename "$(git -C "$dir" branch --show-current 2>/dev/null)" } &!
 fi

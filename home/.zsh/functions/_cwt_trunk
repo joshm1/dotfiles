@@ -1,0 +1,33 @@
+# Resolve the trunk (default) branch for the repo at $1, caching per org/repo.
+# Uses `gh` to determine the GitHub default branch; falls back to "main".
+local repo_dir="${1:-$PWD}"
+
+local url=$(git -C "$repo_dir" config --get remote.origin.url 2>/dev/null)
+# Normalize git@host:org/repo.git and https://host/org/repo.git -> org/repo
+url="${url%.git}"
+url="${url//://}"
+local repo="${url##*/}"
+local rest="${url%/*}"
+local org="${rest##*/}"
+local slug="$org/$repo"
+
+if [[ -z "$org" || -z "$repo" ]]; then
+  echo "main"
+  return 0
+fi
+
+local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/cwt-trunk"
+local cache_file="$cache_dir/${slug//\//_}"
+
+if [[ -s "$cache_file" ]]; then
+  cat "$cache_file"
+  return 0
+fi
+
+local trunk=$(gh repo view "$slug" --json defaultBranchRef \
+  --jq '.defaultBranchRef.name' 2>/dev/null)
+[[ -z "$trunk" ]] && trunk="main"
+
+mkdir -p "$cache_dir"
+print -r -- "$trunk" > "$cache_file"
+print -r -- "$trunk"

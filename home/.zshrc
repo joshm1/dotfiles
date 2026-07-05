@@ -116,7 +116,7 @@ setopt no_beep
 
 alias vim="nvim"
 alias vi="nvim"
-alias cld="claude --dangerously-skip-permissions"
+# cld is an autoloaded function (~/.zsh/functions/cld): cmux-aware claude launcher
 [ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
 [ -d "$HOME/bin" ] && path=("$HOME/bin" $path)
 
@@ -297,3 +297,8 @@ export PATH="$HOME/.bun/bin:$PATH"  # coder-devbox-bootstrap:bun-path
 
 # Added by git-ai installer on Thu Jun 11 15:21:34 EDT 2026
 export PATH="/Users/josh/.git-ai/bin:$PATH"
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/josh/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions

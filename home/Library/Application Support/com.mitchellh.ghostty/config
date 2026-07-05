@@ -60,3 +60,5 @@
 # theme = light:Gruvbox Light,dark:Gruvbox Dark
 theme = Gruvbox Dark
 minimum-contrast = 1.5
+
+scrollback-limit = 100000000

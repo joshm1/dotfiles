@@ -250,6 +250,37 @@ def create_device_gitconfigs(home_dir: Path) -> None:
             print_step(f"Created {config_file}")
 
 
+def link_device_gitconfig_alias() -> None:
+    """Point ``~/.gitconfig_local.device`` at this machine's device file.
+
+    Git config ``include.path`` can't expand ``~/.device_id``, so the shared
+    ``.gitconfig_local`` includes the fixed path ``~/.gitconfig_local.device``
+    and we resolve it per machine here from ``~/.device_id``. On a machine with
+    no matching device file (e.g. a Linux box), the alias is removed so the
+    include is simply a no-op there.
+    """
+    device_id = get_device_id()
+    if not device_id:
+        return
+
+    home = Path.home()
+    target_name = f".gitconfig_local.{device_id}"
+    alias = home / ".gitconfig_local.device"
+
+    if not (home / target_name).exists():
+        if alias.is_symlink():
+            alias.unlink()
+            print_step(f"Removed {alias.name} (no {target_name})")
+        return
+
+    if alias.is_symlink() and alias.readlink() == Path(target_name):
+        return
+    if alias.is_symlink() or alias.exists():
+        alias.unlink()
+    alias.symlink_to(target_name)
+    print_success(f"Linked {alias.name} -> {target_name}")
+
+
 def wait_for_cloud() -> Path | None:
     """Ensure ``~/.dotfiles-private`` resolves to a cloud-synced directory.
 
@@ -382,6 +413,7 @@ def main() -> int:
     create_device_zshrc_configs(home_dir)
     create_device_gitconfigs(home_dir)
     symlink_home_dir(home_dir)
+    link_device_gitconfig_alias()
     fix_permissions(home_dir)
 
     # Also link scripts/ from the cloud root (sibling of the private dotfiles

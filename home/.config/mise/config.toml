@@ -5,3 +5,9 @@ python = "3.13"
 
 # npm-global CLIs (no Homebrew formula)
 "npm:@cubic-dev-ai/cli" = "latest"  # cubic: AI code review CLI for Mutiny - https://cubic.dev
+ruby = "3.2.2"
+
+[settings]
+
+[settings.node]
+corepack = true

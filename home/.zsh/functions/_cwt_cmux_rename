@@ -1,0 +1,55 @@
+# Best-effort: rename the cmux workspace to a branch's ticket id when cwt is run
+# interactively in a workspace we solely occupy. Returns 0 in every skip path so
+# cwt never fails on account of cmux. $1 is the branch/ref. cwt runs this
+# detached (&!) so the network title lookup never blocks; it pins every cmux call
+# to $CMUX_WORKSPACE_ID (captured at fork) rather than wherever focus lands.
+
+local value="$1"
+[[ -n "$value" ]] || return 0
+
+# Must be a cmux terminal with the CLI on PATH.
+[[ -n "$CMUX_WORKSPACE_ID" ]] || return 0
+command -v cmux &>/dev/null || return 0
+
+# Synchronous only: a shell you typed in, not one an agent (Claude, Codex, …)
+# launched. cmux sets CMUX_AGENT_LAUNCH_KIND in agent-launched surfaces.
+[[ -o interactive ]] || return 0
+[[ -z "$CMUX_AGENT_LAUNCH_KIND" ]] || return 0
+
+# Derive the ticket id: drop a leading "author/" segment, take the leading
+# "<project>-<number>", lowercase it. Bail when the branch carries no ticket.
+local leaf="${value##*/}"
+[[ "$leaf" =~ '^([[:alpha:]]+-[0-9]+)' ]] || return 0
+local ticket="${(L)match[1]}"
+
+# Only when we are the sole surface in the workspace (one pane, one tab) — never
+# relabel a workspace shared with splits or sibling tabs. Needs jq to read the
+# topology; skip quietly if it is unavailable or the query fails.
+command -v jq &>/dev/null || return 0
+local surfaces
+surfaces=$(cmux list-panes --workspace "$CMUX_WORKSPACE_ID" --json 2>/dev/null | jq '[.panes[].surface_count] | add' 2>/dev/null) || return 0
+[[ "$surfaces" == 1 ]] || return 0
+
+# Default to the bare ticket id; enrich with the Linear issue title when the
+# `linear` CLI is present and authenticated. Best-effort and time-boxed so a
+# slow or failed lookup can never hang or break cwt — any failure keeps the id.
+local title="$ticket"
+# Prefer the repo's mise-managed env — that is what supplies LINEAR_API_KEY; run
+# from the worktree we just entered so mise loads the project's environment.
+# `mise exec -- linear` falls through to a PATH `linear` with the env applied.
+local -a linear_cmd=()
+if command -v mise &>/dev/null; then linear_cmd=(mise exec -- linear)
+elif command -v linear &>/dev/null; then linear_cmd=(linear); fi
+if (( ${#linear_cmd} )); then
+  local -a runner=()
+  if command -v timeout &>/dev/null; then runner=(timeout 5)
+  elif command -v gtimeout &>/dev/null; then runner=(gtimeout 5); fi
+
+  local subject
+  subject=$($runner $linear_cmd issue title "${(U)ticket}" 2>/dev/null)
+  subject="${subject%%$'\n'*}"   # first line only
+  [[ -n "$subject" ]] && title="$ticket - $subject"
+fi
+
+cmux workspace-action --workspace "$CMUX_WORKSPACE_ID" --action rename --title "$title" &>/dev/null
+return 0

@@ -100,6 +100,7 @@
   br = branch --sort=-committerdate # show branches sorted by last commit
   ri = rebase -i                    # interactive rebase
   today = "!git log --since=midnight --author=\"$(git config user.name)\" --oneline" # show what you've done today
+	pf = push --force-with-lease
 [format]
   pretty = format:%C(blue)%ad%Creset %C(yellow)%h%C(green)%d%Creset %C(blue)%s %C(magenta) [%an]%Creset
 [mergetool]
