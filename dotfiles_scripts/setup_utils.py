@@ -284,6 +284,31 @@ def _resolve_symlinks_directives(
     return active, variants
 
 
+def _resolve_excludes(directory: Path, device_id: str) -> set[str]:
+    """Return filenames in ``directory`` excluded for the current device.
+
+    ``.dotfiles.yaml`` may contain:
+
+        exclude:
+          linux.hermes-grinder:
+            - .ssh
+
+    Excludes are intentionally basename-only and apply to direct children of
+    the directory containing the config file. This matches the symlink walker,
+    which evaluates one directory level at a time.
+    """
+    if not device_id:
+        return set()
+    config = _read_dotfiles_yaml(directory)
+    raw = config.get("exclude")
+    if not isinstance(raw, dict):
+        return set()
+    names = raw.get(device_id)
+    if not isinstance(names, list):
+        return set()
+    return {name for name in names if isinstance(name, str)}
+
+
 def _read_device_id() -> str:
     """Return the contents of ``~/.device_id``, or empty string if absent."""
     device_file = Path.home() / ".device_id"
@@ -488,8 +513,11 @@ def symlink_home_dir(home_dir: Path) -> bool:
         nonlocal success
 
         active, variants = _resolve_symlinks_directives(src_dir, device_id)
+        excludes = _resolve_excludes(src_dir, device_id)
 
         for src in sorted(src_dir.iterdir()):
+            if src.name in excludes:
+                continue
             if src.name in SKIP_FILES or src.name.endswith(SKIP_SUFFIXES):
                 continue
             # Skip files that are device-keyed variants (other devices' copies,
