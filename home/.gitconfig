@@ -111,7 +111,7 @@
   summary = true
   verbosity = 1
   tool = mvimdiff
-	conflictStyle = zdiff3
+	conflictStyle = diff3
 [apply]
   whitespace = nowarn
 [branch]
