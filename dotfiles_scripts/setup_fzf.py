@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 from dotfiles_scripts.setup_utils import (
+    is_linux,
     print_header,
     print_step,
     print_success,
@@ -18,6 +20,32 @@ from dotfiles_scripts.setup_utils import (
 
 def is_mac() -> bool:
     return platform.system() == "Darwin"
+
+
+def clone_fzf() -> Path | None:
+    """Clone fzf to ~/.fzf (shallow) and return its install script path.
+
+    Fallback for platforms without a Homebrew-provided fzf (e.g. Linux
+    servers). The upstream repo ships an ``install`` script that wires up
+    the shell keybindings/completion the same way the brew formula does.
+    """
+    fzf_home = Path.home() / ".fzf"
+    install = fzf_home / "install"
+    if install.exists():
+        return install
+    if not shutil.which("git"):
+        return None
+    print_step("Cloning fzf to ~/.fzf ...")
+    try:
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "https://github.com/junegunn/fzf.git", str(fzf_home)],
+            check=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError as e:
+        print_warning(f"Failed to clone fzf: {e}")
+        return None
+    return install if install.exists() else None
 
 
 def main() -> int:
@@ -42,9 +70,12 @@ def main() -> int:
             fzf_install = path
             break
 
+    if not fzf_install and is_linux():
+        fzf_install = clone_fzf()
+
     if not fzf_install:
         print_warning("fzf install script not found")
-        print("  Install fzf first: brew install fzf")
+        print("  Install fzf first: brew install fzf (or apt install fzf)")
         return 0
 
     print_step(f"Running fzf install from {fzf_install}...")

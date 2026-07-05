@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import platform
 import re
+import socket
 import sys
 from pathlib import Path
 
@@ -32,6 +34,24 @@ def _machine_config_dir() -> Path | None:
 def is_valid_device_id(device_id: str) -> bool:
     """Check if device ID is valid (lowercase, dash-case, starts with letter)."""
     return bool(DEVICE_ID_PATTERN.match(device_id))
+
+
+def default_device_id() -> str:
+    """Derive a valid device ID from the OS and hostname, for non-interactive use.
+
+    Produces ``<os>.<host>`` (e.g. ``linux.hermes-grinder``) so headless
+    machines (servers, CI, containers) get a stable, hierarchy-friendly ID
+    without a prompt. The result always satisfies ``DEVICE_ID_PATTERN``.
+    """
+    system = platform.system()
+    os_segment = {"Darwin": "mac", "Linux": "linux"}.get(system, system.lower())
+
+    host = socket.gethostname().split(".")[0].lower()
+    host = re.sub(r"[^a-z0-9-]", "-", host).strip("-")
+    if not host or not host[0].isalpha():
+        host = f"h{host}" if host else "host"
+
+    return f"{os_segment}.{host}"
 
 
 def get_device_id() -> str | None:
@@ -174,7 +194,14 @@ def main() -> int:
 
     device_id = get_device_id()
     if not device_id:
-        device_id = setup_device_id_interactive()
+        if sys.stdin.isatty():
+            device_id = setup_device_id_interactive()
+        else:
+            # Headless (server / CI / container): derive one instead of hanging
+            # on input(). Writes ~/.device_id so subsequent runs are stable.
+            device_id = default_device_id()
+            DEVICE_ID_FILE.write_text(device_id)
+            print_success(f"Device ID auto-set to: {device_id} (non-interactive)")
         if not device_id:
             return 1
 

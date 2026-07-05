@@ -30,8 +30,11 @@ def get_nvim_info() -> tuple[str, Path]:
         archive = "nvim-macos-arm64.tar.gz" if machine == "arm64" else "nvim-macos-x86_64.tar.gz"
         install_dir = Path.home() / archive.replace(".tar.gz", "")
     elif system == "Linux":
-        archive = "nvim-linux64.tar.gz"
-        install_dir = Path.home() / "nvim-linux64"
+        # Neovim renamed its Linux release assets from ``nvim-linux64`` to
+        # ``nvim-linux-<arch>`` — the old name now 404s on nightly.
+        arch = "arm64" if machine in ("arm64", "aarch64") else "x86_64"
+        archive = f"nvim-linux-{arch}.tar.gz"
+        install_dir = Path.home() / f"nvim-linux-{arch}"
     else:
         raise RuntimeError(f"Unsupported platform: {system}")
 

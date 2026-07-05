@@ -74,6 +74,22 @@ def install_mise_via_homebrew() -> bool:
         return False
 
 
+def install_mise_via_script() -> bool:
+    """Install mise via the official installer (https://mise.run) — no Homebrew.
+
+    Used on platforms without Homebrew (e.g. Linux servers). Installs the
+    binary to ``~/.local/bin/mise``, which ``get_mise_path`` already probes.
+    """
+    print_step("Installing mise via https://mise.run ...")
+    try:
+        subprocess.run("curl -fsSL https://mise.run | sh", shell=True, check=True)
+        print_success("mise installed")
+        return True
+    except subprocess.CalledProcessError as e:
+        print_error(f"Failed to install mise: {e}")
+        return False
+
+
 def get_mise_path() -> str | None:
     """Get the path to mise binary."""
     paths = [
@@ -98,7 +114,12 @@ def main() -> int:
     # Check/install mise
     if not is_mise_installed():
         print_step("mise not found, installing...")
-        if not install_mise_via_homebrew():
+        installed = (
+            install_mise_via_homebrew()
+            if shutil.which("brew")
+            else install_mise_via_script()
+        )
+        if not installed:
             return 1
     else:
         print_success("mise already installed")

@@ -22,13 +22,23 @@ from dotfiles_scripts.setup_utils import (
 
 INSTALL_DIR = Path.home() / ".local" / "nvim"
 SYMLINK_PATH = Path.home() / ".local" / "bin" / "nvim"
-NIGHTLY_URL_TEMPLATE = "https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-{arch}.tar.gz"
+NIGHTLY_URL_TEMPLATE = "https://github.com/neovim/neovim/releases/download/nightly/nvim-{os}-{arch}.tar.gz"
+
+
+def get_os_slug() -> str:
+    """Return the neovim release OS slug for this platform."""
+    system = platform.system()
+    if system == "Darwin":
+        return "macos"
+    if system == "Linux":
+        return "linux"
+    raise RuntimeError(f"Unsupported OS: {system}")
 
 
 def get_arch() -> str:
     """Get the architecture for the download URL."""
     machine = platform.machine()
-    if machine == "arm64":
+    if machine in ("arm64", "aarch64"):
         return "arm64"
     elif machine == "x86_64":
         return "x86_64"
@@ -55,7 +65,7 @@ def get_current_version() -> str | None:
 
 def download_nightly(arch: str) -> Path:
     """Download the nightly release and return path to tarball."""
-    url = NIGHTLY_URL_TEMPLATE.format(arch=arch)
+    url = NIGHTLY_URL_TEMPLATE.format(os=get_os_slug(), arch=arch)
     print_step(f"Downloading from {url}")
 
     tmpdir = Path(tempfile.mkdtemp())
@@ -105,10 +115,6 @@ def install_neovim(tarball: Path) -> None:
 def main() -> int:
     """Main entry point."""
     print_header("Installing Neovim Nightly")
-
-    if platform.system() != "Darwin":
-        print_error("This script only supports macOS")
-        return 1
 
     current = get_current_version()
     if current:

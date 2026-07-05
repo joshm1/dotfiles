@@ -8,23 +8,33 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Check for Homebrew
-if ! command -v brew &>/dev/null; then
-    echo "Homebrew not found. Installing..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# macOS bootstraps its toolchain through Homebrew (also used to install uv).
+# On Linux we skip Homebrew entirely and use apt + the standalone uv installer.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    if ! command -v brew &>/dev/null; then
+        echo "Homebrew not found. Installing..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    # Add Homebrew to PATH for this session
-    if [[ -f /opt/homebrew/bin/brew ]]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -f /usr/local/bin/brew ]]; then
-        eval "$(/usr/local/bin/brew shellenv)"
+        # Add Homebrew to PATH for this session
+        if [[ -f /opt/homebrew/bin/brew ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        elif [[ -f /usr/local/bin/brew ]]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+        fi
     fi
 fi
 
-# Check for uv
+# Ensure uv is available (it drives the venv and the dotfiles-setup entry point).
 if ! command -v uv &>/dev/null; then
-    echo "uv not found. Installing via Homebrew..."
-    brew install uv
+    if command -v brew &>/dev/null; then
+        echo "uv not found. Installing via Homebrew..."
+        brew install uv
+    else
+        echo "uv not found. Installing via https://astral.sh/uv ..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        # The standalone installer drops uv in ~/.local/bin.
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
 fi
 
 echo "Using uv: $(uv --version)"

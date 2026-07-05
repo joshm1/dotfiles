@@ -14,6 +14,7 @@ from dotfiles_scripts.setup_utils import (
     DOTFILES_REPO,
     create_symlink,
     get_private_dotfiles,
+    is_mac,
     print_header,
     print_step,
     print_success,
@@ -135,6 +136,10 @@ def run_brew_bundle() -> bool:
 def main() -> int:
     """Main entry point."""
     print_header("Setting up Homebrew")
+
+    if not is_mac():
+        print_step("Not macOS — skipping Homebrew (Linux tooling comes from mise + apt)")
+        return 0
 
     if not is_homebrew_installed():
         if not install_homebrew():

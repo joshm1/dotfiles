@@ -2,12 +2,24 @@
 
 from __future__ import annotations
 
+import platform
 import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
+
+
+def is_mac() -> bool:
+    """True on macOS (Darwin)."""
+    return platform.system() == "Darwin"
+
+
+def is_linux() -> bool:
+    """True on Linux (includes WSL, which also reports ``Linux``)."""
+    return platform.system() == "Linux"
+
 
 # Configuration
 DOTFILES_REPO = Path.home() / "projects" / "joshm1" / "dotfiles"
