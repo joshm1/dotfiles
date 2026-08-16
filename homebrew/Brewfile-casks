@@ -1,6 +1,7 @@
 cask_args appdir: '/Applications'
 
 # Taps
+tap 'manaflow-ai/cmux'
 tap 'supabase/tap'
 tap 'withgraphite/tap'
 
@@ -25,7 +26,7 @@ cask 'wispr-flow'               # Voice-to-text dictation - https://wisprflow.ai
 cask 'bruno'                    # Opensource API client - https://github.com/usebruno/bruno
 cask 'chatgpt'                  # OpenAI's official ChatGPT desktop app - https://chatgpt.com
 cask 'claude'                   # Anthropic's official Claude AI desktop app - https://claude.ai
-cask 'cmux'                     #
+cask 'cmux'                     # AI-powered terminal multiplexer - https://github.com/manaflow-ai/cmux
 cask 'cursor'                   # AI-powered code editor - https://www.cursor.com
 cask 'cursor-cli'               # Cursor command-line agent (cursor-agent) - https://cursor.com
 cask 'docker-desktop'           # Docker for Mac - https://www.docker.com/products/docker-desktop
@@ -38,11 +39,9 @@ cask 'zed'                      # Multiplayer code editor - https://zed.dev
 
 cask 'codex'                    # OpenAI Codex CLI - https://github.com/openai/codex
 
-tap 'manaflow-ai/cmux'
-cask 'cmux'                     # AI-powered terminal multiplexer - https://github.com/manaflow-ai/cmux
-
 # Cloud & Infrastructure
 cask 'gcloud-cli'               # Google Cloud SDK - https://cloud.google.com/sdk
+cask 'headlamp'                 # Kubernetes cluster UI - https://headlamp.dev
 cask 'ngrok'                    # Secure tunneling - https://ngrok.com
 
 # Communication

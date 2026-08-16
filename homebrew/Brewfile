@@ -56,6 +56,8 @@ brew 'cloudflared'              # Cloudflare Tunnel client - https://github.com/
 brew 'gcalcli'                  # Google Calendar CLI - https://github.com/insanum/gcalcli
 brew 'googleworkspace-cli'      # gws: Drive/Gmail/Calendar/Sheets CLI - https://github.com/googleworkspace/cli
 brew 'helm'                     # Kubernetes package manager - https://github.com/helm/helm
+tap 'derailed/k9s'              # Tap for the upstream k9s builds
+brew 'derailed/k9s/k9s'         # Kubernetes cluster TUI - https://github.com/derailed/k9s
 brew 'pulumi'                   # Infrastructure as code - https://github.com/pulumi/pulumi
 brew 'temporal'                 # Temporal Server/UI CLI - https://github.com/temporalio/cli
 tap 'coder/coder'               # Tap for the coder CLI (not in homebrew/core)
