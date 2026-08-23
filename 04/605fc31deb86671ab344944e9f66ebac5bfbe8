@@ -1,0 +1,14 @@
+.gitignore
+  h_072bc2b0d5cfa3 92-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "04605fc31deb86671ab344944e9f66ebac5bfbe8",
+  "prompts": {},
+  "humans": {
+    "h_072bc2b0d5cfa3": {
+      "author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
