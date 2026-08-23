@@ -1,0 +1,18 @@
+home/.config/mise/config.toml
+  h_072bc2b0d5cfa3 3,8,10
+home/.gitignore
+  h_072bc2b0d5cfa3 80-82
+home/.zshrc
+  h_072bc2b0d5cfa3 305-310
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "e633d1b8f8ed59d28b00174c31dc5f2baaecc4c2",
+  "prompts": {},
+  "humans": {
+    "h_072bc2b0d5cfa3": {
+      "author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
