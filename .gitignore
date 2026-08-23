@@ -89,3 +89,6 @@ service-account*.json
 
 # Local plans / scratch (intentionally not tracked publicly)
 docs/plans/
+
+# Installer-created shell configuration backups
+home/.zshrc.bak.*
