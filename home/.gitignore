@@ -77,3 +77,6 @@ routes.txt
 # CLAUDE settings.local.json
 settings.local.json
 .serena/
+
+# superpowers scratch docs (curated specs get git add -f)
+docs/superpowers/
