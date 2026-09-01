@@ -1,0 +1,76 @@
+dotfiles_scripts/symlink_home.py
+  s_87d07580d36dc2::t_01f959c4e921e7 43-44
+  s_87d07580d36dc2::t_a2d5575a777c23 35-37
+dotfiles_scripts/check_home_symlinks.py
+  s_87d07580d36dc2::t_01f959c4e921e7 103-104
+  s_87d07580d36dc2::t_191b2a94d10e03 41,157,175
+dotfiles_scripts/sync_private_runtime.py
+  s_87d07580d36dc2::t_c3bd827f028269 41,206
+  s_87d07580d36dc2::t_ab75d56d5210e1 244-251,261,583,626
+dotfiles_scripts/setup_coding_tools.py
+  s_87d07580d36dc2::t_6678c37716826d 153-154
+  s_87d07580d36dc2::t_c3bd827f028269 13,142,148,151,175-179,199-203
+  s_87d07580d36dc2::t_59fee0afc1bd5b 24-26,59-60,63-65,109,123-125,184-186
+  s_87d07580d36dc2::t_fc0526486e4556 152
+dotfiles_scripts/setup_gpg.py
+  s_87d07580d36dc2::t_c3bd827f028269 10,56,149,154,157-168,174-177,181-185,202-203
+  s_87d07580d36dc2::t_6678c37716826d 169,173
+dotfiles_scripts/setup_private_repo.py
+  s_87d07580d36dc2::t_c3bd827f028269 34-35
+  s_87d07580d36dc2::t_e362972dab7685 115,364-372,459-461,612-614,750-752,755-758
+dotfiles_scripts/setup_dropbox.py
+  s_87d07580d36dc2::t_59fee0afc1bd5b 220-221,373-376
+dotfiles_scripts/migrate_to_gdrive.py
+  s_87d07580d36dc2::t_c3bd827f028269 89-90,152-153,234,250,287,316
+  s_87d07580d36dc2::t_6a8c28cd484ab7 348-350,477,484
+dotfiles_scripts/dotfiles_doctor.py
+  s_87d07580d36dc2::t_c3bd827f028269 29,37-38,66,69
+  s_87d07580d36dc2::t_29ebd9e621196e 257-264,270-275,343-345
+dotfiles_scripts/detach_cloud_cache.py
+  s_87d07580d36dc2::t_01f959c4e921e7 97,113
+  s_87d07580d36dc2::t_59fee0afc1bd5b 144
+dotfiles_scripts/check_private_repo.py
+  s_87d07580d36dc2::t_6040a1c2402871 162-169,179
+dotfiles_scripts/op_ssh.py
+  s_87d07580d36dc2::t_3b866f11c1dc47 47,85,96,109,203
+dotfiles_scripts/pull_ssh_keys_from_op.py
+  s_87d07580d36dc2::t_3e53501fff34d4 108
+dotfiles_scripts/setup.py
+  s_87d07580d36dc2::t_04cff97cb8c8ae 156
+dotfiles_scripts/setup_device_id.py
+  s_87d07580d36dc2::t_7e1e4641dfc5c0 147
+dotfiles_scripts/setup_fzf.py
+  s_87d07580d36dc2::t_8b58bd6576377b 63-64
+dotfiles_scripts/setup_gstack.py
+  s_87d07580d36dc2::t_ab3e007916424d 319
+dotfiles_scripts/setup_homebrew.py
+  s_87d07580d36dc2::t_5d27f09e094038 40
+dotfiles_scripts/setup_launchd.py
+  s_87d07580d36dc2::t_720d37af5771bc 52-54
+dotfiles_scripts/setup_mise.py
+  s_87d07580d36dc2::t_7bdb5921dba9d3 118
+dotfiles_scripts/setup_neovim.py
+  s_87d07580d36dc2::t_154dcecdfdfcbd 25-27
+dotfiles_scripts/setup_ssh_identity.py
+  s_87d07580d36dc2::t_1ade86a4942f62 96,146,202
+dotfiles_scripts/setup_zsh.py
+  s_87d07580d36dc2::t_9b505c2f83cb78 37-42
+dotfiles_scripts/setup_zsh_history.py
+  s_87d07580d36dc2::t_c689fe9484f7b3 39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "d3c2d1f5b2892eae13f6a23967efc0307c483c3c",
+  "prompts": {},
+  "sessions": {
+    "s_87d07580d36dc2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05ab8-81e6-73d1-919b-b977212620e6",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
