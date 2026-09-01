@@ -1,0 +1,36 @@
+dotfiles_scripts/setup_homebrew.py
+  s_a6da31af370c4a::t_2d4d44c62f6935 130
+  s_a6da31af370c4a::t_13216eb09b77e8 23
+dotfiles_scripts/setup_ssh_identity.py
+  s_a6da31af370c4a::t_76212b41162e6e 36
+  s_a6da31af370c4a::t_836616e0870534 186
+dotfiles_scripts/migrate_to_gdrive.py
+  s_a6da31af370c4a::t_e389fea2391cf2 53
+  s_a6da31af370c4a::t_ff4dac8bd451d4 240
+dotfiles_scripts/check_private_repo.py
+  s_a6da31af370c4a::t_cee36364dc5a03 34
+  s_a6da31af370c4a::t_62e2bd975ab28f 59
+dotfiles_scripts/utils.py
+  s_a6da31af370c4a::t_5bf0f52d9f1859 17,26
+  s_a6da31af370c4a::t_10bccacd11c6af 4,8-15
+  s_a6da31af370c4a::t_8770af2ff68271 16
+dotfiles_scripts/sync_private_runtime.py
+  s_a6da31af370c4a::t_b924028aaec999 59
+  s_a6da31af370c4a::t_e32116c2ff58db 154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "05f8dec3f1b33b615675b286bd09645885547171",
+  "prompts": {},
+  "sessions": {
+    "s_a6da31af370c4a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "256fa127-0f67-4b10-9e25-ee0f18aa7b45",
+        "model": "grok-4.6"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
