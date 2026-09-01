@@ -94,7 +94,7 @@ def _detach_one(source: Path, root: Path, dry_run: bool) -> bool:
 
     # Use an absolute symlink target so other machines (and this machine across
     # symlink-resolution boundaries) all interpret the link the same way.
-    os.symlink(target, source)
+    source.symlink_to(target)
     return True
 
 
@@ -110,7 +110,7 @@ def _ensure_symlink_targets(root: Path, dry_run: bool) -> int:
         if not path.is_symlink():
             continue
         try:
-            link = Path(os.readlink(path))
+            link = path.readlink()
         except OSError:
             continue
         target = link if link.is_absolute() else (path.parent / link).resolve()
@@ -141,9 +141,7 @@ def cli(dry_run: bool, patterns: str) -> None:
     """Detach build artifacts from ~/.dotfiles-private/ to ~/.cache/dotfiles-private/."""
     root = _resolve_private_root()
     if root is None:
-        print_warning(
-            f"{PRIVATE_DOTFILES} is not a directory; cloud private dotfiles not set up"
-        )
+        print_warning(f"{PRIVATE_DOTFILES} is not a directory; cloud private dotfiles not set up")
         sys.exit(0)
 
     pattern_set = {p.strip() for p in patterns.split(",") if p.strip()}

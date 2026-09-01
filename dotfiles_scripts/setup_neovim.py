@@ -22,7 +22,9 @@ from dotfiles_scripts.setup_utils import (
 
 INSTALL_DIR = Path.home() / ".local" / "nvim"
 SYMLINK_PATH = Path.home() / ".local" / "bin" / "nvim"
-NIGHTLY_URL_TEMPLATE = "https://github.com/neovim/neovim/releases/download/nightly/nvim-{os}-{arch}.tar.gz"
+NIGHTLY_URL_TEMPLATE = (
+    "https://github.com/neovim/neovim/releases/download/nightly/nvim-{os}-{arch}.tar.gz"
+)
 
 
 def get_os_slug() -> str:

@@ -37,7 +37,7 @@ def install_homebrew() -> bool:
     try:
         # Download and run the installer
         subprocess.run(
-            f'curl -fsSL {install_script} | /bin/bash',
+            f"curl -fsSL {install_script} | /bin/bash",
             shell=True,
             check=True,
         )

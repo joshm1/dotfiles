@@ -153,9 +153,7 @@ def cli() -> int:
         # first tick sees the correct SSH identity backend.
         run_setup_module("setup_ssh_identity")
     else:
-        print_warning(
-            "~/.dotfiles-private is not set up - skipping cloud-dependent setup"
-        )
+        print_warning("~/.dotfiles-private is not set up - skipping cloud-dependent setup")
         print(
             "  Mount Google Drive or Dropbox, then run setup-dropbox, "
             "setup-zsh-history, and setup-ssh-identity"

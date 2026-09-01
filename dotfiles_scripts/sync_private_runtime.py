@@ -38,7 +38,7 @@ import shlex
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
@@ -203,7 +203,7 @@ def _log(line: str) -> None:
 
 
 @contextmanager
-def _flock_or_skip() -> Iterator[bool]:
+def _flock_or_skip() -> Generator[bool, None, None]:
     """Yield True if we hold the sync lock, False if another run is in progress."""
     _ensure_cache_dir()
     f = LOCK_FILE.open("w")
@@ -241,10 +241,14 @@ def _notify_via_terminal_notifier(title: str, message: str) -> bool:
         result = subprocess.run(
             [
                 TERMINAL_NOTIFIER_BIN,
-                "-title", title,
-                "-message", message,
-                "-group", "dotfiles-runtime",
-                "-execute", f"open {shlex.quote(str(LOG_FILE))}",
+                "-title",
+                title,
+                "-message",
+                message,
+                "-group",
+                "dotfiles-runtime",
+                "-execute",
+                f"open {shlex.quote(str(LOG_FILE))}",
             ],
             check=False,
             capture_output=True,
@@ -254,10 +258,7 @@ def _notify_via_terminal_notifier(title: str, message: str) -> bool:
         _log(f"terminal-notifier failed ({e}) — falling back to osascript")
         return False
     if result.returncode != 0:
-        _log(
-            f"terminal-notifier exited {result.returncode} — "
-            "falling back to osascript"
-        )
+        _log(f"terminal-notifier exited {result.returncode} — falling back to osascript")
         return False
     return True
 
@@ -579,8 +580,7 @@ def _do_pull() -> tuple[bool, str]:
 
     if failures:
         return False, (
-            f"pull: {len(failures)} failure(s); {successes} ok; "
-            f"first error: {failures[0]}"
+            f"pull: {len(failures)} failure(s); {successes} ok; first error: {failures[0]}"
         )
     return True, f"pull: {successes} path(s) synced"
 
@@ -623,8 +623,7 @@ def _do_push() -> tuple[bool, str]:
 
     if failures:
         return False, (
-            f"push: {len(failures)} failure(s); {successes} ok; "
-            f"first error: {failures[0]}"
+            f"push: {len(failures)} failure(s); {successes} ok; first error: {failures[0]}"
         )
     return True, f"push: {successes} path(s) synced"
 

@@ -10,6 +10,7 @@ import sys
 import tempfile
 import urllib.request
 from pathlib import Path
+from typing import cast
 
 from dotfiles_scripts.setup_utils import (
     print_header,
@@ -20,7 +21,9 @@ from dotfiles_scripts.setup_utils import (
 
 _GIT_AI_INSTALL = "https://usegitai.com/install.sh"
 _DCG_BIN = Path.home() / ".local" / "bin" / "dcg"
-_DCG_INSTALLER = "https://raw.githubusercontent.com/Dicklesworthstone/destructive_command_guard/main/install.sh"
+_DCG_INSTALLER = (
+    "https://raw.githubusercontent.com/Dicklesworthstone/destructive_command_guard/main/install.sh"
+)
 
 # settings.json (device-specific symlink) declares which plugins are enabled;
 # its `enabledPlugins` keys are `plugin@marketplace` ids. The enable toggle
@@ -53,11 +56,13 @@ def _security_audit(script_path: Path) -> None:
     print_step("Running Codex security audit on installer...")
     result = subprocess.run(
         [
-            "codex", "exec",
+            "codex",
+            "exec",
             f"Security audit of {script_path} — read the file, then report any risks: "
             "arbitrary code execution, suspicious network calls beyond downloading the binary, "
-            "privilege escalation, path manipulation, eval of untrusted data, hardcoded credentials, "
-            "supply chain risks. Cite line numbers. End with: SAFE TO RUN, REVIEW RECOMMENDED, or DO NOT RUN.",
+            "privilege escalation, path manipulation, eval of untrusted data, "
+            "hardcoded credentials, supply chain risks. Cite line numbers. End with: "
+            "SAFE TO RUN, REVIEW RECOMMENDED, or DO NOT RUN.",
         ],
         capture_output=True,
         text=True,
@@ -101,6 +106,7 @@ def setup_dcg() -> bool:
     print_step("Installing dcg...")
     try:
         import time
+
         url = f"{_DCG_INSTALLER}?{int(time.time())}"
         with tempfile.NamedTemporaryFile(suffix=".sh", delete=False) as tmp:
             tmp_path = Path(tmp.name)
@@ -114,7 +120,9 @@ def setup_dcg() -> bool:
         return True
     except Exception as e:
         print_warning(f"dcg install failed: {e}")
-        print(f"  Manual install: curl -fsSL '{_DCG_INSTALLER}?$(date +%s)' | bash -s -- --easy-mode")
+        print(
+            f"  Manual install: curl -fsSL '{_DCG_INSTALLER}?$(date +%s)' | bash -s -- --easy-mode"
+        )
         return False
 
 
@@ -131,15 +139,19 @@ def _enabled_plugin_ids() -> list[str]:
     return sorted(pid for pid, on in data.get("enabledPlugins", {}).items() if on)
 
 
-def _claude_json(*args: str) -> list | None:
+def _claude_json(*args: str) -> list[dict[str, object]] | None:
     """Run a `claude ... --json` command and parse its array output, or None."""
     try:
         out = subprocess.run(
             ["claude", *args, "--json"], capture_output=True, text=True, check=True
         ).stdout
-        return json.loads(out)
+        parsed: object = json.loads(out)
     except (subprocess.CalledProcessError, json.JSONDecodeError):
         return None
+    if not isinstance(parsed, list):
+        return None
+    items = cast("list[object]", parsed)
+    return [cast("dict[str, object]", item) for item in items if isinstance(item, dict)]
 
 
 def setup_claude_plugins() -> bool:
@@ -160,12 +172,18 @@ def setup_claude_plugins() -> bool:
     print_step(f"Ensuring {len(enabled)} enabled Claude Code plugins are installed...")
 
     # Configure every marketplace the enabled plugins reference.
-    configured = {m["name"] for m in (_claude_json("plugin", "marketplace", "list") or [])}
+    configured = {
+        name
+        for marketplace in (_claude_json("plugin", "marketplace", "list") or [])
+        if isinstance(name := marketplace.get("name"), str)
+    }
     needed = {pid.split("@", 1)[1] for pid in enabled if "@" in pid}
     for mp in sorted(needed - configured):
         source = _MARKETPLACE_SOURCES.get(mp)
         if not source:
-            print_warning(f"unknown marketplace '{mp}' — add it manually; its plugins will be skipped")
+            print_warning(
+                f"unknown marketplace '{mp}' — add it manually; its plugins will be skipped"
+            )
             continue
         if Path(source).is_absolute() and not Path(source).exists():
             print_warning(f"marketplace '{mp}' source path missing: {source} — skipping")
@@ -178,7 +196,11 @@ def setup_claude_plugins() -> bool:
             print_warning(f"failed to add marketplace {mp}: {e}")
 
     # Install each enabled plugin that isn't already installed.
-    installed = {p["id"] for p in (_claude_json("plugin", "list") or [])}
+    installed = {
+        plugin_id
+        for plugin in (_claude_json("plugin", "list") or [])
+        if isinstance(plugin_id := plugin.get("id"), str)
+    }
     ok = True
     for pid in enabled:
         if pid in installed:
