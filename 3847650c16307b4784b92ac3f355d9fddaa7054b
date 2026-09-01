@@ -1,0 +1,22 @@
+homebrew/Brewfile
+  s_baae4e03e5ff70::t_258ecd1fc07ade 59-60
+homebrew/Brewfile-casks
+  s_baae4e03e5ff70::t_17459052776b96 29
+  s_baae4e03e5ff70::t_dcc167fb42bb59 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3847650c16307b4784b92ac3f355d9fddaa7054b",
+  "prompts": {},
+  "sessions": {
+    "s_baae4e03e5ff70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a345bf18-b534-4ae4-9b19-340361e94fae",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
