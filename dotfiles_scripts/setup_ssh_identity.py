@@ -18,7 +18,6 @@ rather than deleting (never destructive on a non-recoverable secret).
 
 from __future__ import annotations
 
-import datetime
 import shutil
 import subprocess
 import sys
@@ -34,6 +33,7 @@ from dotfiles_scripts.setup_utils import (
     print_warning,
     read_dotfiles_config,
 )
+from dotfiles_scripts.utils import utcnow
 
 VALID_BACKENDS = SSH_IDENTITY_BACKENDS
 DEFAULT_BACKEND = DEFAULT_SSH_IDENTITY_BACKEND
@@ -183,7 +183,7 @@ def _backup_stale_private_keys(ssh_dir: Path) -> int:
             stale.append(entry)
     if not stale:
         return 0
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    timestamp = utcnow().strftime("%Y%m%d-%H%M%S")
     backup_dir = ssh_dir / f".opt-out-backup-{timestamp}"
     backup_dir.mkdir(parents=True, exist_ok=True)
     for src in stale:
