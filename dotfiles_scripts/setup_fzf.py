@@ -60,8 +60,8 @@ def main() -> int:
     # Find fzf install script
     fzf_install_paths = [
         Path("/opt/homebrew/opt/fzf/install"),  # macOS ARM
-        Path("/usr/local/opt/fzf/install"),      # macOS Intel
-        Path.home() / ".fzf" / "install",        # Git install
+        Path("/usr/local/opt/fzf/install"),  # macOS Intel
+        Path.home() / ".fzf" / "install",  # Git install
     ]
 
     fzf_install = None

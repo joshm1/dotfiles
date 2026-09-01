@@ -93,8 +93,7 @@ def _pull_keys_now() -> bool:
         return False
     if result.returncode != 0:
         print_warning(
-            f"sync-private-runtime --pull exited {result.returncode}; "
-            "keys may not be in place yet"
+            f"sync-private-runtime --pull exited {result.returncode}; keys may not be in place yet"
         )
         return False
     return True
@@ -144,8 +143,7 @@ def _pull_keys_from_op() -> bool:
         return False
     if result.returncode != 0:
         print_warning(
-            f"pull-ssh-keys-from-op exited {result.returncode}; "
-            "falling back to the shared bucket"
+            f"pull-ssh-keys-from-op exited {result.returncode}; falling back to the shared bucket"
         )
         return False
     return True
@@ -201,9 +199,7 @@ def main() -> int:
 
     ssh_dir = _ssh_dir()
     if not ssh_dir.is_dir():
-        print_warning(
-            f"{ssh_dir} not found; private-dotfiles symlink may not be in place yet"
-        )
+        print_warning(f"{ssh_dir} not found; private-dotfiles symlink may not be in place yet")
         return 0
 
     backend = _resolve_backend()

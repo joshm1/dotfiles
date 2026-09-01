@@ -159,10 +159,14 @@ def _notify_via_terminal_notifier(title: str, message: str) -> bool:
         result = subprocess.run(
             [
                 TERMINAL_NOTIFIER_BIN,
-                "-title", title,
-                "-message", message,
-                "-group", "dotfiles-private",
-                "-execute", f"open {shlex.quote(str(LOG_FILE))}",
+                "-title",
+                title,
+                "-message",
+                message,
+                "-group",
+                "dotfiles-private",
+                "-execute",
+                f"open {shlex.quote(str(LOG_FILE))}",
             ],
             check=False,
             capture_output=True,
@@ -172,10 +176,7 @@ def _notify_via_terminal_notifier(title: str, message: str) -> bool:
         _log(f"terminal-notifier failed ({e}) — falling back to osascript")
         return False
     if result.returncode != 0:
-        _log(
-            f"terminal-notifier exited {result.returncode} — "
-            "falling back to osascript"
-        )
+        _log(f"terminal-notifier exited {result.returncode} — falling back to osascript")
         return False
     return True
 

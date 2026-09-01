@@ -316,8 +316,7 @@ def run(
     print_step("verify: ls ~/.claude/skills | head")
     print_step("verify: ls ~/.codex/skills/gstack 2>/dev/null | head")
     print_step(
-        "verify: cd ~/.dotfiles-private && git status   "
-        "# should NOT show new untracked dirs"
+        "verify: cd ~/.dotfiles-private && git status   # should NOT show new untracked dirs"
     )
     return 0
 

@@ -105,9 +105,7 @@ def cli(
     ssh_dir = _ssh_dir()
     print_header("Pull SSH keys from 1Password → ~/.ssh")
     if not ssh_dir.is_dir():
-        print_error(
-            f"{ssh_dir} not found; the private-dotfiles symlink may not be set up yet."
-        )
+        print_error(f"{ssh_dir} not found; the private-dotfiles symlink may not be set up yet.")
         sys.exit(1)
     print_step(f"Destination: {ssh_dir}")
 

@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -87,8 +86,8 @@ class MigrationPlan:
 
     source_root: Path
     gdrive_root: Path
-    pairs: list[CopyPair] = field(default_factory=list)
-    diffs: dict[str, list[FileDiff]] = field(default_factory=dict)
+    pairs: list[CopyPair] = field(default_factory=lambda: list[CopyPair]())
+    diffs: dict[str, list[FileDiff]] = field(default_factory=lambda: dict[str, list[FileDiff]]())
 
 
 def _resolve_source_dotfiles() -> Path | None:
@@ -150,9 +149,8 @@ def _diff_trees(source: Path, dest: Path) -> list[FileDiff]:
             diffs.append(FileDiff(rel, "missing-from-gdrive"))
             continue
         try:
-            if (
-                src_path.stat().st_size != dst_path.stat().st_size
-                or _sha256(src_path) != _sha256(dst_path)
+            if src_path.stat().st_size != dst_path.stat().st_size or _sha256(src_path) != _sha256(
+                dst_path
             ):
                 diffs.append(FileDiff(rel, "modified"))
         except OSError:
@@ -233,7 +231,7 @@ def _atomic_relink(symlink: Path, target: Path) -> None:
     """
     if symlink.is_symlink() or symlink.exists():
         symlink.unlink()
-    os.symlink(target, symlink)
+    symlink.symlink_to(target)
 
 
 def _journal_path() -> Path:
@@ -249,9 +247,7 @@ def _read_journal(path: Path) -> list[dict[str, str]]:
     return json.loads(path.read_text())
 
 
-def _rewrite_home_symlinks(
-    old_root: Path, new_via: Path, journal: list[dict[str, str]]
-) -> int:
+def _rewrite_home_symlinks(old_root: Path, new_via: Path, journal: list[dict[str, str]]) -> int:
     """Rewrite symlinks under $HOME that point inside ``old_root`` to ``new_via``.
 
     For example: ``~/.zshrc.before -> ~/Dropbox/dotfiles/home/.zshrc.before``
@@ -288,7 +284,7 @@ def _rewrite_home_symlinks(
         ".cache",
     }
 
-    def walk(d: Path) -> "list[Path]":
+    def walk(d: Path) -> list[Path]:
         out: list[Path] = []
         try:
             entries = list(d.iterdir())
@@ -317,7 +313,7 @@ def _rewrite_home_symlinks(
         if not path.is_symlink():
             continue
         try:
-            link_target = Path(os.readlink(path))
+            link_target = path.readlink()
         except OSError:
             continue
         try:
@@ -349,7 +345,9 @@ def _is_subpath(child: Path, parent: Path) -> bool:
 
 
 @click.command()
-@click.option("--apply", "do_apply", is_flag=True, help="Execute the migration (default: plan only).")
+@click.option(
+    "--apply", "do_apply", is_flag=True, help="Execute the migration (default: plan only)."
+)
 @click.option(
     "--prefer-gdrive",
     is_flag=True,
@@ -476,18 +474,14 @@ def _run_apply(plan: MigrationPlan, *, prefer_gdrive: bool, prefer_dropbox: bool
         for pair in plan.pairs:
             expected = sum(1 for _ in pair.source.rglob("*") if _.is_file())
             if not _wait_for_sync(pair.dest, expected):
-                print_warning(
-                    f"Google Drive still settling for {pair.dest}; continuing anyway"
-                )
+                print_warning(f"Google Drive still settling for {pair.dest}; continuing anyway")
 
     # Retarget the local symlink atomically.
     new_target = plan.gdrive_root / TARGET_DIR_NAME
     if not new_target.is_dir():
         print_error(f"Expected {new_target} to exist after copy; aborting before retarget")
         return 1
-    old_pointer = (
-        PRIVATE_DOTFILES.resolve() if PRIVATE_DOTFILES.is_dir() else plan.source_root
-    )
+    old_pointer = PRIVATE_DOTFILES.resolve() if PRIVATE_DOTFILES.is_dir() else plan.source_root
     print_step(f"Retargeting {PRIVATE_DOTFILES} → {new_target}")
     journal_entries.append(
         {

@@ -32,15 +32,16 @@ def cli(dry_run: bool) -> None:
         sys.exit(1)
 
     if dry_run:
-        click.echo("DRY RUN MODE - showing what would be done (not yet supported, running normally)\n")
+        click.echo(
+            "DRY RUN MODE - showing what would be done (not yet supported, running normally)\n"
+        )
 
     if not symlink_home_dir(home_dir):
         ok = False
 
     private_home = PRIVATE_DOTFILES / "home"
-    if private_home.is_dir():
-        if not symlink_home_dir(private_home):
-            ok = False
+    if private_home.is_dir() and not symlink_home_dir(private_home):
+        ok = False
 
     if not ok:
         sys.exit(1)

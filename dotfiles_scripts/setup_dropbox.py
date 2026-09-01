@@ -217,7 +217,8 @@ def create_device_zshrc_configs(home_dir: Path) -> None:
                 label = level if level else "all devices"
                 config_file.write_text(
                     f"# {base_name} for {label}\n"
-                    f"# Sourced by ~/.zshrc {'before' if 'before' in base_name else 'after'} main config\n"
+                    "# Sourced by ~/.zshrc "
+                    f"{'before' if 'before' in base_name else 'after'} main config\n"
                 )
                 print_success(f"Created {config_file}")
 
@@ -369,7 +370,10 @@ def check_cloud_sync(home_dir: Path) -> bool:
     print("\n  To fix this:")
     print(f"    1. Open Finder and navigate to {home_dir.parent}")
     print("    2. Select all files (Cmd+A)")
-    print("    3. Right-click → 'Make Available Offline' (Dropbox) or 'Available offline' (Google Drive)")
+    print(
+        "    3. Right-click → 'Make Available Offline' (Dropbox) or "
+        "'Available offline' (Google Drive)"
+    )
 
     # Nothing to prompt for on a headless box — the 0-byte-placeholder problem
     # only exists behind a streaming cloud provider, not a git clone.

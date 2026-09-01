@@ -44,9 +44,7 @@ from dotfiles_scripts.setup_utils import (
     print_warning,
 )
 
-ITEMS_CONFIG_PATH = (
-    PRIVATE_DOTFILES / "home" / ".config" / "dotfiles" / "ssh-export-items.yaml"
-)
+ITEMS_CONFIG_PATH = PRIVATE_DOTFILES / "home" / ".config" / "dotfiles" / "ssh-export-items.yaml"
 
 
 @dataclass(frozen=True)
@@ -84,9 +82,7 @@ def parse_op_link(url: str) -> dict[str, str]:
     }
     missing = [k for k in ("vault", "item") if not parts[k]]
     if missing:
-        raise click.UsageError(
-            f"1Password link missing required component(s) {missing}: {url!r}"
-        )
+        raise click.UsageError(f"1Password link missing required component(s) {missing}: {url!r}")
     return parts
 
 
@@ -97,9 +93,7 @@ def item_from_link(url: str, filename: str) -> OpSshItem:
     # accepts either as ``--account``.
     account = parts["account"] or parts["host"]
     if not account:
-        raise click.UsageError(
-            f"1Password link missing both account id (a) and host (h): {url!r}"
-        )
+        raise click.UsageError(f"1Password link missing both account id (a) and host (h): {url!r}")
     return OpSshItem(
         op_item=parts["item"],
         filename=filename,
@@ -112,9 +106,7 @@ def parse_item_spec(spec: str) -> OpSshItem:
     """Parse a CLI ``--item NAME:FILENAME:ACCOUNT:VAULT`` spec."""
     fields = spec.split(":")
     if len(fields) != 4:
-        raise click.BadParameter(
-            f"--item must be NAME:FILENAME:ACCOUNT:VAULT (got {spec!r})"
-        )
+        raise click.BadParameter(f"--item must be NAME:FILENAME:ACCOUNT:VAULT (got {spec!r})")
     return OpSshItem(op_item=fields[0], filename=fields[1], account=fields[2], vault=fields[3])
 
 
@@ -208,7 +200,7 @@ def ensure_op_signed_in() -> bool:
         return False
     if result.returncode != 0:
         print_error(
-            "op is not signed in. Run `eval \"$(op signin)\"` in your shell first, "
+            'op is not signed in. Run `eval "$(op signin)"` in your shell first, '
             "then re-run this command."
         )
         return False

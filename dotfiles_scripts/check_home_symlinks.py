@@ -38,9 +38,7 @@ from dotfiles_scripts.setup_utils import (
 # Keep these as literal string prefixes (matched against the symlink's raw
 # target text), so we catch broken links even when the target path no longer
 # resolves to anything on disk.
-_STALE_TARGET_PREFIXES: tuple[str, ...] = (
-    f"{DROPBOX_DIR}/dotfiles/",
-)
+_STALE_TARGET_PREFIXES: tuple[str, ...] = (f"{DROPBOX_DIR}/dotfiles/",)
 
 # Top-level directories under $HOME that we never descend into when scanning
 # for stale symlinks — either too large, too noisy, or known not to contain
@@ -102,9 +100,8 @@ def _scan_stale_symlinks(home: Path) -> list[Path]:
             # ``home/.symlink-dir`` wholesale symlinks).
             if not entry.is_dir():
                 continue
-            if depth == 0:
-                if entry.name in _SCAN_SKIP_TOPLEVEL or is_backup_dir(entry.name):
-                    continue
+            if depth == 0 and (entry.name in _SCAN_SKIP_TOPLEVEL or is_backup_dir(entry.name)):
+                continue
             walk(entry, depth + 1)
 
     walk(home, 0)
@@ -157,9 +154,7 @@ def main(clean: bool, scan_only: bool) -> None:
             _print_link(p)
 
     if live:
-        print_warning(
-            f"{len(live)} live-but-stale symlink(s) (target still exists at old path):"
-        )
+        print_warning(f"{len(live)} live-but-stale symlink(s) (target still exists at old path):")
         for p in live:
             _print_link(p)
 
@@ -177,9 +172,7 @@ def main(clean: bool, scan_only: bool) -> None:
             print_step("Re-run with --clean to remove broken symlinks")
 
     if live:
-        print_step(
-            "Live-but-stale symlinks left alone — repoint or remove them manually"
-        )
+        print_step("Live-but-stale symlinks left alone — repoint or remove them manually")
 
     sys.exit(0 if ok else 1)
 

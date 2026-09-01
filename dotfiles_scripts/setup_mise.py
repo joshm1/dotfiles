@@ -115,9 +115,7 @@ def main() -> int:
     if not is_mise_installed():
         print_step("mise not found, installing...")
         installed = (
-            install_mise_via_homebrew()
-            if shutil.which("brew")
-            else install_mise_via_script()
+            install_mise_via_homebrew() if shutil.which("brew") else install_mise_via_script()
         )
         if not installed:
             return 1

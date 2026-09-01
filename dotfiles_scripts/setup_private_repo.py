@@ -31,6 +31,8 @@ are left in place so a re-bootstrap is fast.
 
 from __future__ import annotations
 
+# These values are initialized after CLI/config resolution.
+# pyright: reportConstantRedefinition=false
 import os
 import re
 import shutil
@@ -109,6 +111,7 @@ def _set_private_repo_path() -> None:
     """Populate ``PRIVATE_DOTFILES_REPO`` from config; called at cli() entry."""
     global PRIVATE_DOTFILES_REPO
     PRIVATE_DOTFILES_REPO = get_private_repo_path()
+
 
 LAUNCH_AGENTS_DIR = Path.home() / "Library" / "LaunchAgents"
 PLIST_NAMES = (
@@ -355,23 +358,18 @@ def _gh_repo_exists() -> bool:
     return result.returncode == 0
 
 
-def _gh_repo_has_commits() -> bool:
-    """True if the GitHub repo has at least one commit on its default branch."""
-    result = subprocess.run(
-        ["gh", "repo", "view", GH_FULL, "--json", "defaultBranchRef", "-q",
-         ".defaultBranchRef.name"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    return result.returncode == 0 and result.stdout.strip() != ""
-
-
 def _gh_repo_create() -> bool:
     print_step(f"creating GitHub repo {GH_FULL} (private)")
     result = subprocess.run(
-        ["gh", "repo", "create", GH_FULL, "--private",
-         "--description", "Personal private dotfiles (managed by joshm1/dotfiles)"],
+        [
+            "gh",
+            "repo",
+            "create",
+            GH_FULL,
+            "--private",
+            "--description",
+            "Personal private dotfiles (managed by joshm1/dotfiles)",
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -458,8 +456,9 @@ def _git_init_with_remote() -> bool:
         ["git", "remote", "add", "origin", f"git@github.com:{GH_FULL}.git"],
     ]
     for c in cmds:
-        result = subprocess.run(c, check=False, cwd=PRIVATE_DOTFILES_REPO,
-                                capture_output=True, text=True)
+        result = subprocess.run(
+            c, check=False, cwd=PRIVATE_DOTFILES_REPO, capture_output=True, text=True
+        )
         if result.returncode != 0:
             print_error(f"{' '.join(c)}: {result.stderr.strip() or result.stdout.strip()}")
             return False
@@ -610,8 +609,9 @@ def _initial_commit_and_push() -> bool:
         ["git", "push", "-u", "origin", "main"],
     ]
     for c in cmds:
-        result = subprocess.run(c, check=False, cwd=PRIVATE_DOTFILES_REPO,
-                                capture_output=True, text=True)
+        result = subprocess.run(
+            c, check=False, cwd=PRIVATE_DOTFILES_REPO, capture_output=True, text=True
+        )
         if result.returncode != 0:
             print_error(f"{' '.join(c)}: {result.stderr.strip() or result.stdout.strip()}")
             return False
@@ -747,11 +747,15 @@ def _install_launch_agents() -> bool:
         subprocess.run(["launchctl", "unload", str(dst)], check=False, capture_output=True)
         result = subprocess.run(
             ["launchctl", "load", "-w", str(dst)],
-            check=False, capture_output=True, text=True,
+            check=False,
+            capture_output=True,
+            text=True,
         )
         if result.returncode != 0:
-            print_warning(f"launchctl load failed for {name}: "
-                          f"{result.stderr.strip() or result.stdout.strip()}")
+            print_warning(
+                f"launchctl load failed for {name}: "
+                f"{result.stderr.strip() or result.stdout.strip()}"
+            )
         else:
             print_success(f"loaded {name}")
     return True

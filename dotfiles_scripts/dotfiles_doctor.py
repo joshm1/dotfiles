@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -33,6 +34,8 @@ import click
 
 from dotfiles_scripts.detach_cloud_cache import (
     CACHE_ROOT,
+)
+from dotfiles_scripts.detach_cloud_cache import (
     DEFAULT_PATTERNS as DETACH_PATTERNS,
 )
 from dotfiles_scripts.setup_utils import (
@@ -60,10 +63,10 @@ class Category:
     """A group of related findings, optionally with an auto-fix."""
 
     title: str
-    findings: list[Finding] = field(default_factory=list)
+    findings: list[Finding] = field(default_factory=lambda: list[Finding]())
     fix_label: str | None = None
     # Returns True if the fix was applied.
-    fixer: "callable[[list[Finding]], bool] | None" = None  # type: ignore[name-defined]
+    fixer: Callable[[list[Finding]], bool] | None = None
     severity: str = "warn"  # "warn" | "info" | "security"
 
     def add(self, path: Path, note: str = "") -> None:
@@ -251,13 +254,25 @@ def _active_device_ids(root: Path) -> set[str]:
 def _looks_like_private_key(path: Path) -> bool:
     if path.name.endswith((".pub", ".pem.pub")):
         return False
-    if path.name in {".symlink-dir", ".dotfiles.yaml", "config", "known_hosts", "known_hosts.old", "authorized_keys"}:
+    if path.name in {
+        ".symlink-dir",
+        ".dotfiles.yaml",
+        "config",
+        "known_hosts",
+        "known_hosts.old",
+        "authorized_keys",
+    }:
         return False
     try:
         head = path.read_bytes()[:128]
     except OSError:
         return False
-    return b"PRIVATE KEY" in head or path.suffix in {".pem", ".key"} or "rsa" in path.name.lower() or "ed25519" in path.name.lower()
+    return (
+        b"PRIVATE KEY" in head
+        or path.suffix in {".pem", ".key"}
+        or "rsa" in path.name.lower()
+        or "ed25519" in path.name.lower()
+    )
 
 
 # ---------------------------------------------------------------- CLI
@@ -325,7 +340,9 @@ def cli(check: bool, yes: bool) -> None:
 
         if cat.fixer is None:
             if cat.severity == "security":
-                print_warning(f"no auto-fix; please review the {len(cat.findings)} item(s) above manually")
+                print_warning(
+                    f"no auto-fix; please review the {len(cat.findings)} item(s) above manually"
+                )
             continue
 
         prompt = f"→ Fix the {len(cat.findings)} path(s) above ({cat.fix_label})?"

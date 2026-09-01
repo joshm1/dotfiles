@@ -144,9 +144,7 @@ def setup_machine_config(device_id: str) -> bool:
     """
     config_dir = _machine_config_dir()
     if config_dir is None:
-        print_warning(
-            "No cloud-synced dotfiles directory found; skipping machine config setup"
-        )
+        print_warning("No cloud-synced dotfiles directory found; skipping machine config setup")
         return False
 
     # Create config directory if needed

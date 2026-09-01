@@ -36,9 +36,7 @@ def main() -> int:
 
     private = get_private_dotfiles()
     if private is None:
-        print_warning(
-            "~/.dotfiles-private is not set up; skipping zsh history setup"
-        )
+        print_warning("~/.dotfiles-private is not set up; skipping zsh history setup")
         return 0
 
     device_id = ensure_device_id()
