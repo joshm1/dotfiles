@@ -20,7 +20,6 @@ import shlex
 import subprocess
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import cast
 
@@ -32,6 +31,7 @@ from dotfiles_scripts.setup_utils import (
     print_success,
     print_warning,
 )
+from dotfiles_scripts.utils import utcnow
 
 CACHE_DIR = Path.home() / ".cache" / "dotfiles-private"
 STATE_FILE = CACHE_DIR / "check-repo-state.json"
@@ -56,7 +56,7 @@ def _is_mac() -> bool:
 
 
 def _now() -> str:
-    return datetime.now().astimezone().isoformat(timespec="seconds")
+    return utcnow().isoformat(timespec="seconds")
 
 
 def _ensure_cache_dir() -> None:

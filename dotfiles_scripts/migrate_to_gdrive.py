@@ -36,7 +36,6 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 
 import click
@@ -51,6 +50,7 @@ from dotfiles_scripts.setup_utils import (
     print_success,
     print_warning,
 )
+from dotfiles_scripts.utils import utcnow
 
 # Where the migrated data lives on Google Drive.
 TARGET_DIR_NAME = "dotfiles-private"
@@ -237,7 +237,7 @@ def _atomic_relink(symlink: Path, target: Path) -> None:
 
 
 def _journal_path() -> Path:
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+    ts = utcnow().strftime("%Y%m%d-%H%M%S")
     return Path(f"/tmp/migrate-to-gdrive-{ts}.log")
 
 

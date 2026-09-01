@@ -40,7 +40,6 @@ import sys
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from datetime import datetime
 from pathlib import Path
 from typing import cast
 
@@ -57,6 +56,7 @@ from dotfiles_scripts.setup_utils import (
     print_success,
     read_dotfiles_config,
 )
+from dotfiles_scripts.utils import utcnow
 
 # ---------------------------------------------------------------------------
 # Paths and constants
@@ -151,7 +151,7 @@ _DEFAULT_STATE: dict[str, object] = {
 
 
 def _now() -> str:
-    return datetime.now().astimezone().isoformat(timespec="seconds")
+    return utcnow().isoformat(timespec="seconds")
 
 
 def _now_epoch() -> float:

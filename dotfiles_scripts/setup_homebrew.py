@@ -6,7 +6,6 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 
 from dotfiles_scripts.setup_device_id import get_device_id
@@ -21,6 +20,7 @@ from dotfiles_scripts.setup_utils import (
     print_warning,
     run_cmd,
 )
+from dotfiles_scripts.utils import utcnow
 
 
 def is_homebrew_installed() -> bool:
@@ -127,7 +127,7 @@ def run_brew_bundle() -> bool:
             print_warning(f"Some packages from {brewfile.name} failed to install")
 
     # Mark as installed
-    installed_marker.write_text(f"Installed: {datetime.now().isoformat()}\n")
+    installed_marker.write_text(f"Installed: {utcnow().isoformat()}\n")
     print_success("Homebrew bundle complete")
 
     return True
