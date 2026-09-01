@@ -4,10 +4,10 @@ version = "0.1.0"
 description = "Utility scripts for managing dotfiles"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["pyyaml>=6.0", "rich>=13.0.0", "click>=8.1.0"]
+dependencies = ["pyyaml>=6.0", "rich>=13.0.0", "click>=8.1.0", "jinja2>=3.1.0"]
 
 [dependency-groups]
-dev = ["ruff>=0.9", "pyright>=1.1"]
+dev = ["ruff>=0.9", "pyright>=1.1", "pytest>=8.0"]
 
 [project.scripts]
 # Main entry point

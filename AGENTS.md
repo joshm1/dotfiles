@@ -196,6 +196,12 @@ dotfiles/
 4. Existing files are backed up to timestamped directory (`~/.dotfiles.YYYYMMDD-HHMMSS.bck/`)
 5. Already-correct symlinks are skipped
 
+For consumers without native includes, a per-directory `.dotfiles.yaml` may declare
+`templates:` entries. The walker renders their `.j2` sources with Jinja2, expands
+`${device_id}` in source and destination names, and prepends the configured comment
+marker with an “Edit <template> instead” notice. Use `optional: true` when only some
+devices provide the resolved template.
+
 **Adding new dotfiles:**
 Simply add the file to `home/` in the structure you want (e.g., `home/.myconfig` → `~/.myconfig`), and it will be automatically symlinked on next setup run. For config directories that should be symlinked as a whole, add a `.symlink-dir` tag file inside.
 
