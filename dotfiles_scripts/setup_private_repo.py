@@ -226,11 +226,6 @@ home/.claude/skills/*/logs/
 # Test fixtures and downloaded blobs
 home/.claude/skills/*/test/fixtures/
 
-# gstack source — installed by setup-gstack to ~/gstack and symlinked into
-# ~/.claude/skills/ at runtime. Should never be a real subdir of the repo.
-home/.claude/skills/gstack/
-home/.claude/skills/gstack
-
 # SSH directory: whitelist what's allowed in git, ignore everything else.
 # Keeps private keys / credentials out by default — even files with names
 # that wouldn't match the conventional id_* / *.pem / *.key patterns.

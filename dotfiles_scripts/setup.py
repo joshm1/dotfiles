@@ -161,19 +161,14 @@ def cli() -> int:
             "setup-zsh-history, and setup-ssh-identity"
         )
 
-    # Phase 12: gstack — clone to ~/gstack, restructure ~/.claude/skills into
-    # per-skill symlinks, register with claude + codex hosts. Idempotent;
-    # gracefully skips gstack/setup if bun isn't installed yet.
-    run_setup_module("setup_gstack")
-
-    # Phase 13: Private per-device setup hooks. Generic extension point —
+    # Phase 12: Private per-device setup hooks. Generic extension point —
     # runs every executable in ~/.dotfiles-private/setup-hooks/ (e.g. the
     # cubic CLI installer, gated to mutiny machines). No-op if the private
     # tree or the hooks dir is absent. Runs after symlinks + homebrew so
     # hooks can rely on ~/.config/dotfiles/* and system tools being present.
     run_setup_module("setup_private_hook")
 
-    # Phase 14: Private dotfiles repo (GitHub + GDrive-runtime hybrid). Prompts
+    # Phase 13: Private dotfiles repo (GitHub + GDrive-runtime hybrid). Prompts
     # for the one-time per-machine config when interactive; skips gracefully
     # when unconfigured, non-interactive, or gh isn't authenticated. Called
     # directly rather than via run_setup_module because its main() is a click
@@ -185,7 +180,7 @@ def cli() -> int:
     except Exception as e:
         print_error(f"Failed to run setup_private_repo: {e}")
 
-    # Phase 15: launchd agents (e.g. hourly detach-cloud-cache)
+    # Phase 14: launchd agents (e.g. hourly detach-cloud-cache)
     run_setup_module("setup_launchd")
 
     # Runs after setup_homebrew so codex is available for the security audit
