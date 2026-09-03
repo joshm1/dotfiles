@@ -1,0 +1,19 @@
+dotfiles_scripts/setup.py
+  s_de73981adf6b49::t_3c27f9625914d7 164,171,183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "27a0a6b240e26f0ea36c9538cb1821ed67ee9085",
+  "prompts": {},
+  "sessions": {
+    "s_de73981adf6b49": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46718d88-b320-4217-90cc-f379c113b81a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
