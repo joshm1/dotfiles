@@ -1,3 +1,12 @@
+# A path argument selects an existing worktree directly: cd there and relabel
+# the workspace. Only explicit paths ("/…", "./…", "../…") qualify, so a branch
+# name is never shadowed by a same-named directory in the current dir.
+if [[ $# -eq 1 && "$1" == (/*|./*|../*) && -d "$1" ]]; then
+  cd "$1" || return 1
+  { _cwt_cmux_rename "$(git -C "$PWD" branch --show-current 2>/dev/null)" } &!
+  return 0
+fi
+
 if ! git rev-parse --git-dir &>/dev/null; then
   echo "Not in a git repository"
   return 1
@@ -50,11 +59,50 @@ if [[ $count -le 1 ]]; then
   return 0
 fi
 
-# Format: /full/path<TAB>branch  dirname
+# Format: /full/path<TAB>branch  dirname (ANSI-colored; fzf runs with --ansi)
 # Path is hidden via --with-nth, but available as {1} for preview and extraction
-local formatted=$(echo "$worktrees" | while read -r path hash branch; do
-  printf "%s\t%s  %s\n" "$path" "$branch" "${path##*/}"
-done)
+local wt_common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+local wt_main="${wt_common%/.git}"
+local wt_here=$(git rev-parse --show-toplevel 2>/dev/null)
+
+local -a wt_paths wt_refs
+local wt_width=0 wt_path wt_hash wt_rest
+while read -r wt_path wt_hash wt_rest; do
+  wt_paths+=("$wt_path")
+  wt_refs+=("$wt_rest")
+  (( ${#wt_rest} > wt_width )) && wt_width=${#wt_rest}
+done <<< "$worktrees"
+(( wt_width > 48 )) && wt_width=48
+
+local formatted=$(
+  local i ref flag color pad tag
+  for (( i = 1; i <= ${#wt_paths}; i++ )); do
+    ref="${wt_refs[i]}"
+    flag=""
+    # "prunable" trails the ref when the worktree dir is gone from disk.
+    if [[ "$ref" == *" prunable" ]]; then
+      ref="${ref% prunable}"
+      flag=$'\033[31m prunable\033[0m'
+    fi
+    # The worktree you are standing in, then the repo's root worktree, outrank
+    # the ref's own styling: branch cyan, detached HEAD dim.
+    tag=""
+    if [[ "${wt_paths[i]}" == "$wt_here" ]]; then
+      color=$'\033[1;32m'
+    elif [[ "${wt_paths[i]}" == "$wt_main" ]]; then
+      color=$'\033[1;35m'
+    elif [[ "$ref" == \(* ]]; then
+      color=$'\033[2;37m'
+    else
+      color=$'\033[36m'
+    fi
+    [[ "${wt_paths[i]}" == "$wt_main" ]] && tag=$'\033[2;35m [root]\033[0m'
+    pad=""
+    (( wt_width > ${#wt_refs[i]} )) && printf -v pad "%*s" $(( wt_width - ${#wt_refs[i]} )) ""
+    printf "%s\t%s%s\033[0m%s%s  \033[2m%s\033[0m%s\n" \
+      "${wt_paths[i]}" "$color" "$ref" "$flag" "$pad" "${wt_paths[i]##*/}" "$tag"
+  done
+)
 
 local preview_cmd='
   dir={1}
@@ -80,18 +128,68 @@ local preview_cmd='
   fi
 '
 
-local selected=$(echo "$formatted" | fzf \
+# --expect makes fzf print the pressed key as the first output line (empty on
+# plain enter), so one picker serves both "switch to it" and "delete these".
+local out=$(echo "$formatted" | fzf \
   --ansi \
+  --multi \
   --delimiter=$'\t' \
   --with-nth=2.. \
   --border-label ' git worktrees ' \
+  --header 'enter: switch · tab: mark · ctrl-a: mark all · ctrl-d: delete marked' \
+  --bind 'ctrl-a:toggle-all' \
+  --expect=ctrl-d \
   --prompt '🌳 ' \
   --preview "$preview_cmd" \
   --preview-window=right:60%)
 
-[[ -z "$selected" ]] && return 0
+[[ -z "$out" ]] && return 0
 
-local dir="${selected%%$'\t'*}"
+local -a out_lines=("${(@f)out}")
+local key="${out_lines[1]}"
+local -a dirs=()
+local line
+for line in "${out_lines[@]:1}"; do
+  [[ -n "$line" ]] && dirs+=("${line%%$'\t'*}")
+done
+(( ${#dirs} )) || return 0
+
+if [[ "$key" == ctrl-d ]]; then
+  local -a targets=() skipped=() failed=()
+  local d
+  for d in "${dirs[@]}"; do
+    # git refuses to remove the worktree you stand in; the root worktree is the
+    # repo itself, so neither is ever a delete target.
+    if [[ "$d" == "$wt_here" || "$d" == "$wt_main" ]]; then
+      skipped+=("$d")
+    else
+      targets+=("$d")
+    fi
+  done
+  (( ${#skipped} )) && print -ru2 -- "Skipped current/root worktree: ${(j:, :)skipped}"
+  (( ${#targets} )) || return 0
+
+  print -r -- "Remove ${#targets} worktree(s):"
+  printf '  %s\n' "${targets[@]}"
+  read -q "reply?Proceed? [y/N] " || { echo; return 0 }
+  echo
+  for d in "${targets[@]}"; do
+    git worktree remove "$d" 2>/dev/null || failed+=("$d")
+  done
+
+  if (( ${#failed} )); then
+    print -r -- "Has modified or untracked files:"
+    printf '  %s\n' "${failed[@]}"
+    read -q "reply?Force remove? [y/N] " || { echo; return 0 }
+    echo
+    for d in "${failed[@]}"; do
+      git worktree remove --force "$d" || print -ru2 -- "failed: $d"
+    done
+  fi
+  return 0
+fi
+
+local dir="${dirs[1]}"
 
 if [[ ! -d "$dir" ]]; then
   echo "Worktree directory missing: $dir"
