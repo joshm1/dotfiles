@@ -8,6 +8,7 @@ python = "3.13"
 "npm:agent-browser" = "latest"      # browser automation CLI - https://agent-browser.dev
 ruby = "3.2.2"
 "npm:ccstatusline" = "latest"
+supabase = "2.116.0"
 
 [settings]
 
