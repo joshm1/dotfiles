@@ -1,0 +1,19 @@
+home/.gitconfig
+  s_84eb03cf614174::t_0ed210fd4e7ad1 177,180
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "46ccd1b59466a7b39cc0b9625757e084d4ba2b5a",
+  "prompts": {},
+  "sessions": {
+    "s_84eb03cf614174": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0444b-7fb4-7d92-b925-1c41a2a7dc1e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
