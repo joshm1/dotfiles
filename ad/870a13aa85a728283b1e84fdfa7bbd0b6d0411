@@ -1,0 +1,21 @@
+home/.zsh/functions/cwt
+  s_67919e40398caf::t_67ff7ee137e864 131-133,135,139-141,146-190,192
+  s_67919e40398caf::t_4c748a5682704f 64-67,78,87-94,99,102-103
+  s_67919e40398caf::t_25ac8ad8283c43 1-9,62,68-77,79-86,95-98,100-101,104-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "ad870a13aa85a728283b1e84fdfa7bbd0b6d0411",
+  "prompts": {},
+  "sessions": {
+    "s_67919e40398caf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "56a84877-c59b-4170-aef0-ae61da6a2dfd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
