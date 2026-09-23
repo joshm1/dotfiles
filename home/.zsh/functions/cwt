@@ -21,6 +21,21 @@ if [[ $# -eq 1 ]]; then
   local common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
   local main_worktree="${common_dir%/.git}"
 
+  # A branch checked out in any worktree (the root one, or one not under
+  # .worktrees/) can't get a second worktree, so switch to where it lives.
+  local wt_line wt_cur existing=""
+  while IFS= read -r wt_line; do
+    case "$wt_line" in
+      "worktree "*) wt_cur="${wt_line#worktree }" ;;
+      "branch refs/heads/$value") existing="$wt_cur"; break ;;
+    esac
+  done < <(git -C "$main_worktree" worktree list --porcelain)
+  if [[ -n "$existing" && -d "$existing" ]]; then
+    cd "$existing" || return 1
+    _cwt_cmux_rename "$value" &!
+    return 0
+  fi
+
   local wt_root="$main_worktree/.worktrees"
   mkdir -p "$wt_root"
 
