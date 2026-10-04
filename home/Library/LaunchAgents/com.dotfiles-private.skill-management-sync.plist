@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dotfiles-private.skill-management-sync</string>
+
+    <!--
+      Daily at 10:00: copy the skills turned off in Claude Code
+      (~/.claude/settings.json skillOverrides) into the generated
+      [[skills.config]] block of ~/.codex/config.toml, so a skill turned
+      off in Claude's /skills is also off in Codex. Notifies via
+      terminal-notifier, and logs, only when Codex changed or the sync
+      failed. A run missed while the Mac sleeps happens on wake.
+    -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>mkdir -p "$HOME/Library/Logs" &amp;&amp; uv run --quiet "$HOME/.agents/skills/skill-management/scripts/skills.py" sync --notify &gt;&gt; "$HOME/Library/Logs/skill-management-sync.log" 2&gt;&amp;1</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>10</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+</dict>
+</plist>
