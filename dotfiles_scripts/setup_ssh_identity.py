@@ -18,7 +18,6 @@ rather than deleting (never destructive on a non-recoverable secret).
 
 from __future__ import annotations
 
-import datetime
 import shutil
 import subprocess
 import sys
@@ -34,6 +33,7 @@ from dotfiles_scripts.setup_utils import (
     print_warning,
     read_dotfiles_config,
 )
+from dotfiles_scripts.utils import utcnow
 
 VALID_BACKENDS = SSH_IDENTITY_BACKENDS
 DEFAULT_BACKEND = DEFAULT_SSH_IDENTITY_BACKEND
@@ -93,8 +93,7 @@ def _pull_keys_now() -> bool:
         return False
     if result.returncode != 0:
         print_warning(
-            f"sync-private-runtime --pull exited {result.returncode}; "
-            "keys may not be in place yet"
+            f"sync-private-runtime --pull exited {result.returncode}; keys may not be in place yet"
         )
         return False
     return True
@@ -144,8 +143,7 @@ def _pull_keys_from_op() -> bool:
         return False
     if result.returncode != 0:
         print_warning(
-            f"pull-ssh-keys-from-op exited {result.returncode}; "
-            "falling back to the shared bucket"
+            f"pull-ssh-keys-from-op exited {result.returncode}; falling back to the shared bucket"
         )
         return False
     return True
@@ -183,7 +181,7 @@ def _backup_stale_private_keys(ssh_dir: Path) -> int:
             stale.append(entry)
     if not stale:
         return 0
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    timestamp = utcnow().strftime("%Y%m%d-%H%M%S")
     backup_dir = ssh_dir / f".opt-out-backup-{timestamp}"
     backup_dir.mkdir(parents=True, exist_ok=True)
     for src in stale:
@@ -201,9 +199,7 @@ def main() -> int:
 
     ssh_dir = _ssh_dir()
     if not ssh_dir.is_dir():
-        print_warning(
-            f"{ssh_dir} not found; private-dotfiles symlink may not be in place yet"
-        )
+        print_warning(f"{ssh_dir} not found; private-dotfiles symlink may not be in place yet")
         return 0
 
     backend = _resolve_backend()

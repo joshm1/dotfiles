@@ -34,8 +34,12 @@ def ensure_zsh_installed() -> str | None:
     if is_linux() and shutil.which("apt-get"):
         print_step("zsh not found — installing via apt...")
         try:
-            subprocess.run(["sudo", "apt-get", "update", "-qq"], check=True, stdin=subprocess.DEVNULL)
-            subprocess.run(["sudo", "apt-get", "install", "-y", "zsh"], check=True, stdin=subprocess.DEVNULL)
+            subprocess.run(
+                ["sudo", "apt-get", "update", "-qq"], check=True, stdin=subprocess.DEVNULL
+            )
+            subprocess.run(
+                ["sudo", "apt-get", "install", "-y", "zsh"], check=True, stdin=subprocess.DEVNULL
+            )
         except subprocess.CalledProcessError as e:
             print_warning(f"Failed to install zsh: {e}")
             return None

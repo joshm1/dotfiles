@@ -6,9 +6,15 @@ import platform
 import re
 import subprocess
 import sys
-from datetime import datetime
+import tempfile
+from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateError
+
+from dotfiles_scripts.utils import utcnow
 
 
 def is_mac() -> bool:
@@ -119,6 +125,7 @@ def ensure_private_dotfiles_symlink() -> Path | None:
     PRIVATE_DOTFILES.symlink_to(target)
     return PRIVATE_DOTFILES
 
+
 # Backup directory (created lazily)
 _backup_dir: Path | None = None
 
@@ -127,16 +134,16 @@ def get_backup_dir() -> Path:
     """Get a timestamped backup directory (created once per session)."""
     global _backup_dir
     if _backup_dir is None:
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        timestamp = utcnow().strftime("%Y%m%d-%H%M%S")
         _backup_dir = Path.home() / f".dotfiles.{timestamp}.bck"
     return _backup_dir
 
 
 def print_header(msg: str) -> None:
     """Print a section header."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  {msg}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 def print_step(msg: str) -> None:
@@ -197,38 +204,61 @@ def run_cmd(
 # Tag file that indicates a directory should be symlinked as a whole
 SYMLINK_DIR_TAG = ".symlink-dir"
 
-# Per-directory config consumed by the symlink walker. Currently supports a
-# ``symlinks:`` block that overrides the default same-name mapping; see
-# ``_resolve_symlinks_directives``. Also consumed by ``setup_dropbox`` for
-# ``chmod:`` rules.
+# Per-directory config consumed by the symlink walker for same-name overrides
+# and rendered templates. Also consumed by ``setup_dropbox`` for ``chmod:`` rules.
 DOTFILES_YAML = ".dotfiles.yaml"
 
 # Files to skip when traversing
 SKIP_FILES = {
-    ".DS_Store", ".git", SYMLINK_DIR_TAG, DOTFILES_YAML,
+    ".DS_Store",
+    ".git",
+    SYMLINK_DIR_TAG,
+    DOTFILES_YAML,
     # build / dependency / cache artifacts that must never be symlinked into $HOME
     # (e.g. a Python project living inside the dotfiles tree produces these).
-    ".venv", "__pycache__", "node_modules", "build", "dist",
-    ".pytest_cache", ".ruff_cache", ".mypy_cache", ".turbo", ".coverage",
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "build",
+    "dist",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".turbo",
+    ".coverage",
 }
 
 # Name suffixes that are likewise never symlinked (globs SKIP_FILES can't express).
-SKIP_SUFFIXES = (".pyc", ".pyo", ".egg-info")
+SKIP_SUFFIXES = (".pyc", ".pyo", ".egg-info", ".j2")
 
 
-def _read_dotfiles_yaml(directory: Path) -> dict[str, Any]:
+def _object_dict(value: object) -> dict[object, object] | None:
+    if not isinstance(value, dict):
+        return None
+    # PyYAML has no runtime annotations or bundled schema-aware return type.
+    # The mapping check above establishes the container; callers validate keys and values.
+    return cast(dict[object, object], value)
+
+
+def _read_dotfiles_yaml(directory: Path) -> dict[str, object]:
     """Read ``.dotfiles.yaml`` from ``directory``; return an empty dict on miss."""
     config_file = directory / DOTFILES_YAML
     if not config_file.is_file():
         return {}
     try:
         import yaml
-
-        loaded = yaml.safe_load(config_file.read_text())
-    except (yaml.YAMLError, ImportError, OSError) as exc:
+    except ImportError as exc:
         print_warning(f"Could not read {config_file}: {exc}")
         return {}
-    return loaded if isinstance(loaded, dict) else {}
+    try:
+        loaded: object = yaml.safe_load(config_file.read_text())
+    except (yaml.YAMLError, OSError) as exc:
+        print_warning(f"Could not read {config_file}: {exc}")
+        return {}
+    raw = _object_dict(loaded)
+    if raw is None:
+        return {}
+    return {key: value for key, value in raw.items() if isinstance(key, str)}
 
 
 def _resolve_symlinks_directives(
@@ -253,15 +283,16 @@ def _resolve_symlinks_directives(
             use: manifest.toml.${device_id}
     """
     config = _read_dotfiles_yaml(directory)
-    raw = config.get("symlinks")
-    if not isinstance(raw, dict):
+    raw = _object_dict(config.get("symlinks"))
+    if raw is None:
         return {}, set()
 
     active: dict[str, str] = {}
     variants: set[str] = set()
 
-    for home_name, spec in raw.items():
-        if not isinstance(home_name, str) or not isinstance(spec, dict):
+    for home_name, raw_spec in raw.items():
+        spec = _object_dict(raw_spec)
+        if not isinstance(home_name, str) or spec is None:
             continue
         use_template = spec.get("use")
         if not isinstance(use_template, str):
@@ -284,6 +315,132 @@ def _resolve_symlinks_directives(
     return active, variants
 
 
+@dataclass(frozen=True)
+class TemplateDirective:
+    source_name: str
+    comment: str
+    optional: bool
+
+
+def _resolve_template_directives(
+    directory: Path, device_id: str
+) -> tuple[dict[str, TemplateDirective], set[str], bool]:
+    """Resolve generated-file templates declared in ``.dotfiles.yaml``."""
+    config = _read_dotfiles_yaml(directory)
+    if "templates" not in config:
+        return {}, set(), True
+    raw = _object_dict(config["templates"])
+    if raw is None:
+        print_warning(f"Invalid templates block in {directory / DOTFILES_YAML}")
+        return {}, set(), False
+
+    active: dict[str, TemplateDirective] = {}
+    variants: set[str] = set()
+    valid = True
+
+    for home_template, raw_spec in raw.items():
+        spec = _object_dict(raw_spec)
+        if not isinstance(home_template, str) or spec is None:
+            print_warning(f"Invalid template directive in {directory / DOTFILES_YAML}")
+            valid = False
+            continue
+        use_template = spec.get("use")
+        comment = spec.get("comment")
+        optional = spec.get("optional", False)
+
+        if isinstance(use_template, str):
+            if "${device_id}" in use_template:
+                prefix, _, suffix = use_template.partition("${device_id}")
+                for candidate in directory.iterdir():
+                    if (
+                        candidate.name.startswith(prefix)
+                        and candidate.name.endswith(suffix)
+                        and len(candidate.name) > len(prefix) + len(suffix)
+                    ):
+                        variants.add(candidate.name)
+            else:
+                variants.add(use_template)
+
+        if (
+            not isinstance(use_template, str)
+            or not isinstance(comment, str)
+            or not isinstance(optional, bool)
+        ):
+            print_warning(
+                f"Invalid template directive for {home_template!r} in {directory / DOTFILES_YAML}"
+            )
+            valid = False
+            continue
+
+        home_name = home_template.replace("${device_id}", device_id)
+        source_name = use_template.replace("${device_id}", device_id)
+        active[home_name] = TemplateDirective(source_name, comment, optional)
+
+    return active, variants, valid
+
+
+def _render_template(source: Path, target: Path, comment: str) -> bool:
+    """Render one Jinja template with includes rooted at the target home."""
+    try:
+        environment = Environment(
+            loader=FileSystemLoader(Path.home()),
+            undefined=StrictUndefined,
+            autoescape=False,
+            keep_trailing_newline=True,
+            trim_blocks=True,
+        )
+        rendered = environment.from_string(source.read_text(encoding="utf-8")).render()
+    except (OSError, TemplateError, UnicodeError) as exc:
+        print_warning(f"Could not render {source}: {exc}")
+        return False
+
+    try:
+        display_source = f"~/{source.relative_to(Path.home())}"
+    except ValueError:
+        display_source = str(source)
+    header = f"{comment} Generated file. Edit {display_source} instead.\n"
+    output = f"{header}{rendered}"
+
+    current: str | None = None
+    managed = False
+    if target.is_file() and not target.is_symlink():
+        with suppress(OSError, UnicodeError):
+            current = target.read_text(encoding="utf-8")
+        managed = current is not None and current.startswith(header)
+    if current == output:
+        print(f"  {target.name} already rendered")
+        return True
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f".{target.name}.",
+            delete=False,
+        ) as file:
+            file.write(output)
+            temporary = Path(file.name)
+
+        if (target.exists() or target.is_symlink()) and not managed:
+            backup_dir = get_backup_dir()
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            backup_path = backup_dir / target.name
+            print_warning(f"Backing up {target} → {backup_path}")
+            target.rename(backup_path)
+        temporary.replace(target)
+    except OSError as exc:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+        print_warning(f"Could not write rendered file {target}: {exc}")
+        return False
+
+    print_success(f"Rendered {target} ← {source}")
+    return True
+
+
 def _resolve_excludes(directory: Path, device_id: str) -> set[str]:
     """Return filenames in ``directory`` excluded for the current device.
 
@@ -300,12 +457,14 @@ def _resolve_excludes(directory: Path, device_id: str) -> set[str]:
     if not device_id:
         return set()
     config = _read_dotfiles_yaml(directory)
-    raw = config.get("exclude")
-    if not isinstance(raw, dict):
+    raw = _object_dict(config.get("exclude"))
+    if raw is None:
         return set()
-    names = raw.get(device_id)
-    if not isinstance(names, list):
+    raw_names = raw.get(device_id)
+    if not isinstance(raw_names, list):
         return set()
+    # The list container is validated above; each item is narrowed below.
+    names = cast(list[object], raw_names)
     return {name for name in names if isinstance(name, str)}
 
 
@@ -328,9 +487,7 @@ DEFAULT_SSH_IDENTITY_BACKEND = "disk-keys"
 # ``KEY=value`` / ``export KEY=value`` lines in the .dotfiles-config files,
 # with optional surrounding quotes. Matches what shell sourcing produces
 # without actually executing the file (so we don't need a subprocess).
-_CONFIG_LINE_RE = re.compile(
-    r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$"
-)
+_CONFIG_LINE_RE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$")
 
 
 def read_dotfiles_config(key: str) -> str | None:
@@ -418,9 +575,7 @@ def get_private_repo_path() -> Path:
     """
     value = read_dotfiles_config("PRIVATE_DOTFILES_REPO_PATH")
     if not value:
-        print_error(
-            "PRIVATE_DOTFILES_REPO_PATH is not set in ~/.config/dotfiles/.dotfiles-config*"
-        )
+        print_error("PRIVATE_DOTFILES_REPO_PATH is not set in ~/.config/dotfiles/.dotfiles-config*")
         print(
             "  Set it in the most-specific .dotfiles-config file for this machine.\n"
             "  Example: PRIVATE_DOTFILES_REPO_PATH=$HOME/projects/<you>/<repo>"
@@ -440,18 +595,14 @@ def get_private_repo_gh() -> str:
     """
     value = read_dotfiles_config("PRIVATE_DOTFILES_REPO_GH")
     if not value:
-        print_error(
-            "PRIVATE_DOTFILES_REPO_GH is not set in ~/.config/dotfiles/.dotfiles-config*"
-        )
+        print_error("PRIVATE_DOTFILES_REPO_GH is not set in ~/.config/dotfiles/.dotfiles-config*")
         print(
             "  Set it in the most-specific .dotfiles-config file for this machine.\n"
             "  Example: PRIVATE_DOTFILES_REPO_GH=<github-user>/<repo>"
         )
         sys.exit(1)
     if "/" not in value:
-        print_error(
-            f"PRIVATE_DOTFILES_REPO_GH={value!r} is missing a '/' (expected owner/name)"
-        )
+        print_error(f"PRIVATE_DOTFILES_REPO_GH={value!r} is missing a '/' (expected owner/name)")
         sys.exit(1)
     return value
 
@@ -500,9 +651,8 @@ def symlink_home_dir(home_dir: Path) -> bool:
     If a directory contains .symlink-dir, symlink the directory itself.
     Otherwise, recurse into it and symlink children.
 
-    A directory may also contain a ``.dotfiles.yaml`` with a ``symlinks:``
-    block to remap individual files (e.g., pick a per-device variant); see
-    ``_resolve_symlinks_directives``.
+    A directory may also contain a ``.dotfiles.yaml`` with ``symlinks:``
+    overrides or ``templates:`` entries rendered through Jinja.
 
     Returns True if every symlink succeeded, False otherwise.
     """
@@ -513,6 +663,12 @@ def symlink_home_dir(home_dir: Path) -> bool:
         nonlocal success
 
         active, variants = _resolve_symlinks_directives(src_dir, device_id)
+        templates, template_variants, templates_valid = _resolve_template_directives(
+            src_dir, device_id
+        )
+        variants.update(template_variants)
+        if not templates_valid:
+            success = False
         excludes = _resolve_excludes(src_dir, device_id)
 
         for src in sorted(src_dir.iterdir()):
@@ -560,6 +716,20 @@ def symlink_home_dir(home_dir: Path) -> bool:
                 success = False
                 continue
             if not create_symlink(repo_path, target_dir / home_name):
+                success = False
+
+        for home_name, template in templates.items():
+            source = src_dir / template.source_name
+            if not source.is_file():
+                if template.optional:
+                    continue
+                print_warning(
+                    f"template source: {source} not found "
+                    f"(device_id={device_id!r}); skipping {home_name}"
+                )
+                success = False
+                continue
+            if not _render_template(source, target_dir / home_name, template.comment):
                 success = False
 
     process_dir(home_dir, Path.home())

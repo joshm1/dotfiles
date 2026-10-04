@@ -49,7 +49,9 @@ def _load_plist(plist: Path) -> bool:
         text=True,
     )
     if result.returncode != 0:
-        print_warning(f"launchctl load failed for {label}: {result.stderr.strip() or result.stdout.strip()}")
+        print_warning(
+            f"launchctl load failed for {label}: {result.stderr.strip() or result.stdout.strip()}"
+        )
         return False
     print_success(f"loaded LaunchAgent: {label}")
     return True

@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 import yaml
 
@@ -52,7 +53,7 @@ def get_existing_emails() -> set[str]:
         capture_output=True,
         text=True,
     )
-    emails = set()
+    emails: set[str] = set()
     for line in result.stdout.splitlines():
         if line.startswith("uid:"):
             # Format: uid:u::::1234567890::Name <email>:::::::::0:
@@ -145,24 +146,43 @@ def main() -> int:
         return 0
 
     try:
-        config = yaml.safe_load(manifest.read_text()) or {}
+        loaded: object = yaml.safe_load(manifest.read_text())
     except yaml.YAMLError as e:
         print_warning(f"Invalid YAML in {manifest}: {e}")
         return 1
 
-    keys = config.get("keys", [])
-    if not keys:
+    if loaded is None:
         print_step("No keys defined in manifest")
         return 0
+    if not isinstance(loaded, dict):
+        print_warning(f"Invalid GPG keys manifest in {manifest}: expected a mapping")
+        return 1
+
+    config = cast("dict[str, object]", loaded)
+    raw_keys = config.get("keys", [])
+    if not raw_keys:
+        print_step("No keys defined in manifest")
+        return 0
+    if not isinstance(raw_keys, list):
+        print_warning(f"Invalid GPG keys manifest in {manifest}: keys must be a list")
+        return 1
+    key_entries = cast("list[object]", raw_keys)
 
     existing_emails = get_existing_emails()
 
-    for key in keys:
+    for raw_key in key_entries:
+        if not isinstance(raw_key, dict):
+            print_warning(f"Skipping invalid key entry: {raw_key}")
+            continue
+        key = cast("dict[str, object]", raw_key)
         name = key.get("name")
         email = key.get("email")
         profile = key.get("profile")
-        if not name or not email:
-            print_warning(f"Skipping invalid key entry: {key}")
+        if not isinstance(name, str) or not isinstance(email, str):
+            print_warning(f"Skipping invalid key entry: {raw_key}")
+            continue
+        if profile is not None and not isinstance(profile, str):
+            print_warning(f"Skipping invalid key profile: {raw_key}")
             continue
 
         # Generate if needed
@@ -179,9 +199,8 @@ def main() -> int:
             print_success(f"Key for {email}: {key_id}")
 
             # Update gitconfig if profile specified
-            if profile and key_id:
-                if update_gitconfig(profile, key_id):
-                    print_success(f"Updated .gitconfig_{profile} with key {key_id}")
+            if profile and update_gitconfig(profile, key_id):
+                print_success(f"Updated .gitconfig_{profile} with key {key_id}")
         else:
             print_warning(f"Could not find key ID for {email}")
 
