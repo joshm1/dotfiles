@@ -1,0 +1,20 @@
+home/Library/LaunchAgents/com.dotfiles-private.skill-management-sync.plist
+  s_1aa3d86912ae1b::t_10eb42d663d326 1-8,10-11,15-19,21-22,30-31
+  s_1aa3d86912ae1b::t_cffe2863d53db1 9,12-14,20,23-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "63b94c6ec96abfc3dfd5e4cacf5a40f816cefa77",
+  "prompts": {},
+  "sessions": {
+    "s_1aa3d86912ae1b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca02a1b1-2c22-45ce-becf-4e05fac3eeb1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
