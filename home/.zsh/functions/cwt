@@ -1,3 +1,13 @@
+# `cwt @` jumps to the repo's root worktree. "@" is git's alias for HEAD, so a
+# real branch by that name is effectively unusable and never shadowed here.
+if [[ $# -eq 1 && "$1" == "@" ]]; then
+  git rev-parse --git-dir &>/dev/null || { echo "Not in a git repository"; return 1 }
+  local root_common=$(git rev-parse --path-format=absolute --git-common-dir)
+  cd "${root_common%/.git}" || return 1
+  { _cwt_cmux_rename "$(git -C "$PWD" branch --show-current 2>/dev/null)" } &!
+  return 0
+fi
+
 # A path argument selects an existing worktree directly: cd there and relabel
 # the workspace. Only explicit paths ("/…", "./…", "../…") qualify, so a branch
 # name is never shadowed by a same-named directory in the current dir.
