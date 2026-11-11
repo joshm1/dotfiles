@@ -1,0 +1,19 @@
+home/.config/mise/config.toml
+  s_3d475e988bc413::t_7797760078402c 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "e6ebea7d811c71f7e5a76e9f77d7430a81351328",
+  "prompts": {},
+  "sessions": {
+    "s_3d475e988bc413": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "71e4d5a1-cf35-478d-9a7d-c03e97d10475",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
