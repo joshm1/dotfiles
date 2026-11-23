@@ -27,6 +27,11 @@
 #   T3=1         also install the T3 Code CLI.
 #   SKIP_INSTALL=1  only link paths and skills.
 #   FORCE_LINK=1 repoint existing working skills/path symlinks (default: leave them).
+#   MAP_MAC_HOME=1  Linux only: if passwordless sudo is available, map /Users/josh
+#                -> $HOME so skills that symlink to Mac-absolute paths
+#                (/Users/josh/projects/..., /Users/josh/.codex/skills/...) resolve
+#                without changing those targets. No-op on Darwin and if /Users/josh
+#                already exists as a real directory.
 
 set -euo pipefail
 
@@ -80,6 +85,32 @@ install_agy() {
     curl -fsSL https://antigravity.google/cli/install.sh -o "$tmp"
     bash "$tmp"
     rm -f "$tmp"
+}
+
+
+# Linux-only, opt-in. Lets Mac-absolute skill symlinks resolve on this box.
+map_mac_home() {
+    if [[ "$(uname -s)" != Linux ]]; then
+        return 0
+    fi
+    if [[ "${MAP_MAC_HOME:-0}" != 1 ]]; then
+        return 0
+    fi
+    if [[ -e /Users/josh && ! -L /Users/josh ]]; then
+        warn "/Users/josh exists and is not a symlink; leaving it alone"
+        return 0
+    fi
+    if [[ -L /Users/josh && "$(readlink /Users/josh)" == "$HOME" ]]; then
+        log "/Users/josh already maps to $HOME"
+        return 0
+    fi
+    if ! sudo -n true 2>/dev/null; then
+        warn "MAP_MAC_HOME=1 needs passwordless sudo to create /Users/josh -> $HOME"
+        return 0
+    fi
+    sudo mkdir -p /Users
+    sudo ln -sfn "$HOME" /Users/josh
+    log "mapped /Users/josh -> $HOME (Mac-absolute skill symlinks can resolve)"
 }
 
 # Resolve the private clone without assuming a single layout.
@@ -169,6 +200,10 @@ link_skills() {
         if [[ -d "$public" ]]; then
             sources+=("$public")
         fi
+        # Skills that live in other cloned project trees (Mac path: ~/projects/mutiny/terraform/skills).
+        if [[ -d "$HOME/projects/mutiny/terraform/skills" ]]; then
+            sources+=("$HOME/projects/mutiny/terraform/skills")
+        fi
         if [[ ${#sources[@]} -eq 0 ]]; then
             warn "no skills source found; set SKILLS_SRC"
             return 0
@@ -195,6 +230,7 @@ link_skills() {
 
 main() {
     link_expected_paths
+    map_mac_home
 
     if [[ "${SKIP_INSTALL:-0}" != 1 ]]; then
         install_npm_cli claude @anthropic-ai/claude-code || warn "claude-code install failed"
