@@ -1,0 +1,31 @@
+home/.config/mise/config.toml
+  s_989f2161088adb::t_1bdc3511bba260 12-13
+home/.zshrc
+  s_309656dd9559f0::t_1733e149b22b23 311-313
+home/.gitignore
+  s_309656dd9559f0::t_f75e10d01d2a23 83-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "5456458f5e1f50d663cab0cdfc306ac000017f70",
+  "prompts": {},
+  "sessions": {
+    "s_309656dd9559f0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98b9783f-7f72-4b12-920e-e8c3c06df433",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    },
+    "s_989f2161088adb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab019530-899c-4abf-9efb-9c3ebe97ba64",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
