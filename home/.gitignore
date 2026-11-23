@@ -80,3 +80,6 @@ settings.local.json
 
 # superpowers scratch docs (curated specs get git add -f)
 docs/superpowers/
+
+**/.claude/settings.local.json
+.worktrees/
