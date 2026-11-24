@@ -310,4 +310,4 @@ autoload -Uz compinit && compinit -C
 # <<< grok installer <<<
 
 # Vite+ bin (https://viteplus.dev)
-. "/Users/josh/.config/vite-plus/env"
+[ -f "$HOME/.config/vite-plus/env" ] && . "$HOME/.config/vite-plus/env"
