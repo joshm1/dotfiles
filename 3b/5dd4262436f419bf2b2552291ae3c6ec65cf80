@@ -1,0 +1,19 @@
+home/.zshrc
+  s_e39c7bcd04f181::t_bbb57df0f6aaff 313
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "3b5dd4262436f419bf2b2552291ae3c6ec65cf80",
+  "prompts": {},
+  "sessions": {
+    "s_e39c7bcd04f181": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "356e4f80-2912-4ae7-84ca-823bd492409b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Josh McDade <josh.ncsu@gmail.com>"
+    }
+  }
+}
